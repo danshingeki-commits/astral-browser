@@ -32,6 +32,10 @@ jobs:
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/anim
+          mkdir -p app/src/main/res/drawable
+
+          # Descargar imagen oficial de Miku directamente como recurso local
+          curl -L -s -A "Mozilla/5.0" -o app/src/main/res/drawable/miku_avatar.png "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" || true
 
           # 1. settings.gradle
           cat << 'EOF' > settings.gradle
@@ -80,8 +84,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 4
-                  versionName "1.3"
+                  versionCode 6
+                  versionName "1.5"
               }
 
               compileOptions {
@@ -92,6 +96,7 @@ jobs:
 
           dependencies {
               implementation 'androidx.appcompat:appcompat:1.6.1'
+              implementation 'com.google.android.material:material:1.11.0'
           }
           EOF
 
@@ -117,6 +122,10 @@ jobs:
                           <category android:name="android.intent.category.LAUNCHER" />
                       </intent-filter>
                   </activity>
+                  <activity
+                      android:name=".SettingsActivity"
+                      android:exported="false"
+                      android:label="Configuracion" />
               </application>
           </manifest>
           EOF
@@ -128,39 +137,82 @@ jobs:
               <string name="btn_back">&lt;</string>
               <string name="btn_forward">&gt;</string>
               <string name="btn_refresh">R</string>
-              <string name="btn_settings">S</string>
+              <string name="btn_settings">Config</string>
               <string name="btn_incognito_off">Norm</string>
               <string name="btn_incognito_on">Incog</string>
               <string name="btn_burn">Purga</string>
-              <string name="url_hint">Buscar en privado o URL...</string>
+              <string name="url_hint">Buscar o ingresar URL...</string>
           </resources>
           EOF
 
           # 7. styles.xml
           cat << 'EOF' > app/src/main/res/values/styles.xml
           <resources>
-              <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+              <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                   <item name="android:windowBackground">#0B0813</item>
                   <item name="android:statusBarColor">#110B1F</item>
+                  <item name="colorPrimary">#A855F7</item>
+                  <item name="colorSecondary">#38BDF8</item>
               </style>
           </resources>
           EOF
 
-          # 8. Animacion suave de flotacion para Miku (subida y bajada ligera)
+          # 8. Animacion suave de levitacion
           cat << 'EOF' > app/src/main/res/anim/floating_anim.xml
           <?xml version="1.0" encoding="utf-8"?>
           <set xmlns:android="http://schemas.android.com/apk/res/android"
               android:interpolator="@android:anim/accelerate_decelerate_interpolator">
               <translate
                   android:fromYDelta="0%p"
-                  android:toYDelta="-3.5%p"
+                  android:toYDelta="-3%p"
                   android:duration="1800"
                   android:repeatCount="infinite"
                   android:repeatMode="reverse" />
           </set>
           EOF
 
-          # 9. activity_main.xml
+          # 9. Avatar de respaldo vectorial de Miku por si la red no descargo el PNG
+          cat << 'EOF' > app/src/main/res/drawable/ic_miku_fallback.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="160dp"
+              android:height="160dp"
+              android:viewportWidth="100"
+              android:viewportHeight="100">
+              <path
+                  android:fillColor="#1A132C"
+                  android:pathData="M50,10 A40,40 0 1,0 50,90 A40,40 0 1,0 50,10 Z" />
+              <!-- Cabello Turquesa Miku -->
+              <path
+                  android:fillColor="#39C5BB"
+                  android:pathData="M25,28 C20,40 18,65 24,75 C26,62 30,45 35,35 Z" />
+              <path
+                  android:fillColor="#39C5BB"
+                  android:pathData="M75,28 C80,40 82,65 76,75 C74,62 70,45 65,35 Z" />
+              <path
+                  android:fillColor="#39C5BB"
+                  android:pathData="M35,25 C45,18 55,18 65,25 C60,35 40,35 35,25 Z" />
+              <!-- Rostro -->
+              <path
+                  android:fillColor="#FFDFC4"
+                  android:pathData="M38,32 C38,48 62,48 62,32 Z" />
+              <!-- Ojos Turquesa -->
+              <path
+                  android:fillColor="#39C5BB"
+                  android:pathData="M43,38 A2.5,2.5 0 1,1 43,37.9 Z" />
+              <path
+                  android:fillColor="#39C5BB"
+                  android:pathData="M57,38 A2.5,2.5 0 1,1 57,37.9 Z" />
+              <!-- Auriculares Miku -->
+              <path
+                  android:fillColor="#EF4444"
+                  android:pathData="M32,32 A4,4 0 1,1 32,31.9 Z" />
+              <path
+                  android:fillColor="#EF4444"
+                  android:pathData="M68,32 A4,4 0 1,1 68,31.9 Z" />
+          </vector>
+          EOF
+
+          # 10. activity_main.xml
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -230,11 +282,11 @@ jobs:
 
                   <Button
                       android:id="@+id/btnSettings"
-                      android:layout_width="32dp"
+                      android:layout_width="48dp"
                       android:layout_height="38dp"
                       android:text="@string/btn_settings"
                       android:textColor="#38BDF8"
-                      android:textSize="11sp"
+                      android:textSize="10sp"
                       android:background="?android:attr/selectableItemBackground" />
 
                   <Button
@@ -274,7 +326,7 @@ jobs:
                       android:layout_height="match_parent"
                       android:background="#0B0813" />
 
-                  <!-- Pantalla de inicio con Miku y animacion flotante -->
+                  <!-- Nueva Pantalla de Inicio con Miku -->
                   <LinearLayout
                       android:id="@+id/homeOverlay"
                       android:layout_width="match_parent"
@@ -287,25 +339,26 @@ jobs:
 
                       <ImageView
                           android:id="@+id/ivMiku"
-                          android:layout_width="160dp"
-                          android:layout_height="160dp"
-                          android:contentDescription="Miku Avatar" />
+                          android:layout_width="170dp"
+                          android:layout_height="170dp"
+                          android:src="@drawable/ic_miku_fallback"
+                          android:contentDescription="Hatsune Miku" />
 
                       <TextView
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
                           android:text="A S T R A L   P R I V A T E"
                           android:textColor="#C084FC"
-                          android:textSize="16sp"
+                          android:textSize="17sp"
                           android:textStyle="bold"
                           android:letterSpacing="0.15"
-                          android:layout_marginTop="16dp" />
+                          android:layout_marginTop="18dp" />
 
                       <TextView
                           android:id="@+id/tvEngineInfo"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
-                          android:text="Sesion Limpia • Sin Registros"
+                          android:text="Escudos Activos • Sin Rastro"
                           android:textColor="#64748B"
                           android:textSize="12sp"
                           android:layout_marginTop="6dp" />
@@ -314,12 +367,362 @@ jobs:
           </LinearLayout>
           EOF
 
-          # 10. MainActivity.java con carga de avatar de Miku, animacion y panel de ajustes
+          # 11. activity_settings.xml (Interfaz dedicada estilo Brave)
+          cat << 'EOF' > app/src/main/res/layout/activity_settings.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#0B0813"
+              android:fitsSystemWindows="true">
+
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="vertical"
+                  android:padding="16dp">
+
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="horizontal"
+                      android:gravity="center_vertical"
+                      android:layout_marginBottom="22dp">
+
+                      <Button
+                          android:id="@+id/btnBackSettings"
+                          android:layout_width="40dp"
+                          android:layout_height="40dp"
+                          android:text="‹"
+                          android:textSize="22sp"
+                          android:textColor="#C084FC"
+                          android:background="?android:attr/selectableItemBackground" />
+
+                      <TextView
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="Configuracion de Privacidad"
+                          android:textColor="#F8FAFC"
+                          android:textSize="18sp"
+                          android:textStyle="bold"
+                          android:layout_marginStart="8dp" />
+                  </LinearLayout>
+
+                  <!-- 1. ESCUDOS Y PRIVACIDAD -->
+                  <TextView
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="ESCUDOS ASTRAL (BRAVE SHIELDS)"
+                      android:textColor="#A855F7"
+                      android:textSize="11sp"
+                      android:textStyle="bold"
+                      android:letterSpacing="0.1"
+                      android:layout_marginBottom="8dp" />
+
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical"
+                      android:background="#150E24"
+                      android:padding="12dp"
+                      android:layout_marginBottom="20dp">
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchBlockThirdParty"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Bloquear Rastreadores y Cookies Cruzadas"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp" />
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchBlockImages"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Modo Texto Ultra Rapido (Sin Imagenes)"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp"
+                          android:layout_marginTop="12dp" />
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchAutoPurge"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Destruir Historial y Sesion al Salir"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp"
+                          android:layout_marginTop="12dp" />
+                  </LinearLayout>
+
+                  <!-- 2. RED, PROXY Y DNS SEGURO -->
+                  <TextView
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="RED, PROXY Y DNS SEGURO"
+                      android:textColor="#38BDF8"
+                      android:textSize="11sp"
+                      android:textStyle="bold"
+                      android:letterSpacing="0.1"
+                      android:layout_marginBottom="8dp" />
+
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical"
+                      android:background="#150E24"
+                      android:padding="12dp"
+                      android:layout_marginBottom="20dp">
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchProxy"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Enrutar Todo Mediante Servidor Proxy"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp" />
+
+                      <EditText
+                          android:id="@+id/etProxyHost"
+                          android:layout_width="match_parent"
+                          android:layout_height="40dp"
+                          android:background="#1F1535"
+                          android:textColor="#F8FAFC"
+                          android:textColorHint="#64748B"
+                          android:hint="Host / IP (ej. 127.0.0.1 o Servidor)"
+                          android:textSize="12sp"
+                          android:paddingHorizontal="10dp"
+                          android:layout_marginTop="10dp"
+                          android:singleLine="true" />
+
+                      <EditText
+                          android:id="@+id/etProxyPort"
+                          android:layout_width="match_parent"
+                          android:layout_height="40dp"
+                          android:background="#1F1535"
+                          android:textColor="#F8FAFC"
+                          android:textColorHint="#64748B"
+                          android:hint="Puerto (ej. 8118, 9050, 8080)"
+                          android:textSize="12sp"
+                          android:inputType="number"
+                          android:paddingHorizontal="10dp"
+                          android:layout_marginTop="8dp"
+                          android:singleLine="true" />
+
+                      <TextView
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="DNS Seguro / Privado:"
+                          android:textColor="#94A3B8"
+                          android:textSize="12sp"
+                          android:layout_marginTop="14dp"
+                          android:layout_marginBottom="6dp" />
+
+                      <RadioGroup
+                          android:id="@+id/rgDns"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content">
+
+                          <RadioButton
+                              android:id="@+id/rbDnsDefault"
+                              android:layout_width="match_parent"
+                              android:layout_height="wrap_content"
+                              android:text="Predeterminado del Sistema"
+                              android:textColor="#F8FAFC"
+                              android:textSize="12sp" />
+
+                          <RadioButton
+                              android:id="@+id/rbDnsAdguard"
+                              android:layout_width="match_parent"
+                              android:layout_height="wrap_content"
+                              android:text="AdGuard DNS (Filtro Antianuncios)"
+                              android:textColor="#F8FAFC"
+                              android:textSize="12sp" />
+
+                          <RadioButton
+                              android:id="@+id/rbDnsCloudflare"
+                              android:layout_width="match_parent"
+                              android:layout_height="wrap_content"
+                              android:text="Cloudflare 1.1.1.1 (Rapido y Privado)"
+                              android:textColor="#F8FAFC"
+                              android:textSize="12sp" />
+                      </RadioGroup>
+                  </LinearLayout>
+
+                  <!-- 3. MOTOR DE BUSQUEDA -->
+                  <TextView
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="MOTOR DE BUSQUEDA PREDETERMINADO"
+                      android:textColor="#A855F7"
+                      android:textSize="11sp"
+                      android:textStyle="bold"
+                      android:letterSpacing="0.1"
+                      android:layout_marginBottom="8dp" />
+
+                  <RadioGroup
+                      android:id="@+id/rgSearchEngine"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:background="#150E24"
+                      android:padding="10dp"
+                      android:layout_marginBottom="24dp">
+
+                      <RadioButton
+                          android:id="@+id/rbBrave"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Brave Search (Independiente)"
+                          android:textColor="#F8FAFC"
+                          android:textSize="12sp" />
+
+                      <RadioButton
+                          android:id="@+id/rbDuck"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="DuckDuckGo (Cero Rastreo)"
+                          android:textColor="#F8FAFC"
+                          android:textSize="12sp" />
+
+                      <RadioButton
+                          android:id="@+id/rbStartpage"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Startpage (Resultados Google Protegidos)"
+                          android:textColor="#F8FAFC"
+                          android:textSize="12sp" />
+                  </RadioGroup>
+
+                  <Button
+                      android:id="@+id/btnSaveSettings"
+                      android:layout_width="match_parent"
+                      android:layout_height="48dp"
+                      android:text="Guardar Cambios y Aplicar"
+                      android:textColor="#FFFFFF"
+                      android:background="#A855F7"
+                      android:textStyle="bold" />
+              </LinearLayout>
+          </ScrollView>
+          EOF
+
+          # 12. SettingsActivity.java
+          cat << 'EOF' > app/src/main/java/com/astral/browser/SettingsActivity.java
+          package com.astral.browser;
+
+          import android.content.SharedPreferences;
+          import android.os.Bundle;
+          import android.widget.Button;
+          import android.widget.EditText;
+          import android.widget.RadioButton;
+          import android.widget.RadioGroup;
+          import android.widget.Toast;
+          import androidx.appcompat.app.AppCompatActivity;
+          import androidx.appcompat.widget.SwitchCompat;
+
+          public class SettingsActivity extends AppCompatActivity {
+
+              private SharedPreferences prefs;
+
+              private RadioGroup rgSearchEngine, rgDns;
+              private RadioButton rbDuck, rbBrave, rbStartpage;
+              private RadioButton rbDnsDefault, rbDnsAdguard, rbDnsCloudflare;
+              private SwitchCompat switchProxy;
+              private EditText etProxyHost, etProxyPort;
+              private SwitchCompat switchBlockThirdParty;
+              private SwitchCompat switchBlockImages;
+              private SwitchCompat switchAutoPurge;
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  setContentView(R.layout.activity_settings);
+
+                  prefs = getSharedPreferences("astral_settings", MODE_PRIVATE);
+
+                  rgSearchEngine = findViewById(R.id.rgSearchEngine);
+                  rbDuck = findViewById(R.id.rbDuck);
+                  rbBrave = findViewById(R.id.rbBrave);
+                  rbStartpage = findViewById(R.id.rbStartpage);
+
+                  rgDns = findViewById(R.id.rgDns);
+                  rbDnsDefault = findViewById(R.id.rbDnsDefault);
+                  rbDnsAdguard = findViewById(R.id.rbDnsAdguard);
+                  rbDnsCloudflare = findViewById(R.id.rbDnsCloudflare);
+
+                  switchProxy = findViewById(R.id.switchProxy);
+                  etProxyHost = findViewById(R.id.etProxyHost);
+                  etProxyPort = findViewById(R.id.etProxyPort);
+
+                  switchBlockThirdParty = findViewById(R.id.switchBlockThirdParty);
+                  switchBlockImages = findViewById(R.id.switchBlockImages);
+                  switchAutoPurge = findViewById(R.id.switchAutoPurge);
+
+                  Button btnBackSettings = findViewById(R.id.btnBackSettings);
+                  Button btnSaveSettings = findViewById(R.id.btnSaveSettings);
+
+                  cargarValores();
+
+                  btnBackSettings.setOnClickListener(v -> finish());
+                  btnSaveSettings.setOnClickListener(v -> guardarValores());
+              }
+
+              private void cargarValores() {
+                  int engine = prefs.getInt("search_engine", 1);
+                  if (engine == 0) rbDuck.setChecked(true);
+                  else if (engine == 2) rbStartpage.setChecked(true);
+                  else rbBrave.setChecked(true);
+
+                  int dnsOption = prefs.getInt("dns_option", 1);
+                  if (dnsOption == 0) rbDnsDefault.setChecked(true);
+                  else if (dnsOption == 2) rbDnsCloudflare.setChecked(true);
+                  else rbDnsAdguard.setChecked(true);
+
+                  boolean proxyEnabled = prefs.getBoolean("proxy_enabled", false);
+                  switchProxy.setChecked(proxyEnabled);
+                  etProxyHost.setText(prefs.getString("proxy_host", ""));
+                  etProxyPort.setText(prefs.getString("proxy_port", ""));
+
+                  switchBlockThirdParty.setChecked(prefs.getBoolean("block_third_party", true));
+                  switchBlockImages.setChecked(prefs.getBoolean("block_images", false));
+                  switchAutoPurge.setChecked(prefs.getBoolean("auto_purge", true));
+              }
+
+              private void guardarValores() {
+                  int engine = 1;
+                  if (rbDuck.isChecked()) engine = 0;
+                  else if (rbStartpage.isChecked()) engine = 2;
+
+                  int dnsOption = 1;
+                  if (rbDnsDefault.isChecked()) dnsOption = 0;
+                  else if (rbDnsCloudflare.isChecked()) dnsOption = 2;
+
+                  boolean proxyEnabled = switchProxy.isChecked();
+                  String host = etProxyHost.getText().toString().trim();
+                  String port = etProxyPort.getText().toString().trim();
+
+                  prefs.edit()
+                          .putInt("search_engine", engine)
+                          .putInt("dns_option", dnsOption)
+                          .putBoolean("proxy_enabled", proxyEnabled)
+                          .putString("proxy_host", host)
+                          .putString("proxy_port", port)
+                          .putBoolean("block_third_party", switchBlockThirdParty.isChecked())
+                          .putBoolean("block_images", switchBlockImages.isChecked())
+                          .putBoolean("auto_purge", switchAutoPurge.isChecked())
+                          .apply();
+
+                  Toast.makeText(this, "Escudos y conexion actualizados", Toast.LENGTH_SHORT).show();
+                  finish();
+              }
+          }
+          EOF
+
+          # 13. MainActivity.java con Miku animada y aplicacion de Escudos/Proxy
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
           import android.annotation.SuppressLint;
           import android.app.AlertDialog;
+          import android.content.Intent;
           import android.content.SharedPreferences;
           import android.graphics.Bitmap;
           import android.graphics.BitmapFactory;
@@ -348,6 +751,7 @@ jobs:
           import android.widget.Toast;
           import androidx.appcompat.app.AppCompatActivity;
 
+          import java.io.File;
           import java.io.InputStream;
           import java.io.UnsupportedEncodingException;
           import java.net.HttpURLConnection;
@@ -374,9 +778,7 @@ jobs:
               private boolean isIncognitoActive = false;
 
               private SharedPreferences prefs;
-              private String searchEngineUrl = "https://duckduckgo.com/?q=";
-
-              private static final String MIKU_IMAGE_URL = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png";
+              private String searchEngineUrl = "https://search.brave.com/search?q=";
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
@@ -384,7 +786,6 @@ jobs:
                   setContentView(R.layout.activity_main);
 
                   prefs = getSharedPreferences("astral_settings", MODE_PRIVATE);
-                  cargarAjustesRed();
 
                   webContainer = findViewById(R.id.webContainer);
                   homeOverlay = findViewById(R.id.homeOverlay);
@@ -402,6 +803,7 @@ jobs:
                   Button btnRefresh = findViewById(R.id.btnRefresh);
                   Button btnBurn = findViewById(R.id.btnBurn);
 
+                  actualizarAjustesDeRed();
                   iniciarMikuAnimada();
                   crearNuevaPestana("");
 
@@ -421,7 +823,12 @@ jobs:
                   });
 
                   btnIncognito.setOnClickListener(v -> toggleIncognito());
-                  btnSettings.setOnClickListener(v -> mostrarDialogoAjustes());
+
+                  btnSettings.setOnClickListener(v -> {
+                      Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                      startActivity(intent);
+                  });
+
                   btnTabs.setOnClickListener(v -> mostrarDialogoPestanas());
 
                   etUrl.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
@@ -436,105 +843,64 @@ jobs:
                   btnBurn.setOnClickListener(v -> purgaTotal());
               }
 
+              @Override
+              protected void onResume() {
+                  super.onResume();
+                  actualizarAjustesDeRed();
+                  WebView wv = getCurrentWebView();
+                  if (wv != null) {
+                      aplicarPreferenciasWebView(wv);
+                  }
+              }
+
+              private void actualizarAjustesDeRed() {
+                  int engineIdx = prefs.getInt("search_engine", 1);
+                  if (engineIdx == 0) {
+                      searchEngineUrl = "https://duckduckgo.com/?q=";
+                      tvEngineInfo.setText("Motor: DuckDuckGo • Escudos Activos");
+                  } else if (engineIdx == 2) {
+                      searchEngineUrl = "https://www.startpage.com/sp/search?query=";
+                      tvEngineInfo.setText("Motor: Startpage • Privacidad Total");
+                  } else {
+                      searchEngineUrl = "https://search.brave.com/search?q=";
+                      tvEngineInfo.setText("Motor: Brave Search • Cero Rastreo");
+                  }
+
+                  boolean proxyEnabled = prefs.getBoolean("proxy_enabled", false);
+                  String host = prefs.getString("proxy_host", "");
+                  String port = prefs.getString("proxy_port", "");
+                  if (proxyEnabled && !host.isEmpty() && !port.isEmpty()) {
+                      System.setProperty("http.proxyHost", host);
+                      System.setProperty("http.proxyPort", port);
+                      System.setProperty("https.proxyHost", host);
+                      System.setProperty("https.proxyPort", port);
+                  } else {
+                      System.clearProperty("http.proxyHost");
+                      System.clearProperty("http.proxyPort");
+                      System.clearProperty("https.proxyHost");
+                      System.clearProperty("https.proxyPort");
+                  }
+              }
+
               private void iniciarMikuAnimada() {
                   Animation floatAnim = AnimationUtils.loadAnimation(this, R.anim.floating_anim);
                   ivMiku.startAnimation(floatAnim);
 
-                  // Carga segura del avatar en segundo plano
+                  // Intentar cargar imagen Miku descargada o avatar en segundo plano
                   new Thread(() -> {
                       try {
-                          URL url = new URL("https://i.pinimg.com/736x/87/42/47/8742475aa8ec7dc662176dcba3f742f3.jpg");
+                          URL url = new URL("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png");
                           HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                          conn.setRequestProperty("User-Agent", "Mozilla/5.0");
                           conn.setDoInput(true);
                           conn.connect();
                           InputStream is = conn.getInputStream();
                           final Bitmap bm = BitmapFactory.decodeStream(is);
-                          runOnUiThread(() -> {
-                              if (bm != null) ivMiku.setImageBitmap(bm);
-                          });
-                      } catch (Exception ignored) {
-                      }
+                          if (bm != null) {
+                              runOnUiThread(() -> ivMiku.setImageBitmap(bm));
+                          }
+                      } catch (Exception ignored) {}
                   }).start();
-              }
-
-              private void cargarAjustesRed() {
-                  String proxyHost = prefs.getString("proxy_host", "");
-                  String proxyPort = prefs.getString("proxy_port", "");
-                  if (!proxyHost.isEmpty() && !proxyPort.isEmpty()) {
-                      System.setProperty("http.proxyHost", proxyHost);
-                      System.setProperty("http.proxyPort", proxyPort);
-                      System.setProperty("https.proxyHost", proxyHost);
-                      System.setProperty("https.proxyPort", proxyPort);
-                  }
-                  int engineIdx = prefs.getInt("search_engine", 0);
-                  if (engineIdx == 1) searchEngineUrl = "https://search.brave.com/search?q=";
-                  else if (engineIdx == 2) searchEngineUrl = "https://www.startpage.com/sp/search?query=";
-                  else searchEngineUrl = "https://duckduckgo.com/?q=";
-              }
-
-              private void mostrarDialogoAjustes() {
-                  String[] opciones = {"Motor de Búsqueda", "Configurar Proxy HTTP", "Restablecer Proxy", "Acerca de Astral"};
-                  AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                  builder.setTitle("Ajustes de Privacidad");
-                  builder.setItems(opciones, (dialog, which) -> {
-                      if (which == 0) elegirMotor();
-                      else if (which == 1) configurarProxyInput();
-                      else if (which == 2) restablecerProxy();
-                      else Toast.makeText(this, "Astral Browser v1.3 • Privado y Seguro", Toast.LENGTH_SHORT).show();
-                  });
-                  builder.show();
-              }
-
-              private void elegirMotor() {
-                  String[] motores = {"DuckDuckGo (Recomendado)", "Brave Search", "Startpage"};
-                  int actual = prefs.getInt("search_engine", 0);
-                  AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                  builder.setTitle("Seleccionar Motor");
-                  builder.setSingleChoiceItems(motores, actual, (dialog, which) -> {
-                      prefs.edit().putInt("search_engine", which).apply();
-                      cargarAjustesRed();
-                      dialog.dismiss();
-                      Toast.makeText(this, "Motor cambiado", Toast.LENGTH_SHORT).show();
-                  });
-                  builder.show();
-              }
-
-              private void configurarProxyInput() {
-                  LinearLayout layout = new LinearLayout(this);
-                  layout.setOrientation(LinearLayout.VERTICAL);
-                  layout.setPadding(30, 20, 30, 20);
-
-                  final EditText etHost = new EditText(this);
-                  etHost.setHint("Host (ej. 127.0.0.1)");
-                  etHost.setText(prefs.getString("proxy_host", ""));
-                  layout.addView(etHost);
-
-                  final EditText etPort = new EditText(this);
-                  etPort.setHint("Puerto (ej. 8118)");
-                  etPort.setText(prefs.getString("proxy_port", ""));
-                  layout.addView(etPort);
-
-                  AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                  builder.setTitle("Configurar Proxy");
-                  builder.setView(layout);
-                  builder.setPositiveButton("Guardar", (dialog, which) -> {
-                      String host = etHost.getText().toString().trim();
-                      String port = etPort.getText().toString().trim();
-                      prefs.edit().putString("proxy_host", host).putString("proxy_port", port).apply();
-                      cargarAjustesRed();
-                      Toast.makeText(this, "Proxy aplicado para nuevas peticiones", Toast.LENGTH_SHORT).show();
-                  });
-                  builder.setNegativeButton("Cancelar", null);
-                  builder.show();
-              }
-
-              private void restablecerProxy() {
-                  prefs.edit().remove("proxy_host").remove("proxy_port").apply();
-                  System.clearProperty("http.proxyHost");
-                  System.clearProperty("http.proxyPort");
-                  System.clearProperty("https.proxyHost");
-                  System.clearProperty("https.proxyPort");
-                  Toast.makeText(this, "Proxy desactivado", Toast.LENGTH_SHORT).show();
               }
 
               private void toggleIncognito() {
@@ -546,17 +912,29 @@ jobs:
                       btnIncognito.setTextColor(Color.parseColor("#A855F7"));
                       topBar.setBackgroundColor(Color.parseColor("#1F0A2E"));
                       aplicarAjustesIncognito(wv, true);
-                      Toast.makeText(this, "🕶️ Incógnito estricto: Cero almacenamiento local", Toast.LENGTH_SHORT).show();
+                      Toast.makeText(this, "🕶️ Incognito ACTIVO: Cookies bloqueadas al 100%", Toast.LENGTH_SHORT).show();
                   } else {
                       btnIncognito.setText(R.string.btn_incognito_off);
                       btnIncognito.setTextColor(Color.parseColor("#94A3B8"));
                       topBar.setBackgroundColor(Color.parseColor("#110B1F"));
                       aplicarAjustesIncognito(wv, false);
-                      Toast.makeText(this, "Modo privado estándar", Toast.LENGTH_SHORT).show();
+                      Toast.makeText(this, "Modo privado estandar", Toast.LENGTH_SHORT).show();
                   }
                   if (wv != null && wv.getUrl() != null && !wv.getUrl().isEmpty()) {
                       wv.reload();
                   }
+              }
+
+              @SuppressLint("SetJavaScriptEnabled")
+              private void aplicarPreferenciasWebView(WebView wv) {
+                  if (wv == null) return;
+                  WebSettings settings = wv.getSettings();
+                  boolean blockImages = prefs.getBoolean("block_images", false);
+                  settings.setLoadsImagesAutomatically(!blockImages);
+                  settings.setBlockNetworkImage(blockImages);
+
+                  boolean blockThirdParty = prefs.getBoolean("block_third_party", true);
+                  CookieManager.getInstance().setAcceptThirdPartyCookies(wv, !blockThirdParty);
               }
 
               @SuppressLint("SetJavaScriptEnabled")
@@ -576,7 +954,8 @@ jobs:
                       settings.setDomStorageEnabled(true);
                       settings.setCacheMode(WebSettings.LOAD_DEFAULT);
                       cookieManager.setAcceptCookie(true);
-                      cookieManager.setAcceptThirdPartyCookies(wv, false);
+                      boolean blockThirdParty = prefs.getBoolean("block_third_party", true);
+                      cookieManager.setAcceptThirdPartyCookies(wv, !blockThirdParty);
                   }
               }
 
@@ -593,6 +972,7 @@ jobs:
                   settings.setBuiltInZoomControls(true);
                   settings.setDisplayZoomControls(false);
 
+                  aplicarPreferenciasWebView(wv);
                   aplicarAjustesIncognito(wv, isIncognitoActive);
 
                   wv.setWebChromeClient(new WebChromeClient() {
@@ -677,12 +1057,12 @@ jobs:
                   List<String> items = new ArrayList<>();
                   for (int i = 0; i < tabList.size(); i++) {
                       String url = tabList.get(i).getUrl();
-                      items.add("Pestaña " + (i + 1) + ": " + (url != null && !url.isEmpty() ? url : "Inicio Miku"));
+                      items.add("Pestana " + (i + 1) + ": " + (url != null && !url.isEmpty() ? url : "Inicio Miku"));
                   }
-                  items.add("➕ Abrir nueva pestaña");
+                  items.add("➕ Abrir nueva pestana");
 
                   AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                  builder.setTitle("Pestañas Privadas");
+                  builder.setTitle("Pestanas Privadas");
                   builder.setItems(items.toArray(new String[0]), (dialog, which) -> {
                       if (which == tabList.size()) {
                           crearNuevaPestana("");
@@ -690,7 +1070,7 @@ jobs:
                           cambiarAPestana(which);
                       }
                   });
-                  builder.setNeutralButton("Cerrar pestaña actual", (dialog, which) -> cerrarPestana(currentTabIndex));
+                  builder.setNeutralButton("Cerrar pestana actual", (dialog, which) -> cerrarPestana(currentTabIndex));
                   builder.show();
               }
 
@@ -740,7 +1120,7 @@ jobs:
                   crearNuevaPestana("");
                   etUrl.setText("");
                   homeOverlay.setVisibility(View.VISIBLE);
-                  Toast.makeText(this, "🔥 Purga completa: Cookies y caché eliminadas", Toast.LENGTH_SHORT).show();
+                  Toast.makeText(this, "🔥 Purga completa: Cookies y cache destruidas", Toast.LENGTH_SHORT).show();
               }
 
               private void hideKeyboard() {
@@ -753,7 +1133,9 @@ jobs:
 
               @Override
               protected void onDestroy() {
-                  purgaTotal();
+                  if (prefs.getBoolean("auto_purge", true)) {
+                      purgaTotal();
+                  }
                   super.onDestroy();
               }
 

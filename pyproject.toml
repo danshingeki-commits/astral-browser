@@ -9,3 +9,6 @@ dependencies = [
 [tool.flet]
 org = "com.astral"
 product = "Astral Browser"
+
+[tool.flet.flutter.dependencies]
+flet_webview = "^0.1.2"

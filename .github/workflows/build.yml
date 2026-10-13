@@ -18,8 +18,11 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
-      - name: Instalar Gradle 8.5
-        uses: gradle/actions/setup-gradle@v4
+      - name: Configurar Android SDK y Licencias
+        uses: android-actions/setup-android@v3
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: "8.5"
 
@@ -82,7 +85,6 @@ jobs:
 
           dependencies {
               implementation 'androidx.appcompat:appcompat:1.6.1'
-              implementation 'com.google.android.material:material:1.11.0'
           }
           EOF
 
@@ -115,7 +117,7 @@ jobs:
           # 5. styles.xml
           cat << 'EOF' > app/src/main/res/values/styles.xml
           <resources>
-              <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+              <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
                   <item name="android:windowBackground">#0B0813</item>
                   <item name="android:statusBarColor">#110B1F</item>
               </style>
@@ -142,7 +144,7 @@ jobs:
 
                   <Button
                       android:id="@+id/btnBack"
-                      android:layout_width="36dp"
+                      android:layout_width="38dp"
                       android:layout_height="38dp"
                       android:text="‹"
                       android:textSize="20sp"
@@ -151,7 +153,7 @@ jobs:
 
                   <Button
                       android:id="@+id/btnForward"
-                      android:layout_width="36dp"
+                      android:layout_width="38dp"
                       android:layout_height="38dp"
                       android:text="›"
                       android:textSize="20sp"
@@ -160,7 +162,7 @@ jobs:
 
                   <Button
                       android:id="@+id/btnRefresh"
-                      android:layout_width="36dp"
+                      android:layout_width="38dp"
                       android:layout_height="38dp"
                       android:text="↻"
                       android:textSize="18sp"
@@ -177,7 +179,8 @@ jobs:
                       android:textColorHint="#64748B"
                       android:hint="DuckDuckGo o URL..."
                       android:textSize="12sp"
-                      android:paddingHorizontal="10dp"
+                      android:paddingLeft="10dp"
+                      android:paddingRight="10dp"
                       android:singleLine="true"
                       android:imeOptions="actionGo"
                       android:inputType="textUri" />
@@ -384,7 +387,7 @@ jobs:
 
       - name: Compilar APK con Gradle
         run: |
-          gradle assembleDebug
+          gradle assembleDebug --stacktrace
 
       - name: Guardar instalador APK
         uses: actions/upload-artifact@v4

@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -81,8 +84,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 10
-                  versionName "1.9"
+                  versionCode 12
+                  versionName "2.1"
               }
 
               compileOptions {
@@ -131,7 +134,7 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Astral Browser</string>
-              <string name="url_hint">Ingresar URL o buscar...</string>
+              <string name="url_hint">Buscar o ingresar URL...</string>
           </resources>
           EOF
 
@@ -154,7 +157,7 @@ jobs:
               android:interpolator="@android:anim/accelerate_decelerate_interpolator">
               <translate
                   android:fromYDelta="0%p"
-                  android:toYDelta="-3%p"
+                  android:toYDelta="-3.5%p"
                   android:duration="1800"
                   android:repeatCount="infinite"
                   android:repeatMode="reverse" />
@@ -184,6 +187,7 @@ jobs:
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/mainRootLayout"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
@@ -191,6 +195,7 @@ jobs:
 
               <!-- BARRA DE PESTAÑAS -->
               <LinearLayout
+                  android:id="@+id/tabsTopBar"
                   android:layout_width="match_parent"
                   android:layout_height="38dp"
                   android:orientation="horizontal"
@@ -233,8 +238,9 @@ jobs:
                       android:background="?android:attr/selectableItemBackground" />
               </LinearLayout>
 
-              <!-- BARRA DE ESTADO -->
+              <!-- BARRA DE ESTADO / CHIPS -->
               <LinearLayout
+                  android:id="@+id/chipsBar"
                   android:layout_width="match_parent"
                   android:layout_height="26dp"
                   android:orientation="horizontal"
@@ -258,10 +264,10 @@ jobs:
                       android:layout_marginRight="6dp" />
 
                   <TextView
-                      android:id="@+id/chipIsolated"
+                      android:id="@+id/chipShields"
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
-                      android:text="PRIVADO"
+                      android:text="ESCUDOS: ACTIVOS"
                       android:textColor="#34D399"
                       android:textSize="9sp"
                       android:paddingLeft="6dp"
@@ -285,8 +291,9 @@ jobs:
                       android:background="#150E24" />
               </LinearLayout>
 
-              <!-- BARRA DE ENTRADA DE URL -->
+              <!-- BARRA DE ENTRADA URL -->
               <LinearLayout
+                  android:id="@+id/urlBar"
                   android:layout_width="match_parent"
                   android:layout_height="42dp"
                   android:orientation="horizontal"
@@ -358,6 +365,7 @@ jobs:
                           android:contentDescription="Hatsune Miku" />
 
                       <TextView
+                          android:id="@+id/tvLogoTitle"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
                           android:text="A S T R A L"
@@ -371,14 +379,14 @@ jobs:
                           android:id="@+id/tvEngineInfo"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
-                          android:text="Sesion Limpia • Sin Registros"
+                          android:text="Protegido • Escudos Activos"
                           android:textColor="#64748B"
                           android:textSize="11sp"
                           android:layout_marginTop="4dp" />
                   </LinearLayout>
               </FrameLayout>
 
-              <!-- BARRA INFERIOR DE NAVEGACION -->
+              <!-- BARRA INFERIOR -->
               <LinearLayout
                   android:id="@+id/bottomBar"
                   android:layout_width="match_parent"
@@ -436,10 +444,11 @@ jobs:
           </LinearLayout>
           EOF
 
-          # 11. activity_settings.xml
+          # 11. activity_settings.xml (Panel completo estilo Brave)
           cat << 'EOF' > app/src/main/res/layout/activity_settings.xml
           <?xml version="1.0" encoding="utf-8"?>
           <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/settingsRoot"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:background="#090610">
@@ -455,7 +464,7 @@ jobs:
                       android:layout_height="wrap_content"
                       android:orientation="horizontal"
                       android:gravity="center_vertical"
-                      android:layout_marginBottom="20dp">
+                      android:layout_marginBottom="18dp">
 
                       <Button
                           android:id="@+id/btnBackSettings"
@@ -476,10 +485,77 @@ jobs:
                           android:layout_marginLeft="8dp" />
                   </LinearLayout>
 
+                  <!-- APARIENCIA Y TEMAS -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
-                      android:text="CONEXION Y PROXY"
+                      android:text="APARIENCIA Y ANIMACIONES"
+                      android:textColor="#C084FC"
+                      android:textSize="11sp"
+                      android:textStyle="bold"
+                      android:layout_marginBottom="8dp" />
+
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical"
+                      android:background="#150E24"
+                      android:padding="12dp"
+                      android:layout_marginBottom="16dp">
+
+                      <TextView
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="Tema Visual:"
+                          android:textColor="#94A3B8"
+                          android:textSize="12sp"
+                          android:layout_marginBottom="6dp" />
+
+                      <RadioGroup
+                          android:id="@+id/rgTheme"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginBottom="8dp">
+
+                          <RadioButton
+                              android:id="@+id/rbThemeCyberpunk"
+                              android:layout_width="match_parent"
+                              android:layout_height="wrap_content"
+                              android:text="Oscuro Cyberpunk (Predeterminado)"
+                              android:textColor="#F8FAFC"
+                              android:textSize="12sp" />
+
+                          <RadioButton
+                              android:id="@+id/rbThemeAmoled"
+                              android:layout_width="match_parent"
+                              android:layout_height="wrap_content"
+                              android:text="Negro Puro AMOLED (Ahorro de bateria)"
+                              android:textColor="#F8FAFC"
+                              android:textSize="12sp" />
+
+                          <RadioButton
+                              android:id="@+id/rbThemeLight"
+                              android:layout_width="match_parent"
+                              android:layout_height="wrap_content"
+                              android:text="Tema Claro"
+                              android:textColor="#F8FAFC"
+                              android:textSize="12sp" />
+                      </RadioGroup>
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchAnimations"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Animacion Flotante de Miku y Efectos"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp" />
+                  </LinearLayout>
+
+                  <!-- ESCUDOS Y PRIVACIDAD BRAVE -->
+                  <TextView
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="ESCUDOS ASTRAL (BRAVE SHIELDS)"
                       android:textColor="#38BDF8"
                       android:textSize="11sp"
                       android:textStyle="bold"
@@ -491,7 +567,70 @@ jobs:
                       android:orientation="vertical"
                       android:background="#150E24"
                       android:padding="12dp"
-                      android:layout_marginBottom="20dp">
+                      android:layout_marginBottom="16dp">
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchBlockTrackers"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Bloquear Rastreadores y Cookies de Terceros"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp" />
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchForceHttps"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Forzar Conexiones Seguras HTTPS"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp"
+                          android:layout_marginTop="10dp" />
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchBlockPopups"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Bloquear Ventanas Emergentes (Pop-ups)"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp"
+                          android:layout_marginTop="10dp" />
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchDesktopMode"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Sitio para Computadora por Defecto"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp"
+                          android:layout_marginTop="10dp" />
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchBlockImages"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Bloquear Imagenes (Navegacion Rapida)"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp"
+                          android:layout_marginTop="10dp" />
+                  </LinearLayout>
+
+                  <!-- CONEXION Y PROXY -->
+                  <TextView
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="RED Y SERVIDOR PROXY"
+                      android:textColor="#34D399"
+                      android:textSize="11sp"
+                      android:textStyle="bold"
+                      android:layout_marginBottom="8dp" />
+
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical"
+                      android:background="#150E24"
+                      android:padding="12dp"
+                      android:layout_marginBottom="16dp">
 
                       <androidx.appcompat.widget.SwitchCompat
                           android:id="@+id/switchProxy"
@@ -531,11 +670,12 @@ jobs:
                           android:singleLine="true" />
                   </LinearLayout>
 
+                  <!-- MOTOR DE BUSQUEDA -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:text="MOTOR DE BUSQUEDA"
-                      android:textColor="#A855F7"
+                      android:textColor="#F59E0B"
                       android:textSize="11sp"
                       android:textStyle="bold"
                       android:layout_marginBottom="8dp" />
@@ -546,13 +686,13 @@ jobs:
                       android:layout_height="wrap_content"
                       android:background="#150E24"
                       android:padding="10dp"
-                      android:layout_marginBottom="24dp">
+                      android:layout_marginBottom="16dp">
 
                       <RadioButton
                           android:id="@+id/rbBrave"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
-                          android:text="Brave Search"
+                          android:text="Brave Search (Independiente)"
                           android:textColor="#F8FAFC"
                           android:textSize="12sp" />
 
@@ -560,7 +700,7 @@ jobs:
                           android:id="@+id/rbDuck"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
-                          android:text="DuckDuckGo"
+                          android:text="DuckDuckGo (Sin rastreo)"
                           android:textColor="#F8FAFC"
                           android:textSize="12sp" />
 
@@ -568,15 +708,27 @@ jobs:
                           android:id="@+id/rbStartpage"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
-                          android:text="Startpage"
+                          android:text="Startpage (Google sin seguimiento)"
                           android:textColor="#F8FAFC"
                           android:textSize="12sp" />
                   </RadioGroup>
 
+                  <!-- BOTON LIMPIAR DATOS -->
+                  <Button
+                      android:id="@+id/btnClearData"
+                      android:layout_width="match_parent"
+                      android:layout_height="44dp"
+                      android:text="Borrar Historial, Cache y Cookies Ahora"
+                      android:textColor="#EF4444"
+                      android:background="?android:attr/selectableItemBackground"
+                      android:textStyle="bold"
+                      android:layout_marginBottom="12dp" />
+
+                  <!-- BOTON GUARDAR -->
                   <Button
                       android:id="@+id/btnSaveSettings"
                       android:layout_width="match_parent"
-                      android:layout_height="46dp"
+                      android:layout_height="48dp"
                       android:text="Guardar Cambios"
                       android:textColor="#FFFFFF"
                       android:background="#A855F7"
@@ -591,6 +743,7 @@ jobs:
 
           import android.content.SharedPreferences;
           import android.os.Bundle;
+          import android.webkit.CookieManager;
           import android.widget.Button;
           import android.widget.EditText;
           import android.widget.RadioButton;
@@ -602,8 +755,18 @@ jobs:
           public class SettingsActivity extends AppCompatActivity {
 
               private SharedPreferences prefs;
-              private RadioGroup rgSearchEngine;
+
+              private RadioGroup rgTheme, rgSearchEngine;
+              private RadioButton rbThemeCyberpunk, rbThemeAmoled, rbThemeLight;
               private RadioButton rbDuck, rbBrave, rbStartpage;
+
+              private SwitchCompat switchAnimations;
+              private SwitchCompat switchBlockTrackers;
+              private SwitchCompat switchForceHttps;
+              private SwitchCompat switchBlockPopups;
+              private SwitchCompat switchDesktopMode;
+              private SwitchCompat switchBlockImages;
+
               private SwitchCompat switchProxy;
               private EditText etProxyHost, etProxyPort;
 
@@ -614,6 +777,18 @@ jobs:
 
                   prefs = getSharedPreferences("astral_settings", MODE_PRIVATE);
 
+                  rgTheme = findViewById(R.id.rgTheme);
+                  rbThemeCyberpunk = findViewById(R.id.rbThemeCyberpunk);
+                  rbThemeAmoled = findViewById(R.id.rbThemeAmoled);
+                  rbThemeLight = findViewById(R.id.rbThemeLight);
+
+                  switchAnimations = findViewById(R.id.switchAnimations);
+                  switchBlockTrackers = findViewById(R.id.switchBlockTrackers);
+                  switchForceHttps = findViewById(R.id.switchForceHttps);
+                  switchBlockPopups = findViewById(R.id.switchBlockPopups);
+                  switchDesktopMode = findViewById(R.id.switchDesktopMode);
+                  switchBlockImages = findViewById(R.id.switchBlockImages);
+
                   rgSearchEngine = findViewById(R.id.rgSearchEngine);
                   rbDuck = findViewById(R.id.rbDuck);
                   rbBrave = findViewById(R.id.rbBrave);
@@ -623,16 +798,35 @@ jobs:
                   etProxyHost = findViewById(R.id.etProxyHost);
                   etProxyPort = findViewById(R.id.etProxyPort);
 
+                  Button btnClearData = findViewById(R.id.btnClearData);
                   Button btnBackSettings = findViewById(R.id.btnBackSettings);
                   Button btnSaveSettings = findViewById(R.id.btnSaveSettings);
 
                   cargar();
+
+                  btnClearData.setOnClickListener(v -> {
+                      CookieManager.getInstance().removeAllCookies(null);
+                      CookieManager.getInstance().flush();
+                      Toast.makeText(this, "Cookies y memoria purgadas", Toast.LENGTH_SHORT).show();
+                  });
 
                   btnBackSettings.setOnClickListener(v -> finish());
                   btnSaveSettings.setOnClickListener(v -> guardar());
               }
 
               private void cargar() {
+                  int theme = prefs.getInt("theme_mode", 0);
+                  if (theme == 1) rbThemeAmoled.setChecked(true);
+                  else if (theme == 2) rbThemeLight.setChecked(true);
+                  else rbThemeCyberpunk.setChecked(true);
+
+                  switchAnimations.setChecked(prefs.getBoolean("enable_animations", true));
+                  switchBlockTrackers.setChecked(prefs.getBoolean("block_trackers", true));
+                  switchForceHttps.setChecked(prefs.getBoolean("force_https", true));
+                  switchBlockPopups.setChecked(prefs.getBoolean("block_popups", true));
+                  switchDesktopMode.setChecked(prefs.getBoolean("desktop_mode", false));
+                  switchBlockImages.setChecked(prefs.getBoolean("block_images", false));
+
                   int engine = prefs.getInt("search_engine", 1);
                   if (engine == 0) rbDuck.setChecked(true);
                   else if (engine == 2) rbStartpage.setChecked(true);
@@ -644,24 +838,35 @@ jobs:
               }
 
               private void guardar() {
+                  int theme = 0;
+                  if (rbThemeAmoled.isChecked()) theme = 1;
+                  else if (rbThemeLight.isChecked()) theme = 2;
+
                   int engine = 1;
                   if (rbDuck.isChecked()) engine = 0;
                   else if (rbStartpage.isChecked()) engine = 2;
 
                   prefs.edit()
+                          .putInt("theme_mode", theme)
+                          .putBoolean("enable_animations", switchAnimations.isChecked())
+                          .putBoolean("block_trackers", switchBlockTrackers.isChecked())
+                          .putBoolean("force_https", switchForceHttps.isChecked())
+                          .putBoolean("block_popups", switchBlockPopups.isChecked())
+                          .putBoolean("desktop_mode", switchDesktopMode.isChecked())
+                          .putBoolean("block_images", switchBlockImages.isChecked())
                           .putInt("search_engine", engine)
                           .putBoolean("proxy_enabled", switchProxy.isChecked())
                           .putString("proxy_host", etProxyHost.getText().toString().trim())
                           .putString("proxy_port", etProxyPort.getText().toString().trim())
                           .apply();
 
-                  Toast.makeText(this, "Ajustes guardados", Toast.LENGTH_SHORT).show();
+                  Toast.makeText(this, "Ajustes y Escudos aplicados", Toast.LENGTH_SHORT).show();
                   finish();
               }
           }
           EOF
 
-          # 13. MainActivity.java con retención de pestañas en segundo plano
+          # 13. MainActivity.java con aplicacion dinamica de Temas, Animaciones y Escudos
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
@@ -702,13 +907,15 @@ jobs:
 
           public class MainActivity extends AppCompatActivity {
 
+              private LinearLayout mainRootLayout, tabsTopBar, chipsBar, urlBar, bottomBar;
               private FrameLayout webContainer;
               private LinearLayout tabsContainer;
               private LinearLayout homeOverlay;
               private ImageView ivMiku;
+              private TextView tvLogoTitle, tvEngineInfo;
               private EditText etUrl;
               private ProgressBar progressBar;
-              private TextView chipProxy, chipIsolated, chipProtocol;
+              private TextView chipProxy, chipShields, chipProtocol;
               private Button btnTabCounter;
 
               private final List<WebView> tabList = new ArrayList<>();
@@ -718,6 +925,8 @@ jobs:
               private SharedPreferences prefs;
               private String searchEngineUrl = "https://search.brave.com/search?q=";
 
+              private static final String DESKTOP_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
@@ -725,16 +934,24 @@ jobs:
 
                   prefs = getSharedPreferences("astral_settings", MODE_PRIVATE);
 
+                  mainRootLayout = findViewById(R.id.mainRootLayout);
+                  tabsTopBar = findViewById(R.id.tabsTopBar);
+                  chipsBar = findViewById(R.id.chipsBar);
+                  urlBar = findViewById(R.id.urlBar);
+                  bottomBar = findViewById(R.id.bottomBar);
+
                   webContainer = findViewById(R.id.webContainer);
                   tabsContainer = findViewById(R.id.tabsContainer);
                   homeOverlay = findViewById(R.id.homeOverlay);
                   ivMiku = findViewById(R.id.ivMiku);
+                  tvLogoTitle = findViewById(R.id.tvLogoTitle);
+                  tvEngineInfo = findViewById(R.id.tvEngineInfo);
                   etUrl = findViewById(R.id.etUrl);
                   progressBar = findViewById(R.id.progressBar);
                   btnTabCounter = findViewById(R.id.btnTabCounter);
 
                   chipProxy = findViewById(R.id.chipProxy);
-                  chipIsolated = findViewById(R.id.chipIsolated);
+                  chipShields = findViewById(R.id.chipShields);
                   chipProtocol = findViewById(R.id.chipProtocol);
 
                   Button btnNewTab = findViewById(R.id.btnNewTab);
@@ -743,9 +960,6 @@ jobs:
                   Button btnForward = findViewById(R.id.btnForward);
                   Button btnRefresh = findViewById(R.id.btnRefresh);
                   Button btnSettings = findViewById(R.id.btnSettings);
-
-                  Animation floatAnim = AnimationUtils.loadAnimation(this, R.anim.floating_anim);
-                  ivMiku.startAnimation(floatAnim);
 
                   btnNewTab.setOnClickListener(v -> crearNuevaPestana("", "Inicio"));
                   btnTabCounter.setOnClickListener(v -> mostrarListaPestanas());
@@ -779,6 +993,8 @@ jobs:
                       return false;
                   });
 
+                  aplicarTemaYAnimacion();
+
                   if (tabList.isEmpty()) {
                       crearNuevaPestana("", "Inicio");
                   }
@@ -788,7 +1004,57 @@ jobs:
               @Override
               protected void onResume() {
                   super.onResume();
+                  aplicarTemaYAnimacion();
                   actualizarAjustesDeRed();
+                  for (WebView wv : tabList) {
+                      configurarEscudosWebView(wv);
+                  }
+              }
+
+              private void aplicarTemaYAnimacion() {
+                  int theme = prefs.getInt("theme_mode", 0);
+                  boolean enableAnim = prefs.getBoolean("enable_animations", true);
+
+                  if (enableAnim) {
+                      Animation floatAnim = AnimationUtils.loadAnimation(this, R.anim.floating_anim);
+                      ivMiku.startAnimation(floatAnim);
+                  } else {
+                      ivMiku.clearAnimation();
+                  }
+
+                  if (theme == 1) { // AMOLED NEGRO PURO
+                      mainRootLayout.setBackgroundColor(Color.parseColor("#000000"));
+                      tabsTopBar.setBackgroundColor(Color.parseColor("#000000"));
+                      chipsBar.setBackgroundColor(Color.parseColor("#050505"));
+                      urlBar.setBackgroundColor(Color.parseColor("#0A0A0A"));
+                      etUrl.setBackgroundColor(Color.parseColor("#121212"));
+                      bottomBar.setBackgroundColor(Color.parseColor("#000000"));
+                      homeOverlay.setBackgroundColor(Color.parseColor("#000000"));
+                      webContainer.setBackgroundColor(Color.parseColor("#000000"));
+                  } else if (theme == 2) { // TEMA CLARO
+                      mainRootLayout.setBackgroundColor(Color.parseColor("#F1F5F9"));
+                      tabsTopBar.setBackgroundColor(Color.parseColor("#E2E8F0"));
+                      chipsBar.setBackgroundColor(Color.parseColor("#CBD5E1"));
+                      urlBar.setBackgroundColor(Color.parseColor("#FFFFFF"));
+                      etUrl.setBackgroundColor(Color.parseColor("#F8FAFC"));
+                      etUrl.setTextColor(Color.parseColor("#0F172A"));
+                      bottomBar.setBackgroundColor(Color.parseColor("#E2E8F0"));
+                      homeOverlay.setBackgroundColor(Color.parseColor("#F8FAFC"));
+                      webContainer.setBackgroundColor(Color.parseColor("#F8FAFC"));
+                      tvLogoTitle.setTextColor(Color.parseColor("#6366F1"));
+                  } else { // CYBERPUNK NEON
+                      mainRootLayout.setBackgroundColor(Color.parseColor("#090610"));
+                      tabsTopBar.setBackgroundColor(Color.parseColor("#0E0919"));
+                      chipsBar.setBackgroundColor(Color.parseColor("#0B0714"));
+                      urlBar.setBackgroundColor(Color.parseColor("#110B1F"));
+                      etUrl.setBackgroundColor(Color.parseColor("#191129"));
+                      etUrl.setTextColor(Color.parseColor("#F8FAFC"));
+                      bottomBar.setBackgroundColor(Color.parseColor("#0E0919"));
+                      homeOverlay.setBackgroundColor(Color.parseColor("#090610"));
+                      webContainer.setBackgroundColor(Color.parseColor("#090610"));
+                      tvLogoTitle.setTextColor(Color.parseColor("#C084FC"));
+                  }
+                  actualizarBarraPestanasSuperior();
               }
 
               private void actualizarAjustesDeRed() {
@@ -816,6 +1082,29 @@ jobs:
                       chipProxy.setText("PROXY: DIRECTO");
                       chipProxy.setTextColor(Color.parseColor("#94A3B8"));
                   }
+
+                  boolean trackers = prefs.getBoolean("block_trackers", true);
+                  chipShields.setText(trackers ? "ESCUDOS: ACTIVOS" : "ESCUDOS: PAUSA");
+                  chipShields.setTextColor(trackers ? Color.parseColor("#34D399") : Color.parseColor("#EF4444"));
+              }
+
+              private void configurarEscudosWebView(WebView wv) {
+                  if (wv == null) return;
+                  WebSettings s = wv.getSettings();
+
+                  boolean blockImages = prefs.getBoolean("block_images", false);
+                  s.setLoadsImagesAutomatically(!blockImages);
+                  s.setBlockNetworkImage(blockImages);
+
+                  boolean desktop = prefs.getBoolean("desktop_mode", false);
+                  s.setUserAgentString(desktop ? DESKTOP_UA : null);
+
+                  boolean blockPopups = prefs.getBoolean("block_popups", true);
+                  s.setJavaScriptCanOpenWindowsAutomatically(!blockPopups);
+                  s.setSupportMultipleWindows(false);
+
+                  boolean blockTrackers = prefs.getBoolean("block_trackers", true);
+                  CookieManager.getInstance().setAcceptThirdPartyCookies(wv, !blockTrackers);
               }
 
               @SuppressLint("SetJavaScriptEnabled")
@@ -831,8 +1120,7 @@ jobs:
                   settings.setBuiltInZoomControls(true);
                   settings.setDisplayZoomControls(false);
 
-                  CookieManager.getInstance().setAcceptCookie(true);
-                  CookieManager.getInstance().setAcceptThirdPartyCookies(wv, false);
+                  configurarEscudosWebView(wv);
 
                   wv.setWebChromeClient(new WebChromeClient() {
                       @Override
@@ -868,6 +1156,12 @@ jobs:
 
                       @Override
                       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                          String dest = request.getUrl().toString();
+                          boolean forceHttps = prefs.getBoolean("force_https", true);
+                          if (forceHttps && dest.startsWith("http://")) {
+                              view.loadUrl(dest.replaceFirst("http://", "https://"));
+                              return true;
+                          }
                           return false;
                       }
                   });
@@ -923,23 +1217,23 @@ jobs:
 
               private void actualizarBarraPestanasSuperior() {
                   tabsContainer.removeAllViews();
+                  int theme = prefs.getInt("theme_mode", 0);
+                  String activeColor = theme == 1 ? "#1A1A1A" : (theme == 2 ? "#FFFFFF" : "#1F1435");
+                  String inactiveColor = theme == 1 ? "#0A0A0A" : (theme == 2 ? "#E2E8F0" : "#0E0919");
+                  String textColor = theme == 2 ? "#0F172A" : "#F8FAFC";
+
                   for (int i = 0; i < tabList.size(); i++) {
                       final int tabIndex = i;
                       LinearLayout tabButton = new LinearLayout(this);
                       tabButton.setOrientation(LinearLayout.HORIZONTAL);
                       tabButton.setPadding(14, 6, 10, 6);
                       tabButton.setGravity(Gravity.CENTER_VERTICAL);
-
-                      if (i == currentTabIndex) {
-                          tabButton.setBackgroundColor(Color.parseColor("#1F1435"));
-                      } else {
-                          tabButton.setBackgroundColor(Color.parseColor("#0E0919"));
-                      }
+                      tabButton.setBackgroundColor(Color.parseColor(i == currentTabIndex ? activeColor : inactiveColor));
 
                       TextView tv = new TextView(this);
                       tv.setText(tabTitles.get(i));
                       tv.setTextSize(11);
-                      tv.setTextColor(i == currentTabIndex ? Color.parseColor("#F8FAFC") : Color.parseColor("#94A3B8"));
+                      tv.setTextColor(Color.parseColor(i == currentTabIndex ? textColor : "#94A3B8"));
                       tabButton.addView(tv);
 
                       TextView closeBtn = new TextView(this);
@@ -1059,9 +1353,15 @@ jobs:
       - name: Compilar APK con Gradle
         run: |
           gradle assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AstralBrowser.apk
 
-      - name: Guardar instalador APK
-        uses: actions/upload-artifact@v4
+      - name: Publicar Release con APK directo
+        uses: softprops/action-gh-release@v2
         with:
-          name: AstralBrowser-Instalador
-          path: app/build/outputs/apk/debug/*.apk
+          tag_name: "v2.1-build${{ github.run_number }}"
+          name: "Astral Browser v2.1"
+          draft: false
+          prerelease: false
+          files: app/build/outputs/apk/debug/AstralBrowser.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

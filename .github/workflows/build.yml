@@ -31,6 +31,7 @@ jobs:
           mkdir -p app/src/main/java/com/astral/browser
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/anim
 
           # 1. settings.gradle
           cat << 'EOF' > settings.gradle
@@ -79,8 +80,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 3
-                  versionName "1.2"
+                  versionCode 4
+                  versionName "1.3"
               }
 
               compileOptions {
@@ -127,6 +128,7 @@ jobs:
               <string name="btn_back">&lt;</string>
               <string name="btn_forward">&gt;</string>
               <string name="btn_refresh">R</string>
+              <string name="btn_settings">S</string>
               <string name="btn_incognito_off">Norm</string>
               <string name="btn_incognito_on">Incog</string>
               <string name="btn_burn">Purga</string>
@@ -144,7 +146,21 @@ jobs:
           </resources>
           EOF
 
-          # 8. activity_main.xml
+          # 8. Animacion suave de flotacion para Miku (subida y bajada ligera)
+          cat << 'EOF' > app/src/main/res/anim/floating_anim.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <set xmlns:android="http://schemas.android.com/apk/res/android"
+              android:interpolator="@android:anim/accelerate_decelerate_interpolator">
+              <translate
+                  android:fromYDelta="0%p"
+                  android:toYDelta="-3.5%p"
+                  android:duration="1800"
+                  android:repeatCount="infinite"
+                  android:repeatMode="reverse" />
+          </set>
+          EOF
+
+          # 9. activity_main.xml
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -165,7 +181,7 @@ jobs:
 
                   <Button
                       android:id="@+id/btnBack"
-                      android:layout_width="34dp"
+                      android:layout_width="32dp"
                       android:layout_height="38dp"
                       android:text="@string/btn_back"
                       android:textColor="#C084FC"
@@ -173,7 +189,7 @@ jobs:
 
                   <Button
                       android:id="@+id/btnForward"
-                      android:layout_width="34dp"
+                      android:layout_width="32dp"
                       android:layout_height="38dp"
                       android:text="@string/btn_forward"
                       android:textColor="#C084FC"
@@ -181,7 +197,7 @@ jobs:
 
                   <Button
                       android:id="@+id/btnRefresh"
-                      android:layout_width="34dp"
+                      android:layout_width="32dp"
                       android:layout_height="38dp"
                       android:text="@string/btn_refresh"
                       android:textColor="#94A3B8"
@@ -205,16 +221,25 @@ jobs:
 
                   <Button
                       android:id="@+id/btnIncognito"
-                      android:layout_width="52dp"
+                      android:layout_width="48dp"
                       android:layout_height="38dp"
                       android:text="@string/btn_incognito_off"
                       android:textColor="#94A3B8"
+                      android:textSize="10sp"
+                      android:background="?android:attr/selectableItemBackground" />
+
+                  <Button
+                      android:id="@+id/btnSettings"
+                      android:layout_width="32dp"
+                      android:layout_height="38dp"
+                      android:text="@string/btn_settings"
+                      android:textColor="#38BDF8"
                       android:textSize="11sp"
                       android:background="?android:attr/selectableItemBackground" />
 
                   <Button
                       android:id="@+id/btnTabs"
-                      android:layout_width="36dp"
+                      android:layout_width="34dp"
                       android:layout_height="38dp"
                       android:text="1"
                       android:textColor="#38BDF8"
@@ -223,11 +248,11 @@ jobs:
 
                   <Button
                       android:id="@+id/btnBurn"
-                      android:layout_width="48dp"
+                      android:layout_width="44dp"
                       android:layout_height="38dp"
                       android:text="@string/btn_burn"
                       android:textColor="#EF4444"
-                      android:textSize="11sp"
+                      android:textSize="10sp"
                       android:background="?android:attr/selectableItemBackground" />
               </LinearLayout>
 
@@ -239,26 +264,72 @@ jobs:
                   android:visibility="gone" />
 
               <FrameLayout
-                  android:id="@+id/webContainer"
                   android:layout_width="match_parent"
                   android:layout_height="0dp"
-                  android:layout_weight="1"
-                  android:background="#0B0813" />
+                  android:layout_weight="1">
+
+                  <FrameLayout
+                      android:id="@+id/webContainer"
+                      android:layout_width="match_parent"
+                      android:layout_height="match_parent"
+                      android:background="#0B0813" />
+
+                  <!-- Pantalla de inicio con Miku y animacion flotante -->
+                  <LinearLayout
+                      android:id="@+id/homeOverlay"
+                      android:layout_width="match_parent"
+                      android:layout_height="match_parent"
+                      android:orientation="vertical"
+                      android:gravity="center"
+                      android:background="#0B0813"
+                      android:padding="20dp"
+                      android:visibility="visible">
+
+                      <ImageView
+                          android:id="@+id/ivMiku"
+                          android:layout_width="160dp"
+                          android:layout_height="160dp"
+                          android:contentDescription="Miku Avatar" />
+
+                      <TextView
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="A S T R A L   P R I V A T E"
+                          android:textColor="#C084FC"
+                          android:textSize="16sp"
+                          android:textStyle="bold"
+                          android:letterSpacing="0.15"
+                          android:layout_marginTop="16dp" />
+
+                      <TextView
+                          android:id="@+id/tvEngineInfo"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="Sesion Limpia • Sin Registros"
+                          android:textColor="#64748B"
+                          android:textSize="12sp"
+                          android:layout_marginTop="6dp" />
+                  </LinearLayout>
+              </FrameLayout>
           </LinearLayout>
           EOF
 
-          # 9. MainActivity.java
+          # 10. MainActivity.java con carga de avatar de Miku, animacion y panel de ajustes
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
           import android.annotation.SuppressLint;
           import android.app.AlertDialog;
+          import android.content.SharedPreferences;
           import android.graphics.Bitmap;
+          import android.graphics.BitmapFactory;
           import android.graphics.Color;
           import android.os.Bundle;
           import android.view.KeyEvent;
           import android.view.View;
           import android.view.ViewGroup;
+          import android.view.animation.Animation;
+          import android.view.animation.AnimationUtils;
           import android.view.inputmethod.EditorInfo;
           import android.view.inputmethod.InputMethodManager;
           import android.webkit.CookieManager;
@@ -270,13 +341,17 @@ jobs:
           import android.widget.Button;
           import android.widget.EditText;
           import android.widget.FrameLayout;
+          import android.widget.ImageView;
           import android.widget.LinearLayout;
           import android.widget.ProgressBar;
           import android.widget.TextView;
           import android.widget.Toast;
           import androidx.appcompat.app.AppCompatActivity;
 
+          import java.io.InputStream;
           import java.io.UnsupportedEncodingException;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
           import java.net.URLEncoder;
           import java.util.ArrayList;
           import java.util.List;
@@ -285,34 +360,50 @@ jobs:
 
               private FrameLayout webContainer;
               private LinearLayout topBar;
+              private LinearLayout homeOverlay;
+              private ImageView ivMiku;
               private EditText etUrl;
               private ProgressBar progressBar;
               private Button btnTabs;
               private Button btnIncognito;
+              private Button btnSettings;
+              private TextView tvEngineInfo;
 
               private final List<WebView> tabList = new ArrayList<>();
               private int currentTabIndex = 0;
               private boolean isIncognitoActive = false;
-              private final String HOME_URL = "https://duckduckgo.com";
+
+              private SharedPreferences prefs;
+              private String searchEngineUrl = "https://duckduckgo.com/?q=";
+
+              private static final String MIKU_IMAGE_URL = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png";
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
                   setContentView(R.layout.activity_main);
 
+                  prefs = getSharedPreferences("astral_settings", MODE_PRIVATE);
+                  cargarAjustesRed();
+
                   webContainer = findViewById(R.id.webContainer);
+                  homeOverlay = findViewById(R.id.homeOverlay);
+                  ivMiku = findViewById(R.id.ivMiku);
                   topBar = findViewById(R.id.topBar);
                   etUrl = findViewById(R.id.etUrl);
                   progressBar = findViewById(R.id.progressBar);
                   btnTabs = findViewById(R.id.btnTabs);
                   btnIncognito = findViewById(R.id.btnIncognito);
+                  btnSettings = findViewById(R.id.btnSettings);
+                  tvEngineInfo = findViewById(R.id.tvEngineInfo);
 
                   Button btnBack = findViewById(R.id.btnBack);
                   Button btnForward = findViewById(R.id.btnForward);
                   Button btnRefresh = findViewById(R.id.btnRefresh);
                   Button btnBurn = findViewById(R.id.btnBurn);
 
-                  crearNuevaPestana(HOME_URL);
+                  iniciarMikuAnimada();
+                  crearNuevaPestana("");
 
                   btnBack.setOnClickListener(v -> {
                       WebView wv = getCurrentWebView();
@@ -330,6 +421,7 @@ jobs:
                   });
 
                   btnIncognito.setOnClickListener(v -> toggleIncognito());
+                  btnSettings.setOnClickListener(v -> mostrarDialogoAjustes());
                   btnTabs.setOnClickListener(v -> mostrarDialogoPestanas());
 
                   etUrl.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
@@ -344,6 +436,107 @@ jobs:
                   btnBurn.setOnClickListener(v -> purgaTotal());
               }
 
+              private void iniciarMikuAnimada() {
+                  Animation floatAnim = AnimationUtils.loadAnimation(this, R.anim.floating_anim);
+                  ivMiku.startAnimation(floatAnim);
+
+                  // Carga segura del avatar en segundo plano
+                  new Thread(() -> {
+                      try {
+                          URL url = new URL("https://i.pinimg.com/736x/87/42/47/8742475aa8ec7dc662176dcba3f742f3.jpg");
+                          HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                          conn.setDoInput(true);
+                          conn.connect();
+                          InputStream is = conn.getInputStream();
+                          final Bitmap bm = BitmapFactory.decodeStream(is);
+                          runOnUiThread(() -> {
+                              if (bm != null) ivMiku.setImageBitmap(bm);
+                          });
+                      } catch (Exception ignored) {
+                      }
+                  }).start();
+              }
+
+              private void cargarAjustesRed() {
+                  String proxyHost = prefs.getString("proxy_host", "");
+                  String proxyPort = prefs.getString("proxy_port", "");
+                  if (!proxyHost.isEmpty() && !proxyPort.isEmpty()) {
+                      System.setProperty("http.proxyHost", proxyHost);
+                      System.setProperty("http.proxyPort", proxyPort);
+                      System.setProperty("https.proxyHost", proxyHost);
+                      System.setProperty("https.proxyPort", proxyPort);
+                  }
+                  int engineIdx = prefs.getInt("search_engine", 0);
+                  if (engineIdx == 1) searchEngineUrl = "https://search.brave.com/search?q=";
+                  else if (engineIdx == 2) searchEngineUrl = "https://www.startpage.com/sp/search?query=";
+                  else searchEngineUrl = "https://duckduckgo.com/?q=";
+              }
+
+              private void mostrarDialogoAjustes() {
+                  String[] opciones = {"Motor de Búsqueda", "Configurar Proxy HTTP", "Restablecer Proxy", "Acerca de Astral"};
+                  AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                  builder.setTitle("Ajustes de Privacidad");
+                  builder.setItems(opciones, (dialog, which) -> {
+                      if (which == 0) elegirMotor();
+                      else if (which == 1) configurarProxyInput();
+                      else if (which == 2) restablecerProxy();
+                      else Toast.makeText(this, "Astral Browser v1.3 • Privado y Seguro", Toast.LENGTH_SHORT).show();
+                  });
+                  builder.show();
+              }
+
+              private void elegirMotor() {
+                  String[] motores = {"DuckDuckGo (Recomendado)", "Brave Search", "Startpage"};
+                  int actual = prefs.getInt("search_engine", 0);
+                  AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                  builder.setTitle("Seleccionar Motor");
+                  builder.setSingleChoiceItems(motores, actual, (dialog, which) -> {
+                      prefs.edit().putInt("search_engine", which).apply();
+                      cargarAjustesRed();
+                      dialog.dismiss();
+                      Toast.makeText(this, "Motor cambiado", Toast.LENGTH_SHORT).show();
+                  });
+                  builder.show();
+              }
+
+              private void configurarProxyInput() {
+                  LinearLayout layout = new LinearLayout(this);
+                  layout.setOrientation(LinearLayout.VERTICAL);
+                  layout.setPadding(30, 20, 30, 20);
+
+                  final EditText etHost = new EditText(this);
+                  etHost.setHint("Host (ej. 127.0.0.1)");
+                  etHost.setText(prefs.getString("proxy_host", ""));
+                  layout.addView(etHost);
+
+                  final EditText etPort = new EditText(this);
+                  etPort.setHint("Puerto (ej. 8118)");
+                  etPort.setText(prefs.getString("proxy_port", ""));
+                  layout.addView(etPort);
+
+                  AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                  builder.setTitle("Configurar Proxy");
+                  builder.setView(layout);
+                  builder.setPositiveButton("Guardar", (dialog, which) -> {
+                      String host = etHost.getText().toString().trim();
+                      String port = etPort.getText().toString().trim();
+                      prefs.edit().putString("proxy_host", host).putString("proxy_port", port).apply();
+                      cargarAjustesRed();
+                      Toast.makeText(this, "Proxy aplicado para nuevas peticiones", Toast.LENGTH_SHORT).show();
+                  });
+                  builder.setNegativeButton("Cancelar", null);
+                  builder.show();
+              }
+
+              private void restablecerProxy() {
+                  prefs.edit().remove("proxy_host").remove("proxy_port").apply();
+                  System.clearProperty("http.proxyHost");
+                  System.clearProperty("http.proxyPort");
+                  System.clearProperty("https.proxyHost");
+                  System.clearProperty("https.proxyPort");
+                  Toast.makeText(this, "Proxy desactivado", Toast.LENGTH_SHORT).show();
+              }
+
               private void toggleIncognito() {
                   isIncognitoActive = !isIncognitoActive;
                   WebView wv = getCurrentWebView();
@@ -353,15 +546,17 @@ jobs:
                       btnIncognito.setTextColor(Color.parseColor("#A855F7"));
                       topBar.setBackgroundColor(Color.parseColor("#1F0A2E"));
                       aplicarAjustesIncognito(wv, true);
-                      Toast.makeText(this, "🕶️ Incognito ACTIVO: Cookies bloqueadas y rastreo neutralizado", Toast.LENGTH_SHORT).show();
+                      Toast.makeText(this, "🕶️ Incógnito estricto: Cero almacenamiento local", Toast.LENGTH_SHORT).show();
                   } else {
                       btnIncognito.setText(R.string.btn_incognito_off);
                       btnIncognito.setTextColor(Color.parseColor("#94A3B8"));
                       topBar.setBackgroundColor(Color.parseColor("#110B1F"));
                       aplicarAjustesIncognito(wv, false);
-                      Toast.makeText(this, "Modo privado estandar", Toast.LENGTH_SHORT).show();
+                      Toast.makeText(this, "Modo privado estándar", Toast.LENGTH_SHORT).show();
                   }
-                  if (wv != null) wv.reload();
+                  if (wv != null && wv.getUrl() != null && !wv.getUrl().isEmpty()) {
+                      wv.reload();
+                  }
               }
 
               @SuppressLint("SetJavaScriptEnabled")
@@ -416,13 +611,18 @@ jobs:
 
                   wv.setWebViewClient(new WebViewClient() {
                       @Override
-                      public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                          if (view == getCurrentWebView()) etUrl.setText(url);
+                      public void onPageStarted(WebView view, String startUrl, Bitmap favicon) {
+                          if (view == getCurrentWebView()) {
+                              etUrl.setText(startUrl);
+                              homeOverlay.setVisibility(View.GONE);
+                          }
                       }
 
                       @Override
-                      public void onPageFinished(WebView view, String url) {
-                          if (view == getCurrentWebView()) etUrl.setText(url);
+                      public void onPageFinished(WebView view, String endUrl) {
+                          if (view == getCurrentWebView()) {
+                              etUrl.setText(endUrl);
+                          }
                       }
 
                       @Override
@@ -431,7 +631,10 @@ jobs:
                       }
                   });
 
-                  wv.loadUrl(url);
+                  if (url != null && !url.isEmpty()) {
+                      wv.loadUrl(url);
+                  }
+
                   tabList.add(wv);
                   cambiarAPestana(tabList.size() - 1);
                   return wv;
@@ -443,7 +646,15 @@ jobs:
                   webContainer.removeAllViews();
                   WebView current = tabList.get(currentTabIndex);
                   webContainer.addView(current);
-                  etUrl.setText(current.getUrl() != null ? current.getUrl() : HOME_URL);
+
+                  String currentUrl = current.getUrl();
+                  if (currentUrl == null || currentUrl.isEmpty()) {
+                      homeOverlay.setVisibility(View.VISIBLE);
+                      etUrl.setText("");
+                  } else {
+                      homeOverlay.setVisibility(View.GONE);
+                      etUrl.setText(currentUrl);
+                  }
                   btnTabs.setText(String.valueOf(tabList.size()));
               }
 
@@ -466,20 +677,20 @@ jobs:
                   List<String> items = new ArrayList<>();
                   for (int i = 0; i < tabList.size(); i++) {
                       String url = tabList.get(i).getUrl();
-                      items.add("Pestana " + (i + 1) + ": " + (url != null ? url : "Nueva"));
+                      items.add("Pestaña " + (i + 1) + ": " + (url != null && !url.isEmpty() ? url : "Inicio Miku"));
                   }
-                  items.add("➕ Abrir nueva pestana");
+                  items.add("➕ Abrir nueva pestaña");
 
                   AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                  builder.setTitle("Pestanas Privadas");
+                  builder.setTitle("Pestañas Privadas");
                   builder.setItems(items.toArray(new String[0]), (dialog, which) -> {
                       if (which == tabList.size()) {
-                          crearNuevaPestana(HOME_URL);
+                          crearNuevaPestana("");
                       } else {
                           cambiarAPestana(which);
                       }
                   });
-                  builder.setNeutralButton("Cerrar pestana actual", (dialog, which) -> cerrarPestana(currentTabIndex));
+                  builder.setNeutralButton("Cerrar pestaña actual", (dialog, which) -> cerrarPestana(currentTabIndex));
                   builder.show();
               }
 
@@ -497,9 +708,11 @@ jobs:
                   if (wv == null) return;
 
                   if (input.isEmpty()) {
-                      wv.loadUrl(HOME_URL);
+                      homeOverlay.setVisibility(View.VISIBLE);
                       return;
                   }
+
+                  homeOverlay.setVisibility(View.GONE);
 
                   if (input.startsWith("http://") || input.startsWith("https://")) {
                       wv.loadUrl(input);
@@ -508,9 +721,9 @@ jobs:
                   } else {
                       try {
                           String query = URLEncoder.encode(input, "UTF-8");
-                          wv.loadUrl("https://duckduckgo.com/?q=" + query);
+                          wv.loadUrl(searchEngineUrl + query);
                       } catch (UnsupportedEncodingException e) {
-                          wv.loadUrl("https://duckduckgo.com/?q=" + input);
+                          wv.loadUrl(searchEngineUrl + input);
                       }
                   }
               }
@@ -524,9 +737,10 @@ jobs:
                   tabList.clear();
                   CookieManager.getInstance().removeAllCookies(null);
                   CookieManager.getInstance().flush();
-                  crearNuevaPestana(HOME_URL);
+                  crearNuevaPestana("");
                   etUrl.setText("");
-                  Toast.makeText(this, "🔥 Purga completa: Cookies, sesiones y cache destruidas", Toast.LENGTH_SHORT).show();
+                  homeOverlay.setVisibility(View.VISIBLE);
+                  Toast.makeText(this, "🔥 Purga completa: Cookies y caché eliminadas", Toast.LENGTH_SHORT).show();
               }
 
               private void hideKeyboard() {
@@ -548,6 +762,9 @@ jobs:
                   WebView wv = getCurrentWebView();
                   if (wv != null && wv.canGoBack()) {
                       wv.goBack();
+                  } else if (homeOverlay.getVisibility() != View.VISIBLE) {
+                      homeOverlay.setVisibility(View.VISIBLE);
+                      etUrl.setText("");
                   } else if (tabList.size() > 1) {
                       cerrarPestana(currentTabIndex);
                   } else {

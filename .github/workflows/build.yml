@@ -81,8 +81,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 8
-                  versionName "1.7"
+                  versionCode 9
+                  versionName "1.8"
               }
 
               compileOptions {
@@ -141,12 +141,13 @@ jobs:
               <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                   <item name="android:windowBackground">#090610</item>
                   <item name="android:statusBarColor">#090610</item>
+                  <item name="android:navigationBarColor">#0E0919</item>
                   <item name="colorPrimary">#38BDF8</item>
               </style>
           </resources>
           EOF
 
-          # 8. Animacion suave de Miku
+          # 8. Animacion Miku
           cat << 'EOF' > app/src/main/res/anim/floating_anim.xml
           <?xml version="1.0" encoding="utf-8"?>
           <set xmlns:android="http://schemas.android.com/apk/res/android"
@@ -160,7 +161,7 @@ jobs:
           </set>
           EOF
 
-          # 9. Avatar vectorial de Miku
+          # 9. Avatar vectorial Miku
           cat << 'EOF' > app/src/main/res/drawable/ic_miku.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
               android:width="150dp"
@@ -179,16 +180,16 @@ jobs:
           </vector>
           EOF
 
-          # 10. activity_main.xml (Pestañas arriba, Chips de estado en medio, Barra abajo)
+          # 10. activity_main.xml (Barra inferior con 58dp fijos, padding de navegacion y textos ajustados)
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
-              android:background="#090610"
-              android:fitsSystemWindows="true">
+              android:background="#090610">
 
+              <!-- BARRA 1: PESTAÑAS HORIZONTALES -->
               <LinearLayout
                   android:layout_width="match_parent"
                   android:layout_height="38dp"
@@ -213,8 +214,18 @@ jobs:
                   </HorizontalScrollView>
 
                   <Button
-                      android:id="@+id/btnNewTab"
+                      android:id="@+id/btnTabCounter"
                       android:layout_width="34dp"
+                      android:layout_height="30dp"
+                      android:text="1"
+                      android:textSize="11sp"
+                      android:textColor="#38BDF8"
+                      android:textStyle="bold"
+                      android:background="?android:attr/selectableItemBackground" />
+
+                  <Button
+                      android:id="@+id/btnNewTab"
+                      android:layout_width="32dp"
                       android:layout_height="32dp"
                       android:text="+"
                       android:textSize="18sp"
@@ -222,9 +233,10 @@ jobs:
                       android:background="?android:attr/selectableItemBackground" />
               </LinearLayout>
 
+              <!-- BARRA 2: CHIPS DE ESTADO -->
               <LinearLayout
                   android:layout_width="match_parent"
-                  android:layout_height="28dp"
+                  android:layout_height="26dp"
                   android:orientation="horizontal"
                   android:background="#0B0714"
                   android:paddingLeft="8dp"
@@ -237,7 +249,7 @@ jobs:
                       android:layout_height="wrap_content"
                       android:text="PROXY: DIRECTO"
                       android:textColor="#94A3B8"
-                      android:textSize="10sp"
+                      android:textSize="9sp"
                       android:paddingLeft="6dp"
                       android:paddingRight="6dp"
                       android:paddingTop="2dp"
@@ -251,7 +263,7 @@ jobs:
                       android:layout_height="wrap_content"
                       android:text="AISLADO"
                       android:textColor="#34D399"
-                      android:textSize="10sp"
+                      android:textSize="9sp"
                       android:paddingLeft="6dp"
                       android:paddingRight="6dp"
                       android:paddingTop="2dp"
@@ -265,7 +277,7 @@ jobs:
                       android:layout_height="wrap_content"
                       android:text="HTTPS"
                       android:textColor="#38BDF8"
-                      android:textSize="10sp"
+                      android:textSize="9sp"
                       android:paddingLeft="6dp"
                       android:paddingRight="6dp"
                       android:paddingTop="2dp"
@@ -273,9 +285,10 @@ jobs:
                       android:background="#150E24" />
               </LinearLayout>
 
+              <!-- BARRA 3: DIRECCIONES -->
               <LinearLayout
                   android:layout_width="match_parent"
-                  android:layout_height="44dp"
+                  android:layout_height="42dp"
                   android:orientation="horizontal"
                   android:background="#110B1F"
                   android:paddingLeft="8dp"
@@ -315,6 +328,7 @@ jobs:
                   android:layout_height="2dp"
                   android:visibility="gone" />
 
+              <!-- ÁREA PRINCIPAL -->
               <FrameLayout
                   android:layout_width="match_parent"
                   android:layout_height="0dp"
@@ -338,8 +352,8 @@ jobs:
 
                       <ImageView
                           android:id="@+id/ivMiku"
-                          android:layout_width="150dp"
-                          android:layout_height="150dp"
+                          android:layout_width="140dp"
+                          android:layout_height="140dp"
                           android:src="@drawable/ic_miku"
                           android:contentDescription="Hatsune Miku" />
 
@@ -348,12 +362,13 @@ jobs:
                           android:layout_height="wrap_content"
                           android:text="A S T R A L"
                           android:textColor="#C084FC"
-                          android:textSize="17sp"
+                          android:textSize="16sp"
                           android:textStyle="bold"
                           android:letterSpacing="0.2"
                           android:layout_marginTop="16dp" />
 
                       <TextView
+                          android:id="@+id/tvEngineInfo"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
                           android:text="Terminal Limpia • Sin Registros"
@@ -363,13 +378,15 @@ jobs:
                   </LinearLayout>
               </FrameLayout>
 
+              <!-- BARRA INFERIOR AMPLIADA Y CON PADDING DE SEGURIDAD -->
               <LinearLayout
                   android:id="@+id/bottomBar"
                   android:layout_width="match_parent"
-                  android:layout_height="48dp"
+                  android:layout_height="58dp"
                   android:orientation="horizontal"
                   android:background="#0E0919"
-                  android:gravity="center_vertical"
+                  android:gravity="center"
+                  android:paddingBottom="4dp"
                   android:weightSum="5">
 
                   <Button
@@ -377,8 +394,9 @@ jobs:
                       android:layout_width="0dp"
                       android:layout_height="match_parent"
                       android:layout_weight="1"
-                      android:text="ATRÁS"
-                      android:textSize="11sp"
+                      android:text="Atrás"
+                      android:textSize="10sp"
+                      android:singleLine="true"
                       android:textColor="#94A3B8"
                       android:background="?android:attr/selectableItemBackground" />
 
@@ -387,8 +405,9 @@ jobs:
                       android:layout_width="0dp"
                       android:layout_height="match_parent"
                       android:layout_weight="1"
-                      android:text="ADELANTE"
-                      android:textSize="11sp"
+                      android:text="Adelante"
+                      android:textSize="10sp"
+                      android:singleLine="true"
                       android:textColor="#94A3B8"
                       android:background="?android:attr/selectableItemBackground" />
 
@@ -397,8 +416,9 @@ jobs:
                       android:layout_width="0dp"
                       android:layout_height="match_parent"
                       android:layout_weight="1"
-                      android:text="RECARGAR"
-                      android:textSize="11sp"
+                      android:text="Recargar"
+                      android:textSize="10sp"
+                      android:singleLine="true"
                       android:textColor="#38BDF8"
                       android:background="?android:attr/selectableItemBackground" />
 
@@ -407,8 +427,9 @@ jobs:
                       android:layout_width="0dp"
                       android:layout_height="match_parent"
                       android:layout_weight="1"
-                      android:text="EXTENSIÓN"
-                      android:textSize="11sp"
+                      android:text="Extensión"
+                      android:textSize="10sp"
+                      android:singleLine="true"
                       android:textColor="#F59E0B"
                       android:background="?android:attr/selectableItemBackground" />
 
@@ -417,8 +438,9 @@ jobs:
                       android:layout_width="0dp"
                       android:layout_height="match_parent"
                       android:layout_weight="1"
-                      android:text="AJUSTES"
-                      android:textSize="11sp"
+                      android:text="Ajustes"
+                      android:textSize="10sp"
+                      android:singleLine="true"
                       android:textColor="#A855F7"
                       android:background="?android:attr/selectableItemBackground" />
               </LinearLayout>
@@ -431,8 +453,7 @@ jobs:
           <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:background="#090610"
-              android:fitsSystemWindows="true">
+              android:background="#090610">
 
               <LinearLayout
                   android:layout_width="match_parent"
@@ -651,7 +672,7 @@ jobs:
           }
           EOF
 
-          # 13. MainActivity.java (Con sintaxis Java 100% limpia)
+          # 13. MainActivity.java con Extracción y Apertura de Pestaña de Extensión
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
@@ -659,7 +680,6 @@ jobs:
           import android.app.AlertDialog;
           import android.content.Intent;
           import android.content.SharedPreferences;
-          import android.graphics.Bitmap;
           import android.graphics.Color;
           import android.net.Uri;
           import android.os.Bundle;
@@ -708,6 +728,7 @@ jobs:
               private EditText etUrl;
               private ProgressBar progressBar;
               private TextView chipProxy, chipIsolated, chipProtocol;
+              private Button btnTabCounter;
 
               private final List<WebView> tabList = new ArrayList<>();
               private final List<String> tabTitles = new ArrayList<>();
@@ -732,6 +753,7 @@ jobs:
                   ivMiku = findViewById(R.id.ivMiku);
                   etUrl = findViewById(R.id.etUrl);
                   progressBar = findViewById(R.id.progressBar);
+                  btnTabCounter = findViewById(R.id.btnTabCounter);
 
                   chipProxy = findViewById(R.id.chipProxy);
                   chipIsolated = findViewById(R.id.chipIsolated);
@@ -750,7 +772,8 @@ jobs:
                   Animation floatAnim = AnimationUtils.loadAnimation(this, R.anim.floating_anim);
                   ivMiku.startAnimation(floatAnim);
 
-                  btnNewTab.setOnClickListener(v -> crearNuevaPestana("", "Nueva Pestaña"));
+                  btnNewTab.setOnClickListener(v -> crearNuevaPestana("", "Inicio Miku"));
+                  btnTabCounter.setOnClickListener(v -> mostrarListaPestanas());
                   btnGo.setOnClickListener(v -> navegar());
 
                   btnBack.setOnClickListener(v -> {
@@ -833,12 +856,12 @@ jobs:
 
               private void mostrarMenuExtensiones() {
                   String[] opciones = {
-                          "Cargar Extension (.zip o .js)",
+                          "Cargar Extensión (.zip o .js)",
                           "Ejecutar script activo ahora",
-                          "Limpiar scripts cargados"
+                          "Limpiar extensiones cargadas"
                   };
                   AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                  builder.setTitle("Gestor de Extensiones / Scripts");
+                  builder.setTitle("Gestor de Extensiones");
                   builder.setItems(opciones, (dialog, which) -> {
                       if (which == 0) {
                           filePickerLauncher.launch(new String[]{"*/*"});
@@ -858,19 +881,31 @@ jobs:
                       if (is == null) return;
 
                       String uriString = uri.toString().toLowerCase();
-                      StringBuilder sb = new StringBuilder();
+                      StringBuilder sbJs = new StringBuilder();
+                      String htmlContent = null;
+                      String entryNameFound = "Extensión";
 
-                      if (uriString.endsWith(".zip")) {
+                      if (uriString.endsWith(".zip") || uriString.contains("zip")) {
                           ZipInputStream zis = new ZipInputStream(is);
                           ZipEntry entry;
                           while ((entry = zis.getNextEntry()) != null) {
-                              if (entry.getName().endsWith(".js")) {
+                              String name = entry.getName().toLowerCase();
+                              if (name.endsWith(".html") || name.endsWith(".htm")) {
+                                  BufferedReader reader = new BufferedReader(new InputStreamReader(zis));
+                                  StringBuilder htmlSb = new StringBuilder();
+                                  String line;
+                                  while ((line = reader.readLine()) != null) {
+                                      htmlSb.append(line).append("\n");
+                                  }
+                                  htmlContent = htmlSb.toString();
+                                  entryNameFound = entry.getName();
+                              } else if (name.endsWith(".js") && sbJs.length() == 0) {
                                   BufferedReader reader = new BufferedReader(new InputStreamReader(zis));
                                   String line;
                                   while ((line = reader.readLine()) != null) {
-                                      sb.append(line).append("\n");
+                                      sbJs.append(line).append("\n");
                                   }
-                                  break;
+                                  entryNameFound = entry.getName();
                               }
                           }
                           zis.close();
@@ -878,17 +913,24 @@ jobs:
                           BufferedReader reader = new BufferedReader(new InputStreamReader(is));
                           String line;
                           while ((line = reader.readLine()) != null) {
-                              sb.append(line).append("\n");
+                              sbJs.append(line).append("\n");
                           }
                           reader.close();
                       }
 
-                      injectedScriptContent = sb.toString();
-                      if (!injectedScriptContent.isEmpty()) {
-                          Toast.makeText(this, "Extensión lista (" + injectedScriptContent.length() + " bytes)", Toast.LENGTH_SHORT).show();
+                      injectedScriptContent = sbJs.toString();
+
+                      // Si la extension tiene interfaz HTML, la abre en su propia pestaña dedicada
+                      if (htmlContent != null) {
+                          WebView extTab = crearNuevaPestana("", entryNameFound);
+                          extTab.loadDataWithBaseURL(null, htmlContent, "text/html", "UTF-8", null);
+                          Toast.makeText(this, "Pestaña de extensión abierta", Toast.LENGTH_SHORT).show();
+                      } else if (!injectedScriptContent.isEmpty()) {
+                          // Si es un script puro, crea su pestaña de control o lo ejecuta
+                          Toast.makeText(this, "Extensión JS lista", Toast.LENGTH_SHORT).show();
                           inyectarScriptActual();
                       } else {
-                          Toast.makeText(this, "No se encontró archivo .js dentro", Toast.LENGTH_LONG).show();
+                          Toast.makeText(this, "No se encontró archivo ejecutable dentro del archivo", Toast.LENGTH_LONG).show();
                       }
                   } catch (Exception e) {
                       Toast.makeText(this, "Error al leer extension: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -899,7 +941,7 @@ jobs:
                   WebView wv = getCurrentWebView();
                   if (wv != null && !injectedScriptContent.isEmpty()) {
                       wv.evaluateJavascript(injectedScriptContent, value -> {
-                          Toast.makeText(this, "Script ejecutado", Toast.LENGTH_SHORT).show();
+                          Toast.makeText(this, "Extensión ejecutada", Toast.LENGTH_SHORT).show();
                       });
                   }
               }
@@ -937,7 +979,7 @@ jobs:
 
                   wv.setWebViewClient(new WebViewClient() {
                       @Override
-                      public void onPageStarted(WebView view, String startUrl, Bitmap favicon) {
+                      public void onPageStarted(WebView view, String startUrl, android.graphics.Bitmap favicon) {
                           if (view == getCurrentWebView()) {
                               etUrl.setText(startUrl);
                               homeOverlay.setVisibility(View.GONE);
@@ -989,6 +1031,7 @@ jobs:
                       etUrl.setText(currentUrl);
                       actualizarChipProtocolo(currentUrl);
                   }
+                  btnTabCounter.setText(String.valueOf(tabList.size()));
                   actualizarBarraPestanasSuperior();
               }
 
@@ -1016,7 +1059,7 @@ jobs:
                       final int tabIndex = i;
                       LinearLayout tabButton = new LinearLayout(this);
                       tabButton.setOrientation(LinearLayout.HORIZONTAL);
-                      tabButton.setPadding(16, 6, 12, 6);
+                      tabButton.setPadding(14, 6, 10, 6);
                       tabButton.setGravity(Gravity.CENTER_VERTICAL);
 
                       if (i == currentTabIndex) {
@@ -1044,6 +1087,25 @@ jobs:
                   }
               }
 
+              private void mostrarListaPestanas() {
+                  List<String> items = new ArrayList<>();
+                  for (int i = 0; i < tabList.size(); i++) {
+                      items.add((i + 1) + ". " + tabTitles.get(i));
+                  }
+                  items.add("➕ Nueva Pestaña");
+
+                  AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                  builder.setTitle("Pestañas Abiertas (" + tabList.size() + ")");
+                  builder.setItems(items.toArray(new String[0]), (dialog, which) -> {
+                      if (which == tabList.size()) {
+                          crearNuevaPestana("", "Inicio Miku");
+                      } else {
+                          cambiarAPestana(which);
+                      }
+                  });
+                  builder.show();
+              }
+
               private void cerrarPestana(int index) {
                   if (tabList.size() <= 1) {
                       WebView wv = tabList.get(0);
@@ -1052,6 +1114,7 @@ jobs:
                       homeOverlay.setVisibility(View.VISIBLE);
                       etUrl.setText("");
                       tabTitles.set(0, "Inicio Miku");
+                      btnTabCounter.setText("1");
                       actualizarBarraPestanasSuperior();
                       return;
                   }

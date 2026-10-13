@@ -79,8 +79,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 1
-                  versionName "1.0"
+                  versionCode 3
+                  versionName "1.2"
               }
 
               compileOptions {
@@ -120,16 +120,17 @@ jobs:
           </manifest>
           EOF
 
-          # 6. strings.xml (para evitar errores de codificacion con simbolos y emojis)
+          # 6. strings.xml
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
-              <string name="app_name">Astral Browser</string>
+              <string name="app_name">Astral Private</string>
               <string name="btn_back">&lt;</string>
               <string name="btn_forward">&gt;</string>
               <string name="btn_refresh">R</string>
-              <string name="btn_search">Ir</string>
-              <string name="btn_burn">Borrar</string>
-              <string name="url_hint">DuckDuckGo o URL...</string>
+              <string name="btn_incognito_off">Norm</string>
+              <string name="btn_incognito_on">Incog</string>
+              <string name="btn_burn">Purga</string>
+              <string name="url_hint">Buscar en privado o URL...</string>
           </resources>
           EOF
 
@@ -154,16 +155,17 @@ jobs:
               android:fitsSystemWindows="true">
 
               <LinearLayout
+                  android:id="@+id/topBar"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
                   android:background="#110B1F"
-                  android:padding="6dp"
+                  android:padding="5dp"
                   android:gravity="center_vertical">
 
                   <Button
                       android:id="@+id/btnBack"
-                      android:layout_width="40dp"
+                      android:layout_width="34dp"
                       android:layout_height="38dp"
                       android:text="@string/btn_back"
                       android:textColor="#C084FC"
@@ -171,7 +173,7 @@ jobs:
 
                   <Button
                       android:id="@+id/btnForward"
-                      android:layout_width="40dp"
+                      android:layout_width="34dp"
                       android:layout_height="38dp"
                       android:text="@string/btn_forward"
                       android:textColor="#C084FC"
@@ -179,7 +181,7 @@ jobs:
 
                   <Button
                       android:id="@+id/btnRefresh"
-                      android:layout_width="40dp"
+                      android:layout_width="34dp"
                       android:layout_height="38dp"
                       android:text="@string/btn_refresh"
                       android:textColor="#94A3B8"
@@ -195,26 +197,37 @@ jobs:
                       android:textColorHint="#64748B"
                       android:hint="@string/url_hint"
                       android:textSize="12sp"
-                      android:paddingLeft="10dp"
-                      android:paddingRight="10dp"
+                      android:paddingLeft="8dp"
+                      android:paddingRight="8dp"
                       android:singleLine="true"
                       android:imeOptions="actionGo"
                       android:inputType="textUri" />
 
                   <Button
-                      android:id="@+id/btnSearch"
-                      android:layout_width="46dp"
+                      android:id="@+id/btnIncognito"
+                      android:layout_width="52dp"
                       android:layout_height="38dp"
-                      android:text="@string/btn_search"
+                      android:text="@string/btn_incognito_off"
+                      android:textColor="#94A3B8"
+                      android:textSize="11sp"
+                      android:background="?android:attr/selectableItemBackground" />
+
+                  <Button
+                      android:id="@+id/btnTabs"
+                      android:layout_width="36dp"
+                      android:layout_height="38dp"
+                      android:text="1"
                       android:textColor="#38BDF8"
+                      android:textStyle="bold"
                       android:background="?android:attr/selectableItemBackground" />
 
                   <Button
                       android:id="@+id/btnBurn"
-                      android:layout_width="56dp"
+                      android:layout_width="48dp"
                       android:layout_height="38dp"
                       android:text="@string/btn_burn"
                       android:textColor="#EF4444"
+                      android:textSize="11sp"
                       android:background="?android:attr/selectableItemBackground" />
               </LinearLayout>
 
@@ -225,8 +238,8 @@ jobs:
                   android:layout_height="3dp"
                   android:visibility="gone" />
 
-              <WebView
-                  android:id="@+id/webView"
+              <FrameLayout
+                  android:id="@+id/webContainer"
                   android:layout_width="match_parent"
                   android:layout_height="0dp"
                   android:layout_weight="1"
@@ -239,10 +252,13 @@ jobs:
           package com.astral.browser;
 
           import android.annotation.SuppressLint;
+          import android.app.AlertDialog;
           import android.graphics.Bitmap;
+          import android.graphics.Color;
           import android.os.Bundle;
           import android.view.KeyEvent;
           import android.view.View;
+          import android.view.ViewGroup;
           import android.view.inputmethod.EditorInfo;
           import android.view.inputmethod.InputMethodManager;
           import android.webkit.CookieManager;
@@ -253,6 +269,8 @@ jobs:
           import android.webkit.WebViewClient;
           import android.widget.Button;
           import android.widget.EditText;
+          import android.widget.FrameLayout;
+          import android.widget.LinearLayout;
           import android.widget.ProgressBar;
           import android.widget.TextView;
           import android.widget.Toast;
@@ -260,65 +278,151 @@ jobs:
 
           import java.io.UnsupportedEncodingException;
           import java.net.URLEncoder;
+          import java.util.ArrayList;
+          import java.util.List;
 
           public class MainActivity extends AppCompatActivity {
 
-              private WebView webView;
+              private FrameLayout webContainer;
+              private LinearLayout topBar;
               private EditText etUrl;
               private ProgressBar progressBar;
+              private Button btnTabs;
+              private Button btnIncognito;
+
+              private final List<WebView> tabList = new ArrayList<>();
+              private int currentTabIndex = 0;
+              private boolean isIncognitoActive = false;
               private final String HOME_URL = "https://duckduckgo.com";
 
-              @SuppressLint("SetJavaScriptEnabled")
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
                   setContentView(R.layout.activity_main);
 
-                  webView = findViewById(R.id.webView);
+                  webContainer = findViewById(R.id.webContainer);
+                  topBar = findViewById(R.id.topBar);
                   etUrl = findViewById(R.id.etUrl);
                   progressBar = findViewById(R.id.progressBar);
+                  btnTabs = findViewById(R.id.btnTabs);
+                  btnIncognito = findViewById(R.id.btnIncognito);
 
                   Button btnBack = findViewById(R.id.btnBack);
                   Button btnForward = findViewById(R.id.btnForward);
                   Button btnRefresh = findViewById(R.id.btnRefresh);
-                  Button btnSearch = findViewById(R.id.btnSearch);
                   Button btnBurn = findViewById(R.id.btnBurn);
 
-                  WebSettings settings = webView.getSettings();
+                  crearNuevaPestana(HOME_URL);
+
+                  btnBack.setOnClickListener(v -> {
+                      WebView wv = getCurrentWebView();
+                      if (wv != null && wv.canGoBack()) wv.goBack();
+                  });
+
+                  btnForward.setOnClickListener(v -> {
+                      WebView wv = getCurrentWebView();
+                      if (wv != null && wv.canGoForward()) wv.goForward();
+                  });
+
+                  btnRefresh.setOnClickListener(v -> {
+                      WebView wv = getCurrentWebView();
+                      if (wv != null) wv.reload();
+                  });
+
+                  btnIncognito.setOnClickListener(v -> toggleIncognito());
+                  btnTabs.setOnClickListener(v -> mostrarDialogoPestanas());
+
+                  etUrl.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
+                      if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH ||
+                          (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                          navegarDesdeInput();
+                          return true;
+                      }
+                      return false;
+                  });
+
+                  btnBurn.setOnClickListener(v -> purgaTotal());
+              }
+
+              private void toggleIncognito() {
+                  isIncognitoActive = !isIncognitoActive;
+                  WebView wv = getCurrentWebView();
+
+                  if (isIncognitoActive) {
+                      btnIncognito.setText(R.string.btn_incognito_on);
+                      btnIncognito.setTextColor(Color.parseColor("#A855F7"));
+                      topBar.setBackgroundColor(Color.parseColor("#1F0A2E"));
+                      aplicarAjustesIncognito(wv, true);
+                      Toast.makeText(this, "🕶️ Incognito ACTIVO: Cookies bloqueadas y rastreo neutralizado", Toast.LENGTH_SHORT).show();
+                  } else {
+                      btnIncognito.setText(R.string.btn_incognito_off);
+                      btnIncognito.setTextColor(Color.parseColor("#94A3B8"));
+                      topBar.setBackgroundColor(Color.parseColor("#110B1F"));
+                      aplicarAjustesIncognito(wv, false);
+                      Toast.makeText(this, "Modo privado estandar", Toast.LENGTH_SHORT).show();
+                  }
+                  if (wv != null) wv.reload();
+              }
+
+              @SuppressLint("SetJavaScriptEnabled")
+              private void aplicarAjustesIncognito(WebView wv, boolean incognito) {
+                  if (wv == null) return;
+                  WebSettings settings = wv.getSettings();
+                  CookieManager cookieManager = CookieManager.getInstance();
+
+                  if (incognito) {
+                      settings.setDomStorageEnabled(false);
+                      settings.setDatabaseEnabled(false);
+                      settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+                      cookieManager.setAcceptCookie(false);
+                      cookieManager.setAcceptThirdPartyCookies(wv, false);
+                      wv.clearCache(true);
+                  } else {
+                      settings.setDomStorageEnabled(true);
+                      settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+                      cookieManager.setAcceptCookie(true);
+                      cookieManager.setAcceptThirdPartyCookies(wv, false);
+                  }
+              }
+
+              @SuppressLint("SetJavaScriptEnabled")
+              private WebView crearNuevaPestana(String url) {
+                  WebView wv = new WebView(this);
+                  wv.setLayoutParams(new ViewGroup.LayoutParams(
+                          ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+                  WebSettings settings = wv.getSettings();
                   settings.setJavaScriptEnabled(true);
-                  settings.setDomStorageEnabled(true);
                   settings.setSaveFormData(false);
-                  settings.setDatabaseEnabled(false);
-                  settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
                   settings.setSupportZoom(true);
                   settings.setBuiltInZoomControls(true);
                   settings.setDisplayZoomControls(false);
 
-                  CookieManager cookieManager = CookieManager.getInstance();
-                  cookieManager.setAcceptCookie(true);
-                  cookieManager.setAcceptThirdPartyCookies(webView, false);
+                  aplicarAjustesIncognito(wv, isIncognitoActive);
 
-                  webView.setWebChromeClient(new WebChromeClient() {
+                  wv.setWebChromeClient(new WebChromeClient() {
                       @Override
                       public void onProgressChanged(WebView view, int newProgress) {
-                          if (newProgress < 100) {
-                              progressBar.setVisibility(View.VISIBLE);
-                              progressBar.setProgress(newProgress);
-                          } else {
-                              progressBar.setVisibility(View.GONE);
+                          if (view == getCurrentWebView()) {
+                              if (newProgress < 100) {
+                                  progressBar.setVisibility(View.VISIBLE);
+                                  progressBar.setProgress(newProgress);
+                              } else {
+                                  progressBar.setVisibility(View.GONE);
+                              }
                           }
                       }
                   });
 
-                  webView.setWebViewClient(new WebViewClient() {
+                  wv.setWebViewClient(new WebViewClient() {
                       @Override
                       public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                          etUrl.setText(url);
+                          if (view == getCurrentWebView()) etUrl.setText(url);
                       }
 
                       @Override
                       public void onPageFinished(WebView view, String url) {
-                          etUrl.setText(url);
+                          if (view == getCurrentWebView()) etUrl.setText(url);
                       }
 
                       @Override
@@ -327,60 +431,102 @@ jobs:
                       }
                   });
 
-                  btnBack.setOnClickListener(v -> {
-                      if (webView.canGoBack()) webView.goBack();
-                  });
-
-                  btnForward.setOnClickListener(v -> {
-                      if (webView.canGoForward()) webView.goForward();
-                  });
-
-                  btnRefresh.setOnClickListener(v -> webView.reload());
-                  btnSearch.setOnClickListener(v -> loadUrlFromInput());
-
-                  etUrl.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
-                      if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH ||
-                          (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
-                          loadUrlFromInput();
-                          return true;
-                      }
-                      return false;
-                  });
-
-                  btnBurn.setOnClickListener(v -> destroySession());
-                  webView.loadUrl(HOME_URL);
+                  wv.loadUrl(url);
+                  tabList.add(wv);
+                  cambiarAPestana(tabList.size() - 1);
+                  return wv;
               }
 
-              private void loadUrlFromInput() {
+              private void cambiarAPestana(int index) {
+                  if (index < 0 || index >= tabList.size()) return;
+                  currentTabIndex = index;
+                  webContainer.removeAllViews();
+                  WebView current = tabList.get(currentTabIndex);
+                  webContainer.addView(current);
+                  etUrl.setText(current.getUrl() != null ? current.getUrl() : HOME_URL);
+                  btnTabs.setText(String.valueOf(tabList.size()));
+              }
+
+              private void cerrarPestana(int index) {
+                  if (tabList.size() <= 1) {
+                      purgaTotal();
+                      return;
+                  }
+                  WebView wv = tabList.remove(index);
+                  wv.clearCache(true);
+                  wv.destroy();
+
+                  if (currentTabIndex >= tabList.size()) {
+                      currentTabIndex = tabList.size() - 1;
+                  }
+                  cambiarAPestana(currentTabIndex);
+              }
+
+              private void mostrarDialogoPestanas() {
+                  List<String> items = new ArrayList<>();
+                  for (int i = 0; i < tabList.size(); i++) {
+                      String url = tabList.get(i).getUrl();
+                      items.add("Pestana " + (i + 1) + ": " + (url != null ? url : "Nueva"));
+                  }
+                  items.add("➕ Abrir nueva pestana");
+
+                  AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                  builder.setTitle("Pestanas Privadas");
+                  builder.setItems(items.toArray(new String[0]), (dialog, which) -> {
+                      if (which == tabList.size()) {
+                          crearNuevaPestana(HOME_URL);
+                      } else {
+                          cambiarAPestana(which);
+                      }
+                  });
+                  builder.setNeutralButton("Cerrar pestana actual", (dialog, which) -> cerrarPestana(currentTabIndex));
+                  builder.show();
+              }
+
+              private WebView getCurrentWebView() {
+                  if (currentTabIndex >= 0 && currentTabIndex < tabList.size()) {
+                      return tabList.get(currentTabIndex);
+                  }
+                  return null;
+              }
+
+              private void navegarDesdeInput() {
                   String input = etUrl.getText().toString().trim();
                   hideKeyboard();
+                  WebView wv = getCurrentWebView();
+                  if (wv == null) return;
+
                   if (input.isEmpty()) {
-                      webView.loadUrl(HOME_URL);
+                      wv.loadUrl(HOME_URL);
                       return;
                   }
 
                   if (input.startsWith("http://") || input.startsWith("https://")) {
-                      webView.loadUrl(input);
+                      wv.loadUrl(input);
                   } else if (input.contains(".") && !input.contains(" ")) {
-                      webView.loadUrl("https://" + input);
+                      wv.loadUrl("https://" + input);
                   } else {
                       try {
                           String query = URLEncoder.encode(input, "UTF-8");
-                          webView.loadUrl("https://duckduckgo.com/?q=" + query);
+                          wv.loadUrl("https://duckduckgo.com/?q=" + query);
                       } catch (UnsupportedEncodingException e) {
-                          webView.loadUrl("https://duckduckgo.com/?q=" + input);
+                          wv.loadUrl("https://duckduckgo.com/?q=" + input);
                       }
                   }
               }
 
-              private void destroySession() {
-                  webView.clearCache(true);
-                  webView.clearHistory();
+              private void purgaTotal() {
+                  for (WebView wv : tabList) {
+                      wv.clearCache(true);
+                      wv.clearHistory();
+                      wv.destroy();
+                  }
+                  tabList.clear();
                   CookieManager.getInstance().removeAllCookies(null);
                   CookieManager.getInstance().flush();
-                  webView.loadUrl(HOME_URL);
+                  crearNuevaPestana(HOME_URL);
                   etUrl.setText("");
-                  Toast.makeText(this, "Rastro destruido: Cookies y cache eliminadas", Toast.LENGTH_SHORT).show();
+                  Toast.makeText(this, "🔥 Purga completa: Cookies, sesiones y cache destruidas", Toast.LENGTH_SHORT).show();
               }
 
               private void hideKeyboard() {
@@ -392,9 +538,18 @@ jobs:
               }
 
               @Override
+              protected void onDestroy() {
+                  purgaTotal();
+                  super.onDestroy();
+              }
+
+              @Override
               public void onBackPressed() {
-                  if (webView.canGoBack()) {
-                      webView.goBack();
+                  WebView wv = getCurrentWebView();
+                  if (wv != null && wv.canGoBack()) {
+                      wv.goBack();
+                  } else if (tabList.size() > 1) {
+                      cerrarPestana(currentTabIndex);
                   } else {
                       super.onBackPressed();
                   }

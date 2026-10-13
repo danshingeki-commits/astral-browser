@@ -81,8 +81,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 9
-                  versionName "1.8"
+                  versionCode 10
+                  versionName "1.9"
               }
 
               compileOptions {
@@ -112,7 +112,7 @@ jobs:
                   <activity
                       android:name=".MainActivity"
                       android:exported="true"
-                      android:configChanges="orientation|screenSize"
+                      android:configChanges="orientation|screenSize|keyboardHidden"
                       android:windowSoftInputMode="adjustResize">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -180,7 +180,7 @@ jobs:
           </vector>
           EOF
 
-          # 10. activity_main.xml (Barra inferior con 58dp fijos, padding de navegacion y textos ajustados)
+          # 10. activity_main.xml
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -189,7 +189,7 @@ jobs:
               android:orientation="vertical"
               android:background="#090610">
 
-              <!-- BARRA 1: PESTAÑAS HORIZONTALES -->
+              <!-- BARRA DE PESTAÑAS -->
               <LinearLayout
                   android:layout_width="match_parent"
                   android:layout_height="38dp"
@@ -233,7 +233,7 @@ jobs:
                       android:background="?android:attr/selectableItemBackground" />
               </LinearLayout>
 
-              <!-- BARRA 2: CHIPS DE ESTADO -->
+              <!-- BARRA DE ESTADO -->
               <LinearLayout
                   android:layout_width="match_parent"
                   android:layout_height="26dp"
@@ -261,7 +261,7 @@ jobs:
                       android:id="@+id/chipIsolated"
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
-                      android:text="AISLADO"
+                      android:text="PRIVADO"
                       android:textColor="#34D399"
                       android:textSize="9sp"
                       android:paddingLeft="6dp"
@@ -285,7 +285,7 @@ jobs:
                       android:background="#150E24" />
               </LinearLayout>
 
-              <!-- BARRA 3: DIRECCIONES -->
+              <!-- BARRA DE ENTRADA DE URL -->
               <LinearLayout
                   android:layout_width="match_parent"
                   android:layout_height="42dp"
@@ -328,7 +328,7 @@ jobs:
                   android:layout_height="2dp"
                   android:visibility="gone" />
 
-              <!-- ÁREA PRINCIPAL -->
+              <!-- CONTENEDOR PRINCIPAL -->
               <FrameLayout
                   android:layout_width="match_parent"
                   android:layout_height="0dp"
@@ -371,23 +371,23 @@ jobs:
                           android:id="@+id/tvEngineInfo"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
-                          android:text="Terminal Limpia • Sin Registros"
+                          android:text="Sesion Limpia • Sin Registros"
                           android:textColor="#64748B"
                           android:textSize="11sp"
                           android:layout_marginTop="4dp" />
                   </LinearLayout>
               </FrameLayout>
 
-              <!-- BARRA INFERIOR AMPLIADA Y CON PADDING DE SEGURIDAD -->
+              <!-- BARRA INFERIOR DE NAVEGACION -->
               <LinearLayout
                   android:id="@+id/bottomBar"
                   android:layout_width="match_parent"
-                  android:layout_height="58dp"
+                  android:layout_height="56dp"
                   android:orientation="horizontal"
                   android:background="#0E0919"
                   android:gravity="center"
                   android:paddingBottom="4dp"
-                  android:weightSum="5">
+                  android:weightSum="4">
 
                   <Button
                       android:id="@+id/btnBack"
@@ -395,7 +395,7 @@ jobs:
                       android:layout_height="match_parent"
                       android:layout_weight="1"
                       android:text="Atrás"
-                      android:textSize="10sp"
+                      android:textSize="11sp"
                       android:singleLine="true"
                       android:textColor="#94A3B8"
                       android:background="?android:attr/selectableItemBackground" />
@@ -406,7 +406,7 @@ jobs:
                       android:layout_height="match_parent"
                       android:layout_weight="1"
                       android:text="Adelante"
-                      android:textSize="10sp"
+                      android:textSize="11sp"
                       android:singleLine="true"
                       android:textColor="#94A3B8"
                       android:background="?android:attr/selectableItemBackground" />
@@ -417,20 +417,9 @@ jobs:
                       android:layout_height="match_parent"
                       android:layout_weight="1"
                       android:text="Recargar"
-                      android:textSize="10sp"
+                      android:textSize="11sp"
                       android:singleLine="true"
                       android:textColor="#38BDF8"
-                      android:background="?android:attr/selectableItemBackground" />
-
-                  <Button
-                      android:id="@+id/btnExtension"
-                      android:layout_width="0dp"
-                      android:layout_height="match_parent"
-                      android:layout_weight="1"
-                      android:text="Extensión"
-                      android:textSize="10sp"
-                      android:singleLine="true"
-                      android:textColor="#F59E0B"
                       android:background="?android:attr/selectableItemBackground" />
 
                   <Button
@@ -439,7 +428,7 @@ jobs:
                       android:layout_height="match_parent"
                       android:layout_weight="1"
                       android:text="Ajustes"
-                      android:textSize="10sp"
+                      android:textSize="11sp"
                       android:singleLine="true"
                       android:textColor="#A855F7"
                       android:background="?android:attr/selectableItemBackground" />
@@ -666,13 +655,13 @@ jobs:
                           .putString("proxy_port", etProxyPort.getText().toString().trim())
                           .apply();
 
-                  Toast.makeText(this, "Ajustes actualizados", Toast.LENGTH_SHORT).show();
+                  Toast.makeText(this, "Ajustes guardados", Toast.LENGTH_SHORT).show();
                   finish();
               }
           }
           EOF
 
-          # 13. MainActivity.java con Extracción y Apertura de Pestaña de Extensión
+          # 13. MainActivity.java con retención de pestañas en segundo plano
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
@@ -681,7 +670,6 @@ jobs:
           import android.content.Intent;
           import android.content.SharedPreferences;
           import android.graphics.Color;
-          import android.net.Uri;
           import android.os.Bundle;
           import android.view.Gravity;
           import android.view.KeyEvent;
@@ -705,19 +693,12 @@ jobs:
           import android.widget.ProgressBar;
           import android.widget.TextView;
           import android.widget.Toast;
-          import androidx.activity.result.ActivityResultLauncher;
-          import androidx.activity.result.contract.ActivityResultContracts;
           import androidx.appcompat.app.AppCompatActivity;
 
-          import java.io.BufferedReader;
-          import java.io.InputStream;
-          import java.io.InputStreamReader;
           import java.io.UnsupportedEncodingException;
           import java.net.URLEncoder;
           import java.util.ArrayList;
           import java.util.List;
-          import java.util.zip.ZipEntry;
-          import java.util.zip.ZipInputStream;
 
           public class MainActivity extends AppCompatActivity {
 
@@ -736,9 +717,6 @@ jobs:
 
               private SharedPreferences prefs;
               private String searchEngineUrl = "https://search.brave.com/search?q=";
-              private String injectedScriptContent = "";
-
-              private ActivityResultLauncher<String[]> filePickerLauncher;
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
@@ -764,15 +742,12 @@ jobs:
                   Button btnBack = findViewById(R.id.btnBack);
                   Button btnForward = findViewById(R.id.btnForward);
                   Button btnRefresh = findViewById(R.id.btnRefresh);
-                  Button btnExtension = findViewById(R.id.btnExtension);
                   Button btnSettings = findViewById(R.id.btnSettings);
-
-                  configurarSelectorDeExtension();
 
                   Animation floatAnim = AnimationUtils.loadAnimation(this, R.anim.floating_anim);
                   ivMiku.startAnimation(floatAnim);
 
-                  btnNewTab.setOnClickListener(v -> crearNuevaPestana("", "Inicio Miku"));
+                  btnNewTab.setOnClickListener(v -> crearNuevaPestana("", "Inicio"));
                   btnTabCounter.setOnClickListener(v -> mostrarListaPestanas());
                   btnGo.setOnClickListener(v -> navegar());
 
@@ -791,8 +766,6 @@ jobs:
                       if (wv != null) wv.reload();
                   });
 
-                  btnExtension.setOnClickListener(v -> mostrarMenuExtensiones());
-
                   btnSettings.setOnClickListener(v -> {
                       Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
                       startActivity(intent);
@@ -806,7 +779,9 @@ jobs:
                       return false;
                   });
 
-                  crearNuevaPestana("", "Inicio Miku");
+                  if (tabList.isEmpty()) {
+                      crearNuevaPestana("", "Inicio");
+                  }
                   actualizarAjustesDeRed();
               }
 
@@ -843,109 +818,6 @@ jobs:
                   }
               }
 
-              private void configurarSelectorDeExtension() {
-                  filePickerLauncher = registerForActivityResult(
-                          new ActivityResultContracts.OpenDocument(),
-                          uri -> {
-                              if (uri != null) {
-                                  cargarExtensionDesdeUri(uri);
-                              }
-                          }
-                  );
-              }
-
-              private void mostrarMenuExtensiones() {
-                  String[] opciones = {
-                          "Cargar Extensión (.zip o .js)",
-                          "Ejecutar script activo ahora",
-                          "Limpiar extensiones cargadas"
-                  };
-                  AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                  builder.setTitle("Gestor de Extensiones");
-                  builder.setItems(opciones, (dialog, which) -> {
-                      if (which == 0) {
-                          filePickerLauncher.launch(new String[]{"*/*"});
-                      } else if (which == 1) {
-                          inyectarScriptActual();
-                      } else {
-                          injectedScriptContent = "";
-                          Toast.makeText(this, "Extensiones eliminadas", Toast.LENGTH_SHORT).show();
-                      }
-                  });
-                  builder.show();
-              }
-
-              private void cargarExtensionDesdeUri(Uri uri) {
-                  try {
-                      InputStream is = getContentResolver().openInputStream(uri);
-                      if (is == null) return;
-
-                      String uriString = uri.toString().toLowerCase();
-                      StringBuilder sbJs = new StringBuilder();
-                      String htmlContent = null;
-                      String entryNameFound = "Extensión";
-
-                      if (uriString.endsWith(".zip") || uriString.contains("zip")) {
-                          ZipInputStream zis = new ZipInputStream(is);
-                          ZipEntry entry;
-                          while ((entry = zis.getNextEntry()) != null) {
-                              String name = entry.getName().toLowerCase();
-                              if (name.endsWith(".html") || name.endsWith(".htm")) {
-                                  BufferedReader reader = new BufferedReader(new InputStreamReader(zis));
-                                  StringBuilder htmlSb = new StringBuilder();
-                                  String line;
-                                  while ((line = reader.readLine()) != null) {
-                                      htmlSb.append(line).append("\n");
-                                  }
-                                  htmlContent = htmlSb.toString();
-                                  entryNameFound = entry.getName();
-                              } else if (name.endsWith(".js") && sbJs.length() == 0) {
-                                  BufferedReader reader = new BufferedReader(new InputStreamReader(zis));
-                                  String line;
-                                  while ((line = reader.readLine()) != null) {
-                                      sbJs.append(line).append("\n");
-                                  }
-                                  entryNameFound = entry.getName();
-                              }
-                          }
-                          zis.close();
-                      } else {
-                          BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                          String line;
-                          while ((line = reader.readLine()) != null) {
-                              sbJs.append(line).append("\n");
-                          }
-                          reader.close();
-                      }
-
-                      injectedScriptContent = sbJs.toString();
-
-                      // Si la extension tiene interfaz HTML, la abre en su propia pestaña dedicada
-                      if (htmlContent != null) {
-                          WebView extTab = crearNuevaPestana("", entryNameFound);
-                          extTab.loadDataWithBaseURL(null, htmlContent, "text/html", "UTF-8", null);
-                          Toast.makeText(this, "Pestaña de extensión abierta", Toast.LENGTH_SHORT).show();
-                      } else if (!injectedScriptContent.isEmpty()) {
-                          // Si es un script puro, crea su pestaña de control o lo ejecuta
-                          Toast.makeText(this, "Extensión JS lista", Toast.LENGTH_SHORT).show();
-                          inyectarScriptActual();
-                      } else {
-                          Toast.makeText(this, "No se encontró archivo ejecutable dentro del archivo", Toast.LENGTH_LONG).show();
-                      }
-                  } catch (Exception e) {
-                      Toast.makeText(this, "Error al leer extension: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                  }
-              }
-
-              private void inyectarScriptActual() {
-                  WebView wv = getCurrentWebView();
-                  if (wv != null && !injectedScriptContent.isEmpty()) {
-                      wv.evaluateJavascript(injectedScriptContent, value -> {
-                          Toast.makeText(this, "Extensión ejecutada", Toast.LENGTH_SHORT).show();
-                      });
-                  }
-              }
-
               @SuppressLint("SetJavaScriptEnabled")
               private WebView crearNuevaPestana(String url, String title) {
                   WebView wv = new WebView(this);
@@ -955,7 +827,6 @@ jobs:
                   WebSettings settings = wv.getSettings();
                   settings.setJavaScriptEnabled(true);
                   settings.setDomStorageEnabled(true);
-                  settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
                   settings.setSupportZoom(true);
                   settings.setBuiltInZoomControls(true);
                   settings.setDisplayZoomControls(false);
@@ -992,9 +863,6 @@ jobs:
                           if (view == getCurrentWebView()) {
                               etUrl.setText(endUrl);
                               actualizarTituloPestana(view.getTitle());
-                              if (!injectedScriptContent.isEmpty()) {
-                                  view.evaluateJavascript(injectedScriptContent, null);
-                              }
                           }
                       }
 
@@ -1098,7 +966,7 @@ jobs:
                   builder.setTitle("Pestañas Abiertas (" + tabList.size() + ")");
                   builder.setItems(items.toArray(new String[0]), (dialog, which) -> {
                       if (which == tabList.size()) {
-                          crearNuevaPestana("", "Inicio Miku");
+                          crearNuevaPestana("", "Inicio");
                       } else {
                           cambiarAPestana(which);
                       }
@@ -1109,11 +977,11 @@ jobs:
               private void cerrarPestana(int index) {
                   if (tabList.size() <= 1) {
                       WebView wv = tabList.get(0);
-                      wv.clearCache(true);
+                      wv.clearHistory();
                       wv.loadUrl("about:blank");
                       homeOverlay.setVisibility(View.VISIBLE);
                       etUrl.setText("");
-                      tabTitles.set(0, "Inicio Miku");
+                      tabTitles.set(0, "Inicio");
                       btnTabCounter.setText("1");
                       actualizarBarraPestanasSuperior();
                       return;

@@ -81,8 +81,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 7
-                  versionName "1.6"
+                  versionCode 8
+                  versionName "1.7"
               }
 
               compileOptions {
@@ -103,7 +103,6 @@ jobs:
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
               <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-              <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
               <application
                   android:allowBackup="false"
@@ -140,7 +139,7 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/styles.xml
           <resources>
               <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-                  <item name="android:windowBackground">#0B0813</item>
+                  <item name="android:windowBackground">#090610</item>
                   <item name="android:statusBarColor">#090610</item>
                   <item name="colorPrimary">#38BDF8</item>
               </style>
@@ -180,7 +179,7 @@ jobs:
           </vector>
           EOF
 
-          # 10. activity_main.xml (Diseno inspirado en el video: Tabs arriba, Chips de estado y Barra abajo)
+          # 10. activity_main.xml (Pestañas arriba, Chips de estado en medio, Barra abajo)
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -190,14 +189,13 @@ jobs:
               android:background="#090610"
               android:fitsSystemWindows="true">
 
-              <!-- BARRA 1: PESTAÑAS HORIZONTALES ESTILO ESCRITORIO -->
               <LinearLayout
                   android:layout_width="match_parent"
                   android:layout_height="38dp"
                   android:orientation="horizontal"
                   android:background="#0E0919"
-                  android:paddingStart="4dp"
-                  android:paddingEnd="4dp"
+                  android:paddingLeft="4dp"
+                  android:paddingRight="4dp"
                   android:gravity="center_vertical">
 
                   <HorizontalScrollView
@@ -224,13 +222,13 @@ jobs:
                       android:background="?android:attr/selectableItemBackground" />
               </LinearLayout>
 
-              <!-- BARRA 2: CHIPS DE ESTADO (PROXY, AISLADO, PROTOCOLO) -->
               <LinearLayout
                   android:layout_width="match_parent"
                   android:layout_height="28dp"
                   android:orientation="horizontal"
                   android:background="#0B0714"
-                  android:paddingHorizontal="8dp"
+                  android:paddingLeft="8dp"
+                  android:paddingRight="8dp"
                   android:gravity="center_vertical">
 
                   <TextView
@@ -240,10 +238,12 @@ jobs:
                       android:text="PROXY: DIRECTO"
                       android:textColor="#94A3B8"
                       android:textSize="10sp"
-                      android:paddingHorizontal="6dp"
-                      android:paddingVertical="2dp"
+                      android:paddingLeft="6dp"
+                      android:paddingRight="6dp"
+                      android:paddingTop="2dp"
+                      android:paddingBottom="2dp"
                       android:background="#150E24"
-                      android:layout_marginEnd="6dp" />
+                      android:layout_marginRight="6dp" />
 
                   <TextView
                       android:id="@+id/chipIsolated"
@@ -252,10 +252,12 @@ jobs:
                       android:text="AISLADO"
                       android:textColor="#34D399"
                       android:textSize="10sp"
-                      android:paddingHorizontal="6dp"
-                      android:paddingVertical="2dp"
+                      android:paddingLeft="6dp"
+                      android:paddingRight="6dp"
+                      android:paddingTop="2dp"
+                      android:paddingBottom="2dp"
                       android:background="#150E24"
-                      android:layout_marginEnd="6dp" />
+                      android:layout_marginRight="6dp" />
 
                   <TextView
                       android:id="@+id/chipProtocol"
@@ -264,18 +266,20 @@ jobs:
                       android:text="HTTPS"
                       android:textColor="#38BDF8"
                       android:textSize="10sp"
-                      android:paddingHorizontal="6dp"
-                      android:paddingVertical="2dp"
+                      android:paddingLeft="6dp"
+                      android:paddingRight="6dp"
+                      android:paddingTop="2dp"
+                      android:paddingBottom="2dp"
                       android:background="#150E24" />
               </LinearLayout>
 
-              <!-- BARRA 3: DIRECCIONES / BUSQUEDA -->
               <LinearLayout
                   android:layout_width="match_parent"
                   android:layout_height="44dp"
                   android:orientation="horizontal"
                   android:background="#110B1F"
-                  android:paddingHorizontal="8dp"
+                  android:paddingLeft="8dp"
+                  android:paddingRight="8dp"
                   android:gravity="center_vertical">
 
                   <EditText
@@ -288,7 +292,8 @@ jobs:
                       android:textColorHint="#64748B"
                       android:hint="@string/url_hint"
                       android:textSize="12sp"
-                      android:paddingHorizontal="10dp"
+                      android:paddingLeft="10dp"
+                      android:paddingRight="10dp"
                       android:singleLine="true"
                       android:imeOptions="actionGo"
                       android:inputType="textUri" />
@@ -310,7 +315,6 @@ jobs:
                   android:layout_height="2dp"
                   android:visibility="gone" />
 
-              <!-- ÁREA PRINCIPAL: WEBVIEW Y OVERLAY DE MIKU -->
               <FrameLayout
                   android:layout_width="match_parent"
                   android:layout_height="0dp"
@@ -350,7 +354,6 @@ jobs:
                           android:layout_marginTop="16dp" />
 
                       <TextView
-                          android:id="@+id/tvEngineInfo"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
                           android:text="Terminal Limpia • Sin Registros"
@@ -360,7 +363,6 @@ jobs:
                   </LinearLayout>
               </FrameLayout>
 
-              <!-- BARRA 4: ACCIONES INFERIORES ESTILO EL VIDEO -->
               <LinearLayout
                   android:id="@+id/bottomBar"
                   android:layout_width="match_parent"
@@ -461,7 +463,7 @@ jobs:
                           android:textColor="#F8FAFC"
                           android:textSize="18sp"
                           android:textStyle="bold"
-                          android:layout_marginStart="8dp" />
+                          android:layout_marginLeft="8dp" />
                   </LinearLayout>
 
                   <TextView
@@ -498,7 +500,8 @@ jobs:
                           android:textColorHint="#64748B"
                           android:hint="Host / IP (ej. 127.0.0.1)"
                           android:textSize="12sp"
-                          android:paddingHorizontal="10dp"
+                          android:paddingLeft="10dp"
+                          android:paddingRight="10dp"
                           android:layout_marginTop="10dp"
                           android:singleLine="true" />
 
@@ -512,7 +515,8 @@ jobs:
                           android:hint="Puerto (ej. 8118, 9050)"
                           android:textSize="12sp"
                           android:inputType="number"
-                          android:paddingHorizontal="10dp"
+                          android:paddingLeft="10dp"
+                          android:paddingRight="10dp"
                           android:layout_marginTop="8dp"
                           android:singleLine="true" />
                   </LinearLayout>
@@ -647,7 +651,7 @@ jobs:
           }
           EOF
 
-          # 13. MainActivity.java con soporte de Pestañas arriba, Barra abajo, Chips e Inyeccion de .zip/.js
+          # 13. MainActivity.java (Con sintaxis Java 100% limpia)
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
@@ -655,9 +659,11 @@ jobs:
           import android.app.AlertDialog;
           import android.content.Intent;
           import android.content.SharedPreferences;
+          import android.graphics.Bitmap;
           import android.graphics.Color;
           import android.net.Uri;
           import android.os.Bundle;
+          import android.view.Gravity;
           import android.view.KeyEvent;
           import android.view.View;
           import android.view.ViewGroup;
@@ -701,7 +707,7 @@ jobs:
               private ImageView ivMiku;
               private EditText etUrl;
               private ProgressBar progressBar;
-              private TextView chipProxy, chipIsolated, chipProtocol, tvEngineInfo;
+              private TextView chipProxy, chipIsolated, chipProtocol;
 
               private final List<WebView> tabList = new ArrayList<>();
               private final List<String> tabTitles = new ArrayList<>();
@@ -730,7 +736,6 @@ jobs:
                   chipProxy = findViewById(R.id.chipProxy);
                   chipIsolated = findViewById(R.id.chipIsolated);
                   chipProtocol = findViewById(R.id.chipProtocol);
-                  tvEngineInfo = findViewById(R.id.tvEngineInfo);
 
                   Button btnNewTab = findViewById(R.id.btnNewTab);
                   Button btnGo = findViewById(R.id.btnGo);
@@ -880,10 +885,10 @@ jobs:
 
                       injectedScriptContent = sb.toString();
                       if (!injectedScriptContent.isEmpty()) {
-                          Toast.makeText(this, "Extensión cargada (" + injectedScriptContent.length() + " bytes)", Toast.LENGTH_SHORT).show();
+                          Toast.makeText(this, "Extensión lista (" + injectedScriptContent.length() + " bytes)", Toast.LENGTH_SHORT).show();
                           inyectarScriptActual();
                       } else {
-                          Toast.makeText(this, "No se encontró ningún archivo .js dentro del archivo", Toast.LENGTH_LONG).show();
+                          Toast.makeText(this, "No se encontró archivo .js dentro", Toast.LENGTH_LONG).show();
                       }
                   } catch (Exception e) {
                       Toast.makeText(this, "Error al leer extension: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -894,7 +899,7 @@ jobs:
                   WebView wv = getCurrentWebView();
                   if (wv != null && !injectedScriptContent.isEmpty()) {
                       wv.evaluateJavascript(injectedScriptContent, value -> {
-                          Toast.makeText(this, "Script ejecutado en la web", Toast.LENGTH_SHORT).show();
+                          Toast.makeText(this, "Script ejecutado", Toast.LENGTH_SHORT).show();
                       });
                   }
               }
@@ -932,7 +937,7 @@ jobs:
 
                   wv.setWebViewClient(new WebViewClient() {
                       @Override
-                      public void onPageStarted(WebView view, String startUrl, android.graphics.Bitmap favicon) {
+                      public void onPageStarted(WebView view, String startUrl, Bitmap favicon) {
                           if (view == getCurrentWebView()) {
                               etUrl.setText(startUrl);
                               homeOverlay.setVisibility(View.GONE);
@@ -1012,7 +1017,7 @@ jobs:
                       LinearLayout tabButton = new LinearLayout(this);
                       tabButton.setOrientation(LinearLayout.HORIZONTAL);
                       tabButton.setPadding(16, 6, 12, 6);
-                      tabButton.setGravity(android.view.Gravity.CENTER_VERTICAL);
+                      tabButton.setGravity(Gravity.CENTER_VERTICAL);
 
                       if (i == currentTabIndex) {
                           tabButton.setBackgroundColor(Color.parseColor("#1F1435"));
@@ -1022,13 +1027,13 @@ jobs:
 
                       TextView tv = new TextView(this);
                       tv.setText(tabTitles.get(i));
-                      tv.setTextSize(11sp);
+                      tv.setTextSize(11);
                       tv.setTextColor(i == currentTabIndex ? Color.parseColor("#F8FAFC") : Color.parseColor("#94A3B8"));
                       tabButton.addView(tv);
 
                       TextView closeBtn = new TextView(this);
                       closeBtn.setText(" ✕");
-                      closeBtn.setTextSize(11sp);
+                      closeBtn.setTextSize(11);
                       closeBtn.setTextColor(Color.parseColor("#EF4444"));
                       closeBtn.setPadding(8, 0, 0, 0);
                       closeBtn.setOnClickListener(v -> cerrarPestana(tabIndex));

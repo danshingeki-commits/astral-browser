@@ -1,0 +1,42 @@
+name: Compilar Astral Browser APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: "3.24.5"
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias y compilar APK
+        run: |
+          pip install "flet==0.25.2" flet-webview
+          yes | flutter doctor --android-licenses || true
+          flet build apk
+
+      - name: Guardar instalador APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AstralBrowser-Instalador
+          path: build/apk/*.apk

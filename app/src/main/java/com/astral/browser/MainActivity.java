@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
         WebSettings s=w.getSettings();
         s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true);
         s.setSupportZoom(true); s.setBuiltInZoomControls(true); s.setDisplayZoomControls(false);
-        CookieManager.getInstance().setAcceptThirdPartyCookies(w,false);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(w,getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("third_party_cookies", false));
         w.setWebChromeClient(new WebChromeClient(){
             @Override public void onProgressChanged(WebView view,int p){ if(view==current()){ progressBar.setVisibility(p<100?View.VISIBLE:View.GONE); progressBar.setProgress(p); } }
             @Override public void onReceivedTitle(WebView view,String title){ int i=tabs.indexOf(view); if(i>=0){tabTitles.set(i, title==null||title.isEmpty()?"Nueva pestaña":title); renderTabs();} }
@@ -152,22 +152,56 @@ public class MainActivity extends AppCompatActivity {
         current().setTag("web");
         if(input.startsWith("http://")||input.startsWith("https://")) current().loadUrl(input);
         else if(input.contains(".")&&!input.contains(" ")) current().loadUrl("https://"+input);
-        else { try{current().loadUrl("https://duckduckgo.com/?q="+URLEncoder.encode(input,"UTF-8"));}catch(Exception e){current().loadUrl("https://duckduckgo.com");} }
+        else { try{String engine=getSharedPreferences("astral_settings", MODE_PRIVATE).getString("search_engine","duckduckgo"); String base=engine.equals("google")?"https://www.google.com/search?q=":engine.equals("bing")?"https://www.bing.com/search?q=":"https://duckduckgo.com/?q="; current().loadUrl(base+URLEncoder.encode(input,"UTF-8"));}catch(Exception e){current().loadUrl("https://duckduckgo.com");} }
     }
     private void showSettings() {
         SharedPreferences prefs = getSharedPreferences("astral_settings", MODE_PRIVATE);
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setPadding(dp(20), dp(8), dp(20), dp(4));
-        TextView intro = new TextView(this);
-        intro.setText("Personaliza la conexión de Astral. El proxy se aplica a las pestañas de esta app.");
-        intro.setTextColor(Color.rgb(210,196,230));
-        panel.addView(intro);
+        panel.setPadding(dp(18), dp(8), dp(18), dp(10));
+        panel.setBackgroundColor(Color.rgb(18, 12, 29));
+
+        addSettingsHeading(panel, "GENERAL");
+        TextView searchLabel = settingsText("Motor de búsqueda", 14, Color.WHITE);
+        panel.addView(searchLabel);
+        android.widget.Spinner searchEngine = new android.widget.Spinner(this);
+        String[] engines = {"DuckDuckGo · Privacidad", "Google", "Bing"};
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_item, engines);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        searchEngine.setAdapter(adapter);
+        String savedEngine = prefs.getString("search_engine", "duckduckgo");
+        searchEngine.setSelection(savedEngine.equals("google") ? 1 : savedEngine.equals("bing") ? 2 : 0);
+        panel.addView(searchEngine);
+
+        addSettingsHeading(panel, "PRIVACIDAD Y SEGURIDAD");
+        CheckBox thirdPartyCookies = new CheckBox(this);
+        thirdPartyCookies.setText("Permitir cookies de terceros");
+        thirdPartyCookies.setTextColor(Color.WHITE);
+        thirdPartyCookies.setButtonTintList(android.content.res.ColorStateList.valueOf(Color.rgb(192,132,252)));
+        thirdPartyCookies.setChecked(prefs.getBoolean("third_party_cookies", false));
+        panel.addView(thirdPartyCookies);
+        TextView privacyNote = settingsText("Desactivarlas puede limitar el seguimiento entre sitios, aunque algunas páginas podrían no funcionar igual.", 12, Color.rgb(169,154,190));
+        panel.addView(privacyNote);
+        Button clearData = new Button(this);
+        clearData.setText("Borrar cookies, caché e historial");
+        panel.addView(clearData);
+        clearData.setOnClickListener(v -> new androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Borrar datos de navegación")
+            .setMessage("Se eliminarán las cookies, la caché y el historial de las pestañas abiertas. Puede cerrar tus sesiones en páginas web.")
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Borrar", (d, which) -> destroySession())
+            .show());
+
+        addSettingsHeading(panel, "CONEXIÓN · PROXY");
+        TextView proxyNote = settingsText("Introduce el servidor de proxy que te haya proporcionado un servicio de confianza. Formato: host:puerto.", 12, Color.rgb(210,196,230));
+        panel.addView(proxyNote);
         EditText proxy = new EditText(this);
         proxy.setSingleLine(true);
         proxy.setText(prefs.getString("proxy", ""));
-        proxy.setHint("Proxy: host:puerto (ej. 192.0.2.10:8080)");
-        proxy.setTextColor(Color.WHITE); proxy.setHintTextColor(Color.GRAY);
+        proxy.setHint("host:puerto");
+        proxy.setTextColor(Color.WHITE);
+        proxy.setHintTextColor(Color.GRAY);
         proxy.setInputType(InputType.TYPE_CLASS_TEXT);
         panel.addView(proxy);
         CheckBox enableProxy = new CheckBox(this);
@@ -176,34 +210,37 @@ public class MainActivity extends AppCompatActivity {
         enableProxy.setButtonTintList(android.content.res.ColorStateList.valueOf(Color.rgb(192,132,252)));
         enableProxy.setChecked(prefs.getBoolean("proxy_enabled", false));
         panel.addView(enableProxy);
-        TextView proxyNote = new TextView(this);
-        proxyNote.setText("Usa solo un proxy de confianza. El proxy puede ver metadatos de conexión y, si no usa HTTPS correctamente, podría comprometer tu privacidad.");
-        proxyNote.setTextColor(Color.rgb(169,154,190)); proxyNote.setTextSize(12);
-        panel.addView(proxyNote);
-        TextView dnsTitle = new TextView(this);
-        dnsTitle.setText("\nDNS privado");
-        dnsTitle.setTextColor(Color.rgb(192,132,252)); dnsTitle.setTextSize(16); dnsTitle.setTypeface(null, Typeface.BOLD);
-        panel.addView(dnsTitle);
-        TextView dnsNote = new TextView(this);
-        dnsNote.setText("Android no permite que esta app cambie por sí sola el DNS privado del sistema. Puedes abrir los ajustes de red y configurarlo allí. En Android, busca DNS privado y escribe el nombre de host de tu proveedor.");
-        dnsNote.setTextColor(Color.rgb(210,196,230)); dnsNote.setTextSize(13);
-        panel.addView(dnsNote);
-        Button openDns = new Button(this); openDns.setText("Abrir ajustes de red / DNS");
+        TextView proxyWarning = settingsText("No uses proxies desconocidos: el operador podría observar metadatos de conexión.", 12, Color.rgb(169,154,190));
+        panel.addView(proxyWarning);
+
+        addSettingsHeading(panel, "DNS PRIVADO");
+        panel.addView(settingsText("El DNS privado se configura desde Android y afecta al dispositivo, no solo a Astral. En los ajustes de red, busca «DNS privado» e introduce el nombre de host de tu proveedor.", 13, Color.rgb(210,196,230)));
+        Button openDns = new Button(this);
+        openDns.setText("Abrir ajustes de red / DNS");
         panel.addView(openDns);
         openDns.setOnClickListener(v -> {
             try { startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)); }
             catch (Exception e) { Toast.makeText(this, "Abre Ajustes > Red e Internet > DNS privado", Toast.LENGTH_LONG).show(); }
         });
-        ScrollView scroll = new ScrollView(this); scroll.addView(panel);
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.addView(panel);
         new androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("⚙ Astral · Configuración")
             .setView(scroll)
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton("Cerrar", null)
             .setNeutralButton("Quitar proxy", (dialog, which) -> clearProxy())
             .setPositiveButton("Guardar", (dialog, which) -> {
+                String engine = searchEngine.getSelectedItemPosition() == 1 ? "google" :
+                    searchEngine.getSelectedItemPosition() == 2 ? "bing" : "duckduckgo";
+                boolean cookies = thirdPartyCookies.isChecked();
                 String value = proxy.getText().toString().trim();
                 boolean enabled = enableProxy.isChecked();
-                prefs.edit().putString("proxy", value).putBoolean("proxy_enabled", enabled).apply();
+                prefs.edit().putString("search_engine", engine)
+                    .putBoolean("third_party_cookies", cookies)
+                    .putString("proxy", value).putBoolean("proxy_enabled", enabled).apply();
+                for (WebView web : tabs) CookieManager.getInstance().setAcceptThirdPartyCookies(web, cookies);
                 if (!enabled) { clearProxy(); return; }
                 if (value.isEmpty() || !value.contains(":")) {
                     Toast.makeText(this, "Escribe el proxy como host:puerto", Toast.LENGTH_LONG).show(); return;
@@ -214,11 +251,30 @@ public class MainActivity extends AppCompatActivity {
                     if (parts[0].trim().isEmpty() || port < 1 || port > 65535) throw new Exception();
                     ProxyConfig config = new ProxyConfig.Builder().addProxyRule(parts[0].trim()+":"+port).build();
                     ProxyController.getInstance().setProxyOverride(config, Runnable::run,
-                        () -> runOnUiThread(() -> Toast.makeText(this, "Proxy aplicado. Puede que debas recargar la página.", Toast.LENGTH_LONG).show()));
+                        () -> runOnUiThread(() -> Toast.makeText(this, "Ajustes guardados. Recarga la página para aplicar cambios.", Toast.LENGTH_LONG).show()));
                 } catch (Exception e) {
                     Toast.makeText(this, "Proxy inválido. Usa host:puerto, por ejemplo proxy.ejemplo.com:8080", Toast.LENGTH_LONG).show();
                 }
             }).show();
+    }
+
+    private void addSettingsHeading(LinearLayout panel, String heading) {
+        TextView title = settingsText(heading, 13, Color.rgb(192,132,252));
+        title.setTypeface(null, Typeface.BOLD);
+        title.setPadding(0, dp(18), 0, dp(7));
+        panel.addView(title);
+        View line = new View(this);
+        line.setBackgroundColor(Color.rgb(63, 43, 82));
+        panel.addView(line, new LinearLayout.LayoutParams(-1, dp(1)));
+    }
+
+    private TextView settingsText(String value, int size, int color) {
+        TextView text = new TextView(this);
+        text.setText(value);
+        text.setTextSize(size);
+        text.setTextColor(color);
+        text.setPadding(0, dp(5), 0, dp(5));
+        return text;
     }
 
     private void clearProxy() {

@@ -35,7 +35,7 @@ public class SplashActivity extends Activity {
         root.setBackgroundColor(Color.rgb(11, 8, 19));
 
         ImageView logo = new ImageView(this);
-        logo.setImageResource(R.drawable.ic_astral_launcher);
+        logo.setImageResource(R.drawable.astral_anime_icon);
         logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
         LinearLayout.LayoutParams logoParams = new LinearLayout.LayoutParams(dp(112), dp(112));
         logoParams.bottomMargin = dp(22);

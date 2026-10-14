@@ -10,6 +10,14 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.Intent;
+import android.provider.Settings;
+import android.text.InputType;
+import android.widget.CheckBox;
+import android.widget.ScrollView;
+import androidx.webkit.ProxyController;
+import androidx.webkit.ProxyConfig;
 import android.graphics.drawable.GradientDrawable;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
@@ -50,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
         Button back = findViewById(R.id.btnBack), forward = findViewById(R.id.btnForward);
         Button refresh = findViewById(R.id.btnRefresh), go = findViewById(R.id.btnSearch);
         Button burn = findViewById(R.id.btnBurn), addTab = findViewById(R.id.btnAddTab);
-        Button home = findViewById(R.id.btnHome), tabsButton = findViewById(R.id.btnTabs);
+        Button home = findViewById(R.id.btnHome), tabsButton = findViewById(R.id.btnTabs), settingsButton = findViewById(R.id.btnSettings);
 
         back.setOnClickListener(v -> { WebView w=current(); if(w.canGoBack()) w.goBack(); else showHome(w); });
         forward.setOnClickListener(v -> { if(current().canGoForward()) current().goForward(); });
@@ -60,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         addTab.setOnClickListener(v -> newTab(true));
         home.setOnClickListener(v -> showHome(current()));
         tabsButton.setOnClickListener(v -> { renderTabs(); Toast.makeText(this, tabs.size()+" pestaña(s) abiertas", Toast.LENGTH_SHORT).show(); });
+        settingsButton.setOnClickListener(v -> showSettings());
         etUrl.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH ||
                 (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
@@ -120,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,dp(38)); lp.setMargins(dp(4),dp(4),dp(3),dp(4)); tabsBar.addView(chip,lp);
         }
         TextView count=findViewById(R.id.tabCount); count.setText(String.valueOf(tabs.size()));
+        Button tabsButton=findViewById(R.id.btnTabs); if(tabsButton!=null) tabsButton.setText("▢ "+tabs.size());
     }
 
     private void closeTab(int index){
@@ -131,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showHome(WebView w){
         w.setTag("home");
-        String html = "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><style>*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 18%,#281342 0%,#100b1c 48%,#0b0813 100%);color:#f8f5ff;font-family:Arial,sans-serif;min-height:100vh;display:flex;justify-content:center}.wrap{width:100%;max-width:520px;padding:48px 22px 35px;text-align:center}.orb{margin:12px auto 16px;width:82px;height:82px;border-radius:26px;background:linear-gradient(135deg,#a855f7,#22d3ee);display:flex;align-items:center;justify-content:center;box-shadow:0 0 42px #9333ea55;font-size:39px;font-weight:800;color:#100b1c}.brand{font-size:32px;font-weight:800;letter-spacing:1px}.brand span{color:#c084fc}.tag{color:#a99abf;font-size:13px;margin:8px 0 30px}.search{display:flex;padding:6px;border:1px solid #47305e;background:#1a1329;border-radius:18px;box-shadow:0 8px 32px #0004}.search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:white;font-size:15px;padding:12px}.search button{border:0;border-radius:13px;background:linear-gradient(135deg,#a855f7,#6d28d9);color:white;padding:0 16px;font-size:18px}.label{margin:31px 0 14px;text-align:left;font-size:12px;color:#a99abf;letter-spacing:1.4px}.links{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.link{padding:14px 4px;border:1px solid #2d2240;background:#171122;border-radius:16px;color:#e9ddfa;text-decoration:none;font-size:12px}.ico{display:block;font-size:23px;margin-bottom:9px}.foot{margin-top:38px;color:#706080;font-size:11px}</style></head><body><div class='wrap'><div class='orb'>✦</div><div class='brand'>ASTRAL<span>.</span></div><div class='tag'>Tu espacio. Tu universo. Tu navegador.</div><form class='search' action='https://duckduckgo.com/'><input name='q' placeholder='Busca o escribe una dirección…' autocomplete='off'><button type='submit'>⌕</button></form><div class='label'>ACCESOS RÁPIDOS</div><div class='links'><a class='link' href='https://www.youtube.com'><span class='ico'>▶</span>YouTube</a><a class='link' href='https://www.wikipedia.org'><span class='ico'>◈</span>Wiki</a><a class='link' href='https://www.google.com'><span class='ico'>◎</span>Google</a><a class='link' href='https://github.com'><span class='ico'>⌘</span>GitHub</a></div><div class='foot'>ASTRAL BROWSER · EXPLORA A TU MANERA</div></div></body></html>";
+        String html = "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><style>*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 18%,#281342 0%,#100b1c 48%,#0b0813 100%);color:#f8f5ff;font-family:Arial,sans-serif;min-height:100vh;display:flex;justify-content:center}.wrap{width:100%;max-width:520px;padding:48px 22px 35px;text-align:center}.orb{margin:12px auto 16px;width:82px;height:82px;border-radius:26px;background:linear-gradient(135deg,#a855f7,#22d3ee);display:flex;align-items:center;justify-content:center;box-shadow:0 0 42px #9333ea55;font-size:39px;font-weight:800;color:#100b1c}.brand{font-size:32px;font-weight:800;letter-spacing:1px}.brand span{color:#c084fc}.tag{color:#a99abf;font-size:13px;margin:8px 0 30px}.search{display:flex;padding:6px;border:1px solid #47305e;background:#1a1329;border-radius:18px;box-shadow:0 8px 32px #0004}.search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:white;font-size:15px;padding:12px}.search button{border:0;border-radius:13px;background:linear-gradient(135deg,#a855f7,#6d28d9);color:white;padding:0 16px;font-size:18px}.label{margin:31px 0 14px;text-align:left;font-size:12px;color:#a99abf;letter-spacing:1.4px}.links{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.link{padding:14px 4px;border:1px solid #2d2240;background:#171122;border-radius:16px;color:#e9ddfa;text-decoration:none;font-size:12px}.ico{display:block;font-size:23px;margin-bottom:9px}.foot{margin-top:38px;color:#706080;font-size:11px}</style></head><body><div class='wrap'><div class='orb'><svg viewBox='0 0 100 100' width='82' height='82' aria-label='Avatar anime de cabello azul'><defs><linearGradient id='hair' x1='0' y1='0' x2='1' y2='1'><stop stop-color='#9deaff'/><stop offset='1' stop-color='#3987ff'/></linearGradient></defs><path d='M17 45 Q9 13 38 10 Q65 0 80 23 Q95 42 82 71 L72 83 L28 83 L17 65Z' fill='url(#hair)'/><path d='M28 41 Q27 24 49 24 Q70 25 72 47 L68 68 Q50 84 32 67Z' fill='#ffe2d6'/><path d='M26 41 Q25 22 45 19 L39 38 L31 55Z M45 21 Q67 18 75 41 L66 43 L58 31 L50 46 L43 39Z' fill='#65c8ff'/><path d='M37 48 Q42 44 46 48 M55 48 Q60 44 64 48' stroke='#344c9d' stroke-width='3' fill='none' stroke-linecap='round'/><circle cx='42' cy='53' r='3' fill='#344c9d'/><circle cx='59' cy='53' r='3' fill='#344c9d'/><path d='M46 63 Q51 68 57 62' stroke='#d76d85' stroke-width='2' fill='none' stroke-linecap='round'/><path d='M20 34 Q7 37 17 55 L29 59 L31 45Z M78 33 Q91 37 83 55 L72 59 L69 44Z' fill='#3987ff'/></svg></div><div class='brand'>ASTRAL<span>.</span></div><div class='tag'>Tu espacio. Tu universo. Tu navegador.</div><form class='search' action='https://duckduckgo.com/'><input name='q' placeholder='Busca o escribe una dirección…' autocomplete='off'><button type='submit'>⌕</button></form><div class='label'>ACCESOS RÁPIDOS</div><div class='links'><a class='link' href='https://www.youtube.com'><span class='ico'>▶</span>YouTube</a><a class='link' href='https://www.wikipedia.org'><span class='ico'>◈</span>Wiki</a><a class='link' href='https://www.google.com'><span class='ico'>◎</span>Google</a><a class='link' href='https://github.com'><span class='ico'>⌘</span>GitHub</a></div><div class='foot'>ASTRAL BROWSER · EXPLORA A TU MANERA</div></div></body></html>";
         w.loadDataWithBaseURL("https://astral.local/",html,"text/html","UTF-8",null);
         etUrl.setText("");
     }
@@ -144,6 +154,83 @@ public class MainActivity extends AppCompatActivity {
         else if(input.contains(".")&&!input.contains(" ")) current().loadUrl("https://"+input);
         else { try{current().loadUrl("https://duckduckgo.com/?q="+URLEncoder.encode(input,"UTF-8"));}catch(Exception e){current().loadUrl("https://duckduckgo.com");} }
     }
+    private void showSettings() {
+        SharedPreferences prefs = getSharedPreferences("astral_settings", MODE_PRIVATE);
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(dp(20), dp(8), dp(20), dp(4));
+        TextView intro = new TextView(this);
+        intro.setText("Personaliza la conexión de Astral. El proxy se aplica a las pestañas de esta app.");
+        intro.setTextColor(Color.rgb(210,196,230));
+        panel.addView(intro);
+        EditText proxy = new EditText(this);
+        proxy.setSingleLine(true);
+        proxy.setText(prefs.getString("proxy", ""));
+        proxy.setHint("Proxy: host:puerto (ej. 192.0.2.10:8080)");
+        proxy.setTextColor(Color.WHITE); proxy.setHintTextColor(Color.GRAY);
+        proxy.setInputType(InputType.TYPE_CLASS_TEXT);
+        panel.addView(proxy);
+        CheckBox enableProxy = new CheckBox(this);
+        enableProxy.setText("Activar proxy para Astral");
+        enableProxy.setTextColor(Color.WHITE);
+        enableProxy.setButtonTintList(android.content.res.ColorStateList.valueOf(Color.rgb(192,132,252)));
+        enableProxy.setChecked(prefs.getBoolean("proxy_enabled", false));
+        panel.addView(enableProxy);
+        TextView proxyNote = new TextView(this);
+        proxyNote.setText("Usa solo un proxy de confianza. El proxy puede ver metadatos de conexión y, si no usa HTTPS correctamente, podría comprometer tu privacidad.");
+        proxyNote.setTextColor(Color.rgb(169,154,190)); proxyNote.setTextSize(12);
+        panel.addView(proxyNote);
+        TextView dnsTitle = new TextView(this);
+        dnsTitle.setText("\nDNS privado");
+        dnsTitle.setTextColor(Color.rgb(192,132,252)); dnsTitle.setTextSize(16); dnsTitle.setTypeface(null, Typeface.BOLD);
+        panel.addView(dnsTitle);
+        TextView dnsNote = new TextView(this);
+        dnsNote.setText("Android no permite que esta app cambie por sí sola el DNS privado del sistema. Puedes abrir los ajustes de red y configurarlo allí. En Android, busca DNS privado y escribe el nombre de host de tu proveedor.");
+        dnsNote.setTextColor(Color.rgb(210,196,230)); dnsNote.setTextSize(13);
+        panel.addView(dnsNote);
+        Button openDns = new Button(this); openDns.setText("Abrir ajustes de red / DNS");
+        panel.addView(openDns);
+        openDns.setOnClickListener(v -> {
+            try { startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)); }
+            catch (Exception e) { Toast.makeText(this, "Abre Ajustes > Red e Internet > DNS privado", Toast.LENGTH_LONG).show(); }
+        });
+        ScrollView scroll = new ScrollView(this); scroll.addView(panel);
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("⚙ Astral · Configuración")
+            .setView(scroll)
+            .setNegativeButton("Cancelar", null)
+            .setNeutralButton("Quitar proxy", (dialog, which) -> clearProxy())
+            .setPositiveButton("Guardar", (dialog, which) -> {
+                String value = proxy.getText().toString().trim();
+                boolean enabled = enableProxy.isChecked();
+                prefs.edit().putString("proxy", value).putBoolean("proxy_enabled", enabled).apply();
+                if (!enabled) { clearProxy(); return; }
+                if (value.isEmpty() || !value.contains(":")) {
+                    Toast.makeText(this, "Escribe el proxy como host:puerto", Toast.LENGTH_LONG).show(); return;
+                }
+                String[] parts = value.split(":", 2);
+                try {
+                    int port = Integer.parseInt(parts[1].trim());
+                    if (parts[0].trim().isEmpty() || port < 1 || port > 65535) throw new Exception();
+                    ProxyConfig config = new ProxyConfig.Builder().addProxyRule(parts[0].trim()+":"+port).build();
+                    ProxyController.getInstance().setProxyOverride(config, Runnable::run,
+                        () -> runOnUiThread(() -> Toast.makeText(this, "Proxy aplicado. Puede que debas recargar la página.", Toast.LENGTH_LONG).show()));
+                } catch (Exception e) {
+                    Toast.makeText(this, "Proxy inválido. Usa host:puerto, por ejemplo proxy.ejemplo.com:8080", Toast.LENGTH_LONG).show();
+                }
+            }).show();
+    }
+
+    private void clearProxy() {
+        getSharedPreferences("astral_settings", MODE_PRIVATE).edit().putBoolean("proxy_enabled", false).apply();
+        try {
+            ProxyController.getInstance().clearProxyOverride(Runnable::run,
+                () -> runOnUiThread(() -> Toast.makeText(this, "Proxy desactivado", Toast.LENGTH_SHORT).show()));
+        } catch (Exception e) {
+            Toast.makeText(this, "No se pudo quitar el proxy: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void destroySession(){
         for(WebView w:tabs){w.clearCache(true);w.clearHistory();}
         CookieManager.getInstance().removeAllCookies(null); CookieManager.getInstance().flush();

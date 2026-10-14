@@ -37,6 +37,9 @@ jobs:
           mkdir -p app/src/main/res/anim
           mkdir -p app/src/main/res/drawable
 
+          # Descarga de imagen oficial de Hatsune Miku
+          curl -L -s -A "Mozilla/5.0" -o app/src/main/res/drawable/miku_avatar.png "https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Hatsune_Miku_V4x.png/440px-Hatsune_Miku_V4x.png" || true
+
           # 1. settings.gradle
           cat << 'EOF' > settings.gradle
           pluginManagement {
@@ -84,8 +87,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 12
-                  versionName "2.1"
+                  versionCode 14
+                  versionName "2.3"
               }
 
               compileOptions {
@@ -134,7 +137,7 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Astral Browser</string>
-              <string name="url_hint">Buscar o ingresar URL...</string>
+              <string name="url_hint">Buscar o escribir URL...</string>
           </resources>
           EOF
 
@@ -143,14 +146,51 @@ jobs:
           <resources>
               <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                   <item name="android:windowBackground">#090610</item>
-                  <item name="android:statusBarColor">#090610</item>
-                  <item name="android:navigationBarColor">#0E0919</item>
+                  <item name="android:statusBarColor">#0D0819</item>
+                  <item name="android:navigationBarColor">#090610</item>
                   <item name="colorPrimary">#38BDF8</item>
               </style>
           </resources>
           EOF
 
-          # 8. Animacion Miku
+          # 8. RECURSOS LIQUID GLASS (Degradados vidriados y bordes reflectantes)
+          cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_bar.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android">
+              <gradient
+                  android:startColor="#B31A122A"
+                  android:endColor="#80100A1C"
+                  android:angle="90" />
+              <corners android:radius="26dp" />
+              <stroke
+                  android:width="1.2dp"
+                  android:color="#4DFFFFFF" />
+          </shape>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_input.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android">
+              <solid android:color="#4D1F1435" />
+              <corners android:radius="18dp" />
+              <stroke
+                  android:width="1dp"
+                  android:color="#33C084FC" />
+          </shape>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_chip.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android">
+              <solid android:color="#66130B24" />
+              <corners android:radius="12dp" />
+              <stroke
+                  android:width="0.8dp"
+                  android:color="#3338BDF8" />
+          </shape>
+          EOF
+
+          # 9. Animacion de levitacion suave para Miku
           cat << 'EOF' > app/src/main/res/anim/floating_anim.xml
           <?xml version="1.0" encoding="utf-8"?>
           <set xmlns:android="http://schemas.android.com/apk/res/android"
@@ -164,26 +204,26 @@ jobs:
           </set>
           EOF
 
-          # 9. Avatar vectorial Miku
-          cat << 'EOF' > app/src/main/res/drawable/ic_miku.xml
+          # 10. Vectorial de respaldo Miku
+          cat << 'EOF' > app/src/main/res/drawable/ic_miku_fallback.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="150dp"
-              android:height="150dp"
+              android:width="160dp"
+              android:height="160dp"
               android:viewportWidth="100"
               android:viewportHeight="100">
               <path android:fillColor="#150E24" android:pathData="M50,10 A40,40 0 1,0 50,90 A40,40 0 1,0 50,10 Z" />
-              <path android:fillColor="#39C5BB" android:pathData="M25,28 C20,40 18,65 24,75 C26,62 30,45 35,35 Z" />
-              <path android:fillColor="#39C5BB" android:pathData="M75,28 C80,40 82,65 76,75 C74,62 70,45 65,35 Z" />
-              <path android:fillColor="#39C5BB" android:pathData="M35,25 C45,18 55,18 65,25 C60,35 40,35 35,25 Z" />
-              <path android:fillColor="#FFDFC4" android:pathData="M38,32 C38,48 62,48 62,32 Z" />
-              <path android:fillColor="#39C5BB" android:pathData="M43,38 A2.5,2.5 0 1,1 43,37.9 Z" />
-              <path android:fillColor="#39C5BB" android:pathData="M57,38 A2.5,2.5 0 1,1 57,37.9 Z" />
-              <path android:fillColor="#EF4444" android:pathData="M32,32 A4,4 0 1,1 32,31.9 Z" />
-              <path android:fillColor="#EF4444" android:pathData="M68,32 A4,4 0 1,1 68,31.9 Z" />
+              <path android:fillColor="#39C5BB" android:pathData="M22,25 C16,42 16,72 23,82 C26,68 30,50 36,36 Z" />
+              <path android:fillColor="#39C5BB" android:pathData="M78,25 C84,42 84,72 77,82 C74,68 70,50 64,36 Z" />
+              <path android:fillColor="#39C5BB" android:pathData="M34,22 C44,14 56,14 66,22 C62,34 38,34 34,22 Z" />
+              <path android:fillColor="#FFDFC4" android:pathData="M36,30 C36,48 64,48 64,30 Z" />
+              <path android:fillColor="#39C5BB" android:pathData="M43,36 A2.5,2.5 0 1,1 43,35.9 Z" />
+              <path android:fillColor="#39C5BB" android:pathData="M57,36 A2.5,2.5 0 1,1 57,35.9 Z" />
+              <path android:fillColor="#EF4444" android:pathData="M30,30 A4,4 0 1,1 30,29.9 Z" />
+              <path android:fillColor="#EF4444" android:pathData="M70,30 A4,4 0 1,1 70,29.9 Z" />
           </vector>
           EOF
 
-          # 10. activity_main.xml
+          # 11. activity_main.xml con Liquid Glass y Barra Telegram completa
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -193,15 +233,15 @@ jobs:
               android:orientation="vertical"
               android:background="#090610">
 
-              <!-- BARRA DE PESTAÑAS -->
+              <!-- BARRA DE PESTAÑAS VIDRIADA -->
               <LinearLayout
                   android:id="@+id/tabsTopBar"
                   android:layout_width="match_parent"
-                  android:layout_height="38dp"
+                  android:layout_height="40dp"
                   android:orientation="horizontal"
-                  android:background="#0E0919"
-                  android:paddingLeft="4dp"
-                  android:paddingRight="4dp"
+                  android:background="#B30E0919"
+                  android:paddingLeft="8dp"
+                  android:paddingRight="8dp"
                   android:gravity="center_vertical">
 
                   <HorizontalScrollView
@@ -220,33 +260,33 @@ jobs:
 
                   <Button
                       android:id="@+id/btnTabCounter"
-                      android:layout_width="34dp"
-                      android:layout_height="30dp"
+                      android:layout_width="36dp"
+                      android:layout_height="32dp"
                       android:text="1"
-                      android:textSize="11sp"
+                      android:textSize="12sp"
                       android:textColor="#38BDF8"
                       android:textStyle="bold"
                       android:background="?android:attr/selectableItemBackground" />
 
                   <Button
                       android:id="@+id/btnNewTab"
-                      android:layout_width="32dp"
-                      android:layout_height="32dp"
+                      android:layout_width="34dp"
+                      android:layout_height="34dp"
                       android:text="+"
                       android:textSize="18sp"
                       android:textColor="#38BDF8"
                       android:background="?android:attr/selectableItemBackground" />
               </LinearLayout>
 
-              <!-- BARRA DE ESTADO / CHIPS -->
+              <!-- BARRA DE ESTADO / CHIPS DE CRISTAL -->
               <LinearLayout
                   android:id="@+id/chipsBar"
                   android:layout_width="match_parent"
-                  android:layout_height="26dp"
+                  android:layout_height="28dp"
                   android:orientation="horizontal"
-                  android:background="#0B0714"
-                  android:paddingLeft="8dp"
-                  android:paddingRight="8dp"
+                  android:background="#800B0714"
+                  android:paddingLeft="10dp"
+                  android:paddingRight="10dp"
                   android:gravity="center_vertical">
 
                   <TextView
@@ -256,25 +296,25 @@ jobs:
                       android:text="PROXY: DIRECTO"
                       android:textColor="#94A3B8"
                       android:textSize="9sp"
-                      android:paddingLeft="6dp"
-                      android:paddingRight="6dp"
-                      android:paddingTop="2dp"
-                      android:paddingBottom="2dp"
-                      android:background="#150E24"
+                      android:paddingLeft="8dp"
+                      android:paddingRight="8dp"
+                      android:paddingTop="3dp"
+                      android:paddingBottom="3dp"
+                      android:background="@drawable/bg_liquid_glass_chip"
                       android:layout_marginRight="6dp" />
 
                   <TextView
                       android:id="@+id/chipShields"
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
-                      android:text="ESCUDOS: ACTIVOS"
+                      android:text="ESCUDOS: ON"
                       android:textColor="#34D399"
                       android:textSize="9sp"
-                      android:paddingLeft="6dp"
-                      android:paddingRight="6dp"
-                      android:paddingTop="2dp"
-                      android:paddingBottom="2dp"
-                      android:background="#150E24"
+                      android:paddingLeft="8dp"
+                      android:paddingRight="8dp"
+                      android:paddingTop="3dp"
+                      android:paddingBottom="3dp"
+                      android:background="@drawable/bg_liquid_glass_chip"
                       android:layout_marginRight="6dp" />
 
                   <TextView
@@ -284,44 +324,44 @@ jobs:
                       android:text="HTTPS"
                       android:textColor="#38BDF8"
                       android:textSize="9sp"
-                      android:paddingLeft="6dp"
-                      android:paddingRight="6dp"
-                      android:paddingTop="2dp"
-                      android:paddingBottom="2dp"
-                      android:background="#150E24" />
+                      android:paddingLeft="8dp"
+                      android:paddingRight="8dp"
+                      android:paddingTop="3dp"
+                      android:paddingBottom="3dp"
+                      android:background="@drawable/bg_liquid_glass_chip" />
               </LinearLayout>
 
-              <!-- BARRA DE ENTRADA URL -->
+              <!-- BARRA DE ENTRADA URL CRISTAL AHUMADO -->
               <LinearLayout
                   android:id="@+id/urlBar"
                   android:layout_width="match_parent"
-                  android:layout_height="42dp"
+                  android:layout_height="46dp"
                   android:orientation="horizontal"
-                  android:background="#110B1F"
-                  android:paddingLeft="8dp"
-                  android:paddingRight="8dp"
+                  android:background="#99110B1F"
+                  android:paddingLeft="10dp"
+                  android:paddingRight="10dp"
                   android:gravity="center_vertical">
 
                   <EditText
                       android:id="@+id/etUrl"
                       android:layout_width="0dp"
-                      android:layout_height="34dp"
+                      android:layout_height="36dp"
                       android:layout_weight="1"
-                      android:background="#191129"
+                      android:background="@drawable/bg_liquid_glass_input"
                       android:textColor="#F8FAFC"
                       android:textColorHint="#64748B"
                       android:hint="@string/url_hint"
                       android:textSize="12sp"
-                      android:paddingLeft="10dp"
-                      android:paddingRight="10dp"
+                      android:paddingLeft="12dp"
+                      android:paddingRight="12dp"
                       android:singleLine="true"
                       android:imeOptions="actionGo"
                       android:inputType="textUri" />
 
                   <Button
                       android:id="@+id/btnGo"
-                      android:layout_width="38dp"
-                      android:layout_height="34dp"
+                      android:layout_width="44dp"
+                      android:layout_height="36dp"
                       android:text="Ir"
                       android:textColor="#38BDF8"
                       android:textSize="12sp"
@@ -335,7 +375,7 @@ jobs:
                   android:layout_height="2dp"
                   android:visibility="gone" />
 
-              <!-- CONTENEDOR PRINCIPAL -->
+              <!-- ÁREA PRINCIPAL -->
               <FrameLayout
                   android:layout_width="match_parent"
                   android:layout_height="0dp"
@@ -359,9 +399,10 @@ jobs:
 
                       <ImageView
                           android:id="@+id/ivMiku"
-                          android:layout_width="140dp"
-                          android:layout_height="140dp"
-                          android:src="@drawable/ic_miku"
+                          android:layout_width="190dp"
+                          android:layout_height="230dp"
+                          android:scaleType="fitCenter"
+                          android:src="@drawable/ic_miku_fallback"
                           android:contentDescription="Hatsune Miku" />
 
                       <TextView
@@ -369,82 +410,87 @@ jobs:
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
                           android:text="A S T R A L"
-                          android:textColor="#C084FC"
-                          android:textSize="16sp"
+                          android:textColor="#39C5BB"
+                          android:textSize="18sp"
                           android:textStyle="bold"
-                          android:letterSpacing="0.2"
-                          android:layout_marginTop="16dp" />
+                          android:letterSpacing="0.25"
+                          android:layout_marginTop="14dp" />
 
                       <TextView
                           android:id="@+id/tvEngineInfo"
                           android:layout_width="wrap_content"
                           android:layout_height="wrap_content"
-                          android:text="Protegido • Escudos Activos"
+                          android:text="Liquid Glass Edition • Sin Rastreo"
                           android:textColor="#64748B"
-                          android:textSize="11sp"
+                          android:textSize="12sp"
                           android:layout_marginTop="4dp" />
                   </LinearLayout>
               </FrameLayout>
 
-              <!-- BARRA INFERIOR -->
+              <!-- BARRA INFERIOR LIQUID GLASS ESTILO TELEGRAM -->
               <LinearLayout
-                  android:id="@+id/bottomBar"
+                  android:id="@+id/bottomBarContainer"
                   android:layout_width="match_parent"
-                  android:layout_height="56dp"
-                  android:orientation="horizontal"
-                  android:background="#0E0919"
-                  android:gravity="center"
-                  android:paddingBottom="4dp"
-                  android:weightSum="4">
+                  android:layout_height="wrap_content"
+                  android:background="#660E0919"
+                  android:padding="8dp">
 
-                  <Button
-                      android:id="@+id/btnBack"
-                      android:layout_width="0dp"
-                      android:layout_height="match_parent"
-                      android:layout_weight="1"
-                      android:text="Atrás"
-                      android:textSize="11sp"
-                      android:singleLine="true"
-                      android:textColor="#94A3B8"
-                      android:background="?android:attr/selectableItemBackground" />
+                  <LinearLayout
+                      android:id="@+id/telegramStyleBar"
+                      android:layout_width="match_parent"
+                      android:layout_height="52dp"
+                      android:orientation="horizontal"
+                      android:background="@drawable/bg_liquid_glass_bar"
+                      android:gravity="center_vertical"
+                      android:weightSum="4"
+                      android:paddingLeft="8dp"
+                      android:paddingRight="8dp">
 
-                  <Button
-                      android:id="@+id/btnForward"
-                      android:layout_width="0dp"
-                      android:layout_height="match_parent"
-                      android:layout_weight="1"
-                      android:text="Adelante"
-                      android:textSize="11sp"
-                      android:singleLine="true"
-                      android:textColor="#94A3B8"
-                      android:background="?android:attr/selectableItemBackground" />
+                      <Button
+                          android:id="@+id/btnBack"
+                          android:layout_width="0dp"
+                          android:layout_height="match_parent"
+                          android:layout_weight="1"
+                          android:text="‹ Atrás"
+                          android:textSize="12sp"
+                          android:textColor="#94A3B8"
+                          android:background="?android:attr/selectableItemBackground" />
 
-                  <Button
-                      android:id="@+id/btnRefresh"
-                      android:layout_width="0dp"
-                      android:layout_height="match_parent"
-                      android:layout_weight="1"
-                      android:text="Recargar"
-                      android:textSize="11sp"
-                      android:singleLine="true"
-                      android:textColor="#38BDF8"
-                      android:background="?android:attr/selectableItemBackground" />
+                      <Button
+                          android:id="@+id/btnForward"
+                          android:layout_width="0dp"
+                          android:layout_height="match_parent"
+                          android:layout_weight="1"
+                          android:text="Adelante ›"
+                          android:textSize="12sp"
+                          android:textColor="#94A3B8"
+                          android:background="?android:attr/selectableItemBackground" />
 
-                  <Button
-                      android:id="@+id/btnSettings"
-                      android:layout_width="0dp"
-                      android:layout_height="match_parent"
-                      android:layout_weight="1"
-                      android:text="Ajustes"
-                      android:textSize="11sp"
-                      android:singleLine="true"
-                      android:textColor="#A855F7"
-                      android:background="?android:attr/selectableItemBackground" />
+                      <Button
+                          android:id="@+id/btnRefresh"
+                          android:layout_width="0dp"
+                          android:layout_height="match_parent"
+                          android:layout_weight="1"
+                          android:text="Recargar"
+                          android:textSize="12sp"
+                          android:textColor="#38BDF8"
+                          android:background="?android:attr/selectableItemBackground" />
+
+                      <Button
+                          android:id="@+id/btnSettings"
+                          android:layout_width="0dp"
+                          android:layout_height="match_parent"
+                          android:layout_weight="1"
+                          android:text="Ajustes"
+                          android:textSize="12sp"
+                          android:textColor="#C084FC"
+                          android:background="?android:attr/selectableItemBackground" />
+                  </LinearLayout>
               </LinearLayout>
           </LinearLayout>
           EOF
 
-          # 11. activity_settings.xml (Panel completo estilo Brave)
+          # 12. activity_settings.xml
           cat << 'EOF' > app/src/main/res/layout/activity_settings.xml
           <?xml version="1.0" encoding="utf-8"?>
           <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
@@ -485,7 +531,7 @@ jobs:
                           android:layout_marginLeft="8dp" />
                   </LinearLayout>
 
-                  <!-- APARIENCIA Y TEMAS -->
+                  <!-- APARIENCIA -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
@@ -521,7 +567,7 @@ jobs:
                               android:id="@+id/rbThemeCyberpunk"
                               android:layout_width="match_parent"
                               android:layout_height="wrap_content"
-                              android:text="Oscuro Cyberpunk (Predeterminado)"
+                              android:text="Oscuro Cyberpunk (Liquid Glass)"
                               android:textColor="#F8FAFC"
                               android:textSize="12sp" />
 
@@ -546,12 +592,12 @@ jobs:
                           android:id="@+id/switchAnimations"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
-                          android:text="Animacion Flotante de Miku y Efectos"
+                          android:text="Animacion Flotante de Miku"
                           android:textColor="#F8FAFC"
                           android:textSize="13sp" />
                   </LinearLayout>
 
-                  <!-- ESCUDOS Y PRIVACIDAD BRAVE -->
+                  <!-- ESCUDOS BRAVE -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
@@ -573,7 +619,7 @@ jobs:
                           android:id="@+id/switchBlockTrackers"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
-                          android:text="Bloquear Rastreadores y Cookies de Terceros"
+                          android:text="Bloquear Rastreadores y Cookies Cruzadas"
                           android:textColor="#F8FAFC"
                           android:textSize="13sp" />
 
@@ -608,7 +654,7 @@ jobs:
                           android:id="@+id/switchBlockImages"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
-                          android:text="Bloquear Imagenes (Navegacion Rapida)"
+                          android:text="Bloquear Imagenes (Ahorro de Datos)"
                           android:textColor="#F8FAFC"
                           android:textSize="13sp"
                           android:layout_marginTop="10dp" />
@@ -670,7 +716,7 @@ jobs:
                           android:singleLine="true" />
                   </LinearLayout>
 
-                  <!-- MOTOR DE BUSQUEDA -->
+                  <!-- BUSCADOR -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
@@ -708,12 +754,12 @@ jobs:
                           android:id="@+id/rbStartpage"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
-                          android:text="Startpage (Google sin seguimiento)"
+                          android:text="Startpage (Google protegido)"
                           android:textColor="#F8FAFC"
                           android:textSize="12sp" />
                   </RadioGroup>
 
-                  <!-- BOTON LIMPIAR DATOS -->
+                  <!-- PURGA -->
                   <Button
                       android:id="@+id/btnClearData"
                       android:layout_width="match_parent"
@@ -724,7 +770,6 @@ jobs:
                       android:textStyle="bold"
                       android:layout_marginBottom="12dp" />
 
-                  <!-- BOTON GUARDAR -->
                   <Button
                       android:id="@+id/btnSaveSettings"
                       android:layout_width="match_parent"
@@ -737,7 +782,7 @@ jobs:
           </ScrollView>
           EOF
 
-          # 12. SettingsActivity.java
+          # 13. SettingsActivity.java
           cat << 'EOF' > app/src/main/java/com/astral/browser/SettingsActivity.java
           package com.astral.browser;
 
@@ -866,7 +911,7 @@ jobs:
           }
           EOF
 
-          # 13. MainActivity.java con aplicacion dinamica de Temas, Animaciones y Escudos
+          # 14. MainActivity.java con Miku Oficial y soporte Liquid Glass
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
@@ -874,6 +919,8 @@ jobs:
           import android.app.AlertDialog;
           import android.content.Intent;
           import android.content.SharedPreferences;
+          import android.graphics.Bitmap;
+          import android.graphics.BitmapFactory;
           import android.graphics.Color;
           import android.os.Bundle;
           import android.view.Gravity;
@@ -900,14 +947,17 @@ jobs:
           import android.widget.Toast;
           import androidx.appcompat.app.AppCompatActivity;
 
+          import java.io.InputStream;
           import java.io.UnsupportedEncodingException;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
           import java.net.URLEncoder;
           import java.util.ArrayList;
           import java.util.List;
 
           public class MainActivity extends AppCompatActivity {
 
-              private LinearLayout mainRootLayout, tabsTopBar, chipsBar, urlBar, bottomBar;
+              private LinearLayout mainRootLayout, tabsTopBar, chipsBar, urlBar, bottomBarContainer, telegramStyleBar;
               private FrameLayout webContainer;
               private LinearLayout tabsContainer;
               private LinearLayout homeOverlay;
@@ -926,6 +976,7 @@ jobs:
               private String searchEngineUrl = "https://search.brave.com/search?q=";
 
               private static final String DESKTOP_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+              private static final String MIKU_URL = "https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Hatsune_Miku_V4x.png/440px-Hatsune_Miku_V4x.png";
 
               @Override
               protected void onCreate(Bundle savedInstanceState) {
@@ -938,7 +989,8 @@ jobs:
                   tabsTopBar = findViewById(R.id.tabsTopBar);
                   chipsBar = findViewById(R.id.chipsBar);
                   urlBar = findViewById(R.id.urlBar);
-                  bottomBar = findViewById(R.id.bottomBar);
+                  bottomBarContainer = findViewById(R.id.bottomBarContainer);
+                  telegramStyleBar = findViewById(R.id.telegramStyleBar);
 
                   webContainer = findViewById(R.id.webContainer);
                   tabsContainer = findViewById(R.id.tabsContainer);
@@ -961,7 +1013,7 @@ jobs:
                   Button btnRefresh = findViewById(R.id.btnRefresh);
                   Button btnSettings = findViewById(R.id.btnSettings);
 
-                  btnNewTab.setOnClickListener(v -> crearNuevaPestana("", "Inicio"));
+                  btnNewTab.setOnClickListener(v -> crearNuevaPestana("", "Inicio Miku"));
                   btnTabCounter.setOnClickListener(v -> mostrarListaPestanas());
                   btnGo.setOnClickListener(v -> navegar());
 
@@ -993,12 +1045,30 @@ jobs:
                       return false;
                   });
 
+                  cargarMikuOficial();
                   aplicarTemaYAnimacion();
 
                   if (tabList.isEmpty()) {
-                      crearNuevaPestana("", "Inicio");
+                      crearNuevaPestana("", "Inicio Miku");
                   }
                   actualizarAjustesDeRed();
+              }
+
+              private void cargarMikuOficial() {
+                  new Thread(() -> {
+                      try {
+                          URL url = new URL(MIKU_URL);
+                          HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                          conn.setRequestProperty("User-Agent", "Mozilla/5.0");
+                          conn.setDoInput(true);
+                          conn.connect();
+                          InputStream is = conn.getInputStream();
+                          final Bitmap bm = BitmapFactory.decodeStream(is);
+                          if (bm != null) {
+                              runOnUiThread(() -> ivMiku.setImageBitmap(bm));
+                          }
+                      } catch (Exception ignored) {}
+                  }).start();
               }
 
               @Override
@@ -1028,7 +1098,7 @@ jobs:
                       chipsBar.setBackgroundColor(Color.parseColor("#050505"));
                       urlBar.setBackgroundColor(Color.parseColor("#0A0A0A"));
                       etUrl.setBackgroundColor(Color.parseColor("#121212"));
-                      bottomBar.setBackgroundColor(Color.parseColor("#000000"));
+                      bottomBarContainer.setBackgroundColor(Color.parseColor("#000000"));
                       homeOverlay.setBackgroundColor(Color.parseColor("#000000"));
                       webContainer.setBackgroundColor(Color.parseColor("#000000"));
                   } else if (theme == 2) { // TEMA CLARO
@@ -1038,21 +1108,21 @@ jobs:
                       urlBar.setBackgroundColor(Color.parseColor("#FFFFFF"));
                       etUrl.setBackgroundColor(Color.parseColor("#F8FAFC"));
                       etUrl.setTextColor(Color.parseColor("#0F172A"));
-                      bottomBar.setBackgroundColor(Color.parseColor("#E2E8F0"));
+                      bottomBarContainer.setBackgroundColor(Color.parseColor("#E2E8F0"));
                       homeOverlay.setBackgroundColor(Color.parseColor("#F8FAFC"));
                       webContainer.setBackgroundColor(Color.parseColor("#F8FAFC"));
-                      tvLogoTitle.setTextColor(Color.parseColor("#6366F1"));
-                  } else { // CYBERPUNK NEON
+                      tvLogoTitle.setTextColor(Color.parseColor("#0D9488"));
+                  } else { // LIQUID GLASS CYBERPUNK (PREDETERMINADO)
                       mainRootLayout.setBackgroundColor(Color.parseColor("#090610"));
-                      tabsTopBar.setBackgroundColor(Color.parseColor("#0E0919"));
-                      chipsBar.setBackgroundColor(Color.parseColor("#0B0714"));
-                      urlBar.setBackgroundColor(Color.parseColor("#110B1F"));
-                      etUrl.setBackgroundColor(Color.parseColor("#191129"));
+                      tabsTopBar.setBackgroundColor(Color.parseColor("#B30E0919"));
+                      chipsBar.setBackgroundColor(Color.parseColor("#800B0714"));
+                      urlBar.setBackgroundColor(Color.parseColor("#99110B1F"));
+                      etUrl.setBackgroundResource(R.drawable.bg_liquid_glass_input);
                       etUrl.setTextColor(Color.parseColor("#F8FAFC"));
-                      bottomBar.setBackgroundColor(Color.parseColor("#0E0919"));
+                      bottomBarContainer.setBackgroundColor(Color.parseColor("#660E0919"));
                       homeOverlay.setBackgroundColor(Color.parseColor("#090610"));
                       webContainer.setBackgroundColor(Color.parseColor("#090610"));
-                      tvLogoTitle.setTextColor(Color.parseColor("#C084FC"));
+                      tvLogoTitle.setTextColor(Color.parseColor("#39C5BB"));
                   }
                   actualizarBarraPestanasSuperior();
               }
@@ -1084,7 +1154,7 @@ jobs:
                   }
 
                   boolean trackers = prefs.getBoolean("block_trackers", true);
-                  chipShields.setText(trackers ? "ESCUDOS: ACTIVOS" : "ESCUDOS: PAUSA");
+                  chipShields.setText(trackers ? "ESCUDOS: ON" : "ESCUDOS: OFF");
                   chipShields.setTextColor(trackers ? Color.parseColor("#34D399") : Color.parseColor("#EF4444"));
               }
 
@@ -1218,8 +1288,8 @@ jobs:
               private void actualizarBarraPestanasSuperior() {
                   tabsContainer.removeAllViews();
                   int theme = prefs.getInt("theme_mode", 0);
-                  String activeColor = theme == 1 ? "#1A1A1A" : (theme == 2 ? "#FFFFFF" : "#1F1435");
-                  String inactiveColor = theme == 1 ? "#0A0A0A" : (theme == 2 ? "#E2E8F0" : "#0E0919");
+                  String activeColor = theme == 1 ? "#1A1A1A" : (theme == 2 ? "#FFFFFF" : "#4D281745");
+                  String inactiveColor = theme == 1 ? "#0A0A0A" : (theme == 2 ? "#CBD5E1" : "#330E0919");
                   String textColor = theme == 2 ? "#0F172A" : "#F8FAFC";
 
                   for (int i = 0; i < tabList.size(); i++) {
@@ -1260,7 +1330,7 @@ jobs:
                   builder.setTitle("Pestañas Abiertas (" + tabList.size() + ")");
                   builder.setItems(items.toArray(new String[0]), (dialog, which) -> {
                       if (which == tabList.size()) {
-                          crearNuevaPestana("", "Inicio");
+                          crearNuevaPestana("", "Inicio Miku");
                       } else {
                           cambiarAPestana(which);
                       }
@@ -1275,7 +1345,7 @@ jobs:
                       wv.loadUrl("about:blank");
                       homeOverlay.setVisibility(View.VISIBLE);
                       etUrl.setText("");
-                      tabTitles.set(0, "Inicio");
+                      tabTitles.set(0, "Inicio Miku");
                       btnTabCounter.setText("1");
                       actualizarBarraPestanasSuperior();
                       return;
@@ -1358,8 +1428,8 @@ jobs:
       - name: Publicar Release con APK directo
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v2.1-build${{ github.run_number }}"
-          name: "Astral Browser v2.1"
+          tag_name: "v2.3-build${{ github.run_number }}"
+          name: "Astral Browser v2.3 (Liquid Glass Edition)"
           draft: false
           prerelease: false
           files: app/build/outputs/apk/debug/AstralBrowser.apk

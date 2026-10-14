@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         burn.setOnClickListener(v -> destroySession());
         addTab.setOnClickListener(v -> newTab(true));
         home.setOnClickListener(v -> showHome(current()));
-        tabsButton.setOnClickListener(v -> { renderTabs(); Toast.makeText(this, tabs.size()+" pestaña(s) abiertas", Toast.LENGTH_SHORT).show(); });
+        tabsButton.setOnClickListener(v -> showTabsMenu());
         settingsButton.setOnClickListener(v -> showSettings());
         etUrl.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH ||
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         WebView w = new WebView(this);
         w.setBackgroundColor(Color.rgb(11,8,19));
         WebSettings s=w.getSettings();
-        s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true);
+        s.setJavaScriptEnabled(getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("javascript_enabled", true)); s.setDomStorageEnabled(true); s.setTextZoom(getSharedPreferences("astral_settings", MODE_PRIVATE).getInt("text_zoom", 100)); s.setJavaScriptCanOpenWindowsAutomatically(!getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("block_popups", true)); s.setMediaPlaybackRequiresUserGesture(!getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("autoplay_media", false));
         s.setSupportZoom(true); s.setBuiltInZoomControls(true); s.setDisplayZoomControls(false);
         CookieManager.getInstance().setAcceptThirdPartyCookies(w,getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("third_party_cookies", false));
         w.setWebChromeClient(new WebChromeClient(){
@@ -155,7 +155,72 @@ public class MainActivity extends AppCompatActivity {
         else { try{String engine=getSharedPreferences("astral_settings", MODE_PRIVATE).getString("search_engine","duckduckgo"); String base=engine.equals("google")?"https://www.google.com/search?q=":engine.equals("bing")?"https://www.bing.com/search?q=":"https://duckduckgo.com/?q="; current().loadUrl(base+URLEncoder.encode(input,"UTF-8"));}catch(Exception e){current().loadUrl("https://duckduckgo.com");} }
     }
     private void showSettings() {
-        startActivity(new Intent(this, SettingsActivity.class));
+        Intent settings = new Intent(this, SettingsActivity.class);
+        settings.putExtra("open_tabs_count", tabs.size());
+        startActivity(settings);
+    }
+
+    private void showTabsMenu() {
+        final android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this).create();
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(dp(18), dp(16), dp(18), dp(12));
+        panel.setBackgroundColor(Color.rgb(11, 8, 19));
+        TextView title = settingsText("Pestañas abiertas · " + tabs.size(), 20, Color.WHITE);
+        title.setTypeface(null, Typeface.BOLD);
+        panel.addView(title);
+        TextView subtitle = settingsText("Toca una tarjeta para cambiar de pestaña", 12, Color.rgb(169,154,190));
+        panel.addView(subtitle);
+        ScrollView scroll = new ScrollView(this);
+        LinearLayout list = new LinearLayout(this);
+        list.setOrientation(LinearLayout.VERTICAL);
+        for (int i = 0; i < tabs.size(); i++) {
+            final int index = i;
+            LinearLayout row = new LinearLayout(this);
+            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(12), dp(8), dp(8), dp(8));
+            GradientDrawable rowBg = new GradientDrawable();
+            rowBg.setColor(i == activeTab ? Color.rgb(48,31,72) : Color.rgb(24,18,37));
+            rowBg.setCornerRadius(dp(13));
+            row.setBackground(rowBg);
+            LinearLayout labels = new LinearLayout(this);
+            labels.setOrientation(LinearLayout.VERTICAL);
+            TextView tabName = settingsText((i == activeTab ? "●  " : "○  ") + tabTitles.get(i), 14, Color.WHITE);
+            tabName.setMaxLines(1);
+            tabName.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            labels.addView(tabName);
+            TextView tabUrl = settingsText(isHome(tabs.get(i)) ? "Página de inicio" : (tabs.get(i).getUrl() == null ? "Cargando…" : tabs.get(i).getUrl()), 10, Color.rgb(169,154,190));
+            tabUrl.setMaxLines(1);
+            tabUrl.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            labels.addView(tabUrl);
+            row.addView(labels, new LinearLayout.LayoutParams(0, -2, 1));
+            Button close = new Button(this);
+            close.setText("×");
+            close.setTextSize(18);
+            close.setTextColor(Color.rgb(192,132,252));
+            close.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(35,24,49)));
+            close.setMinWidth(dp(42));
+            close.setOnClickListener(v -> { dialog.dismiss(); closeTab(index); showTabsMenu(); });
+            row.addView(close, new LinearLayout.LayoutParams(dp(44), dp(44)));
+            row.setOnClickListener(v -> { dialog.dismiss(); switchTab(index); });
+            LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(-1, -2);
+            rowLp.setMargins(0, dp(5), 0, dp(5));
+            list.addView(row, rowLp);
+        }
+        scroll.addView(list);
+        panel.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
+        Button add = new Button(this);
+        add.setText("+  Nueva pestaña");
+        add.setTextColor(Color.WHITE);
+        add.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(91,45,130)));
+        add.setOnClickListener(v -> { dialog.dismiss(); newTab(true); });
+        panel.addView(add, new LinearLayout.LayoutParams(-1, -2));
+        dialog.setView(panel);
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.rgb(11,8,19)));
+            dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels * 0.92f), (int)(getResources().getDisplayMetrics().heightPixels * 0.78f));
+        }
     }
 
     private void addSettingsHeading(LinearLayout panel, String heading) {

@@ -1,0 +1,51 @@
+package com.astral.browser;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.provider.Settings;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.*;
+import android.webkit.CookieManager;
+import androidx.webkit.ProxyController;
+import androidx.webkit.ProxyConfig;
+
+public class SettingsActivity extends Activity {
+    private final int bg=Color.rgb(11,8,19), panel=Color.rgb(24,18,37), purple=Color.rgb(192,132,252), cyan=Color.rgb(34,211,238), muted=Color.rgb(169,154,190);
+    private SharedPreferences prefs;
+    private LinearLayout root, content, nav;
+    private String active="General";
+    private final String[] sections={"General","Diseño","Buscadores","Privacidad y seguridad","Multimedia","Pestañas y grupos","Avanzado"};
+    @Override public void onCreate(Bundle b){super.onCreate(b);prefs=getSharedPreferences("astral_settings",MODE_PRIVATE);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg); buildShell(); showSection("General");}
+    private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}
+    private GradientDrawable shape(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
+    private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
+    private void buildShell(){
+        root=new LinearLayout(this);root.setOrientation(1);root.setBackgroundColor(bg);
+        LinearLayout top=new LinearLayout(this);top.setGravity(Gravity.CENTER_VERTICAL);top.setPadding(dp(18),dp(14),dp(18),dp(14));
+        TextView back=text("‹",34,purple,true);top.addView(back,new LinearLayout.LayoutParams(dp(42),dp(48)));back.setOnClickListener(v->finish());
+        LinearLayout titleBox=new LinearLayout(this);titleBox.setOrientation(1);titleBox.addView(text("ASTRAL",20,Color.WHITE,true));titleBox.addView(text("Configuración",13,cyan,false));top.addView(titleBox,new LinearLayout.LayoutParams(0,-2,1));
+        TextView done=text("LISTO",12,cyan,true);top.addView(done);done.setOnClickListener(v->finish());root.addView(top);
+        ScrollView navScroll=new ScrollView(this);navScroll.setFillViewport(false);navScroll.setBackgroundColor(Color.rgb(16,11,26));nav=new LinearLayout(this);nav.setPadding(dp(12),dp(8),dp(12),dp(8));nav.setOrientation(1);navScroll.addView(nav);root.addView(navScroll,new LinearLayout.LayoutParams(-1,dp(236)));
+        ScrollView bodyScroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);content.setPadding(dp(18),dp(10),dp(18),dp(28));bodyScroll.addView(content);root.addView(bodyScroll,new LinearLayout.LayoutParams(-1,0,1));
+        setContentView(root);for(String s:sections){TextView item=text("  ◇   "+s,15,Color.WHITE,true);item.setPadding(dp(12),dp(13),dp(12),dp(13));item.setBackground(shape(panel,12));LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.setMargins(0,dp(3),0,dp(3));nav.addView(item,lp);item.setOnClickListener(v->showSection(s));}
+    }
+    private void heading(String s,String sub){content.addView(text(s,23,Color.WHITE,true));TextView t=text(sub,13,muted,false);t.setPadding(0,dp(6),0,dp(16));content.addView(t);}
+    private void card(String label,String description,View control){LinearLayout box=new LinearLayout(this);box.setOrientation(1);box.setPadding(dp(14),dp(12),dp(14),dp(12));box.setBackground(shape(panel,16));TextView a=text(label,15,Color.WHITE,true);box.addView(a);if(description!=null&&!description.isEmpty()){TextView d=text(description,12,muted,false);d.setPadding(0,dp(5),0,dp(7));box.addView(d);}if(control!=null){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.topMargin=dp(4);box.addView(control,p);}LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.setMargins(0,0,0,dp(10));content.addView(box,lp);}
+    private void showSection(String section){active=section;content.removeAllViews();heading(section,"Personaliza tu experiencia en Astral Browser");switch(section){
+        case "General": card("Página de inicio","Al abrir una pestaña, Astral muestra su página de inicio.",text("Página Astral · activa",14,cyan,true));card("Borrar datos de navegación","Elimina cookies, caché e historial de las pestañas.",button("Borrar datos",()->new android.app.AlertDialog.Builder(this).setTitle("Borrar datos").setMessage("Se eliminarán cookies, caché e historial. Puede cerrar sesiones web.").setNegativeButton("Cancelar",null).setPositiveButton("Borrar",(d,w)->{android.webkit.WebStorage.getInstance().deleteAllData();CookieManager.getInstance().removeAllCookies(null);CookieManager.getInstance().flush();Toast.makeText(this,"Datos de navegación borrados",Toast.LENGTH_SHORT).show();}).show()));break;
+        case "Diseño": card("Tema","Elige el aspecto de Astral.",text("Oscuro · Neón morado y cian",14,cyan,true));card("Barra de herramientas","La barra de navegación mantiene el acceso a inicio, pestañas y ajustes.",null);break;
+        case "Buscadores": Spinner engine=new Spinner(this);String[] engines={"DuckDuckGo · Privacidad","Google","Bing"};engine.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,engines));String saved=prefs.getString("search_engine","duckduckgo");engine.setSelection(saved.equals("google")?1:saved.equals("bing")?2:0);card("Motor de búsqueda predeterminado","Se utiliza cuando escribes palabras en la barra de direcciones.",engine);card("Guardar buscador", "Aplica la selección al próximo uso de la barra.",button("Guardar",()->{String e=engine.getSelectedItemPosition()==1?"google":engine.getSelectedItemPosition()==2?"bing":"duckduckgo";prefs.edit().putString("search_engine",e).apply();Toast.makeText(this,"Buscador guardado",Toast.LENGTH_SHORT).show();}));break;
+        case "Privacidad y seguridad": CheckBox cookies=new CheckBox(this);cookies.setText("Permitir cookies de terceros");cookies.setTextColor(Color.WHITE);cookies.setButtonTintList(android.content.res.ColorStateList.valueOf(purple));cookies.setChecked(prefs.getBoolean("third_party_cookies",false));card("Cookies","Desactivarlas puede limitar el seguimiento entre sitios, aunque algunas páginas podrían funcionar distinto.",cookies);card("Guardar privacidad","Aplica la preferencia de cookies a las pestañas abiertas.",button("Guardar",()->{boolean value=cookies.isChecked();prefs.edit().putBoolean("third_party_cookies",value).apply();Toast.makeText(this,"Preferencia guardada para nuevas pestañas",Toast.LENGTH_SHORT).show();}));card("DNS privado","Esta opción se configura en los ajustes de Android y afecta al dispositivo.",button("Abrir ajustes de red",()->{try{startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));}catch(Exception e){Toast.makeText(this,"Abre Ajustes > Red e Internet",Toast.LENGTH_LONG).show();}}));break;
+        case "Multimedia": card("Reproducción web","Los controles de audio y vídeo dependen de cada página.",text("Administrados por el sitio web",14,cyan,true));card("Permisos del sitio","Gestiona permisos desde los ajustes de Android si una página no funciona como esperas.",button("Abrir ajustes de la aplicación",()->{Intent i=new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:"+getPackageName()));startActivity(i);}));break;
+        case "Pestañas y grupos": card("Pestañas abiertas","Crea y cambia de pestaña desde la barra superior.",text("Pestañas independientes",14,cyan,true));card("Cerrar pestaña","Usa la × de cada pestaña para cerrarla.",null);break;
+        case "Avanzado": EditText proxy=new EditText(this);proxy.setSingleLine(true);proxy.setTextColor(Color.WHITE);proxy.setHintTextColor(muted);proxy.setHint("host:puerto");proxy.setText(prefs.getString("proxy",""));card("Servidor proxy","Solo configura un proxy de un proveedor de confianza.",proxy);CheckBox enabled=new CheckBox(this);enabled.setText("Activar proxy para Astral");enabled.setTextColor(Color.WHITE);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(cyan));enabled.setChecked(prefs.getBoolean("proxy_enabled",false));card("Proxy", "El soporte depende de la versión de Android System WebView.",enabled);card("Guardar proxy","Revisa host y puerto antes de guardar.",button("Guardar proxy",()->saveProxy(proxy.getText().toString().trim(),enabled.isChecked())));card("Desactivar proxy","Quita la configuración de proxy de WebView.",button("Desactivar",()->{prefs.edit().putBoolean("proxy_enabled",false).apply();try{ProxyController.getInstance().clearProxyOverride(Runnable::run,()->runOnUiThread(()->Toast.makeText(this,"Proxy desactivado",Toast.LENGTH_SHORT).show()));}catch(Exception e){Toast.makeText(this,"No se pudo desactivar el proxy",Toast.LENGTH_SHORT).show();}}));break;
+    }}
+    private Button button(String label,Runnable action){Button b=new Button(this);b.setText(label);b.setTextColor(Color.WHITE);b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(91,45,130)));b.setOnClickListener(v->action.run());return b;}
+    private void saveProxy(String value,boolean enabled){prefs.edit().putString("proxy",value).putBoolean("proxy_enabled",enabled).apply();if(!enabled){Toast.makeText(this,"Proxy guardado como desactivado",Toast.LENGTH_SHORT).show();return;}try{String[] p=value.split(":",2);int port=Integer.parseInt(p[1]);if(p[0].trim().isEmpty()||port<1||port>65535)throw new Exception();ProxyConfig c=new ProxyConfig.Builder().addProxyRule(p[0].trim()+":"+port).build();ProxyController.getInstance().setProxyOverride(c,Runnable::run,()->runOnUiThread(()->Toast.makeText(this,"Proxy configurado",Toast.LENGTH_SHORT).show()));}catch(Exception e){Toast.makeText(this,"Formato inválido. Usa host:puerto",Toast.LENGTH_LONG).show();}}
+}

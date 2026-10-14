@@ -37,7 +37,6 @@ jobs:
           mkdir -p app/src/main/res/anim
           mkdir -p app/src/main/res/drawable
 
-          # Descargar imagen oficial de Hatsune Miku
           curl -L -s -A "Mozilla/5.0" -o app/src/main/res/drawable/miku_avatar.png "https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Hatsune_Miku_V4x.png/440px-Hatsune_Miku_V4x.png" || true
 
           # 1. settings.gradle
@@ -87,8 +86,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 19
-                  versionName "2.8"
+                  versionCode 20
+                  versionName "2.9"
               }
 
               compileOptions {
@@ -157,42 +156,27 @@ jobs:
           cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_bar.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
-              <gradient
-                  android:startColor="#CC181028"
-                  android:endColor="#990E081A"
-                  android:angle="90" />
+              <gradient android:startColor="#CC181028" android:endColor="#990E081A" android:angle="90" />
               <corners android:radius="28dp" />
-              <stroke
-                  android:width="1.2dp"
-                  android:color="#40C084FC" />
+              <stroke android:width="1.2dp" android:color="#40C084FC" />
           </shape>
           EOF
 
           cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_card.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
-              <gradient
-                  android:startColor="#F218102C"
-                  android:endColor="#D90E081A"
-                  android:angle="135" />
+              <gradient android:startColor="#F218102C" android:endColor="#D90E081A" android:angle="135" />
               <corners android:radius="24dp" />
-              <stroke
-                  android:width="1.5dp"
-                  android:color="#66C084FC" />
+              <stroke android:width="1.5dp" android:color="#66C084FC" />
           </shape>
           EOF
 
           cat << 'EOF' > app/src/main/res/drawable/bg_liquid_bubble.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
-              <gradient
-                  android:startColor="#E638BDF8"
-                  android:endColor="#80A855F7"
-                  android:angle="45" />
+              <gradient android:startColor="#E638BDF8" android:endColor="#80A855F7" android:angle="45" />
               <corners android:radius="22dp" />
-              <stroke
-                  android:width="1.5dp"
-                  android:color="#FFFFFFFF" />
+              <stroke android:width="1.5dp" android:color="#FFFFFFFF" />
           </shape>
           EOF
 
@@ -201,9 +185,7 @@ jobs:
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
               <solid android:color="#331A122E" />
               <corners android:radius="24dp" />
-              <stroke
-                  android:width="1dp"
-                  android:color="#4D94A3B8" />
+              <stroke android:width="1dp" android:color="#4D94A3B8" />
           </shape>
           EOF
 
@@ -212,9 +194,7 @@ jobs:
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
               <solid android:color="#66130B24" />
               <corners android:radius="12dp" />
-              <stroke
-                  android:width="0.8dp"
-                  android:color="#3338BDF8" />
+              <stroke android:width="0.8dp" android:color="#3338BDF8" />
           </shape>
           EOF
 
@@ -223,22 +203,13 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?>
           <set xmlns:android="http://schemas.android.com/apk/res/android"
               android:interpolator="@android:anim/accelerate_decelerate_interpolator">
-              <translate
-                  android:fromYDelta="0%p"
-                  android:toYDelta="-3.5%p"
-                  android:duration="1800"
-                  android:repeatCount="infinite"
-                  android:repeatMode="reverse" />
+              <translate android:fromYDelta="0%p" android:toYDelta="-3.5%p" android:duration="1800" android:repeatCount="infinite" android:repeatMode="reverse" />
           </set>
           EOF
 
           # 10. Respaldo Miku
           cat << 'EOF' > app/src/main/res/drawable/ic_miku_fallback.xml
-          <vector xmlns:android="http://schemas.android.com/apk/res/android"
-              android:width="160dp"
-              android:height="160dp"
-              android:viewportWidth="100"
-              android:viewportHeight="100">
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="160dp" android:height="160dp" android:viewportWidth="100" android:viewportHeight="100">
               <path android:fillColor="#150E24" android:pathData="M50,10 A40,40 0 1,0 50,90 A40,40 0 1,0 50,10 Z" />
               <path android:fillColor="#39C5BB" android:pathData="M22,25 C16,42 16,72 23,82 C26,68 30,50 36,36 Z" />
               <path android:fillColor="#39C5BB" android:pathData="M78,25 C84,42 84,72 77,82 C74,68 70,50 64,36 Z" />
@@ -261,33 +232,20 @@ jobs:
           import android.graphics.Paint;
           import android.util.AttributeSet;
           import android.view.View;
-
           import java.util.ArrayList;
           import java.util.List;
           import java.util.Random;
 
           public class BubbleRainView extends View {
-
-              private static class Bubble {
-                  float x, y, speed, radius, alpha;
-                  int color;
-              }
-
+              private static class Bubble { float x, y, speed, radius, alpha; int color; }
               private final List<Bubble> bubbles = new ArrayList<>();
               private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
               private final Paint glowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
               private final Random random = new Random();
               private boolean isAnimating = true;
 
-              public BubbleRainView(Context context) {
-                  super(context);
-                  init();
-              }
-
-              public BubbleRainView(Context context, AttributeSet attrs) {
-                  super(context, attrs);
-                  init();
-              }
+              public BubbleRainView(Context context) { super(context); init(); }
+              public BubbleRainView(Context context, AttributeSet attrs) { super(context, attrs); init(); }
 
               private void init() {
                   paint.setStyle(Paint.Style.FILL);
@@ -295,22 +253,15 @@ jobs:
                   glowPaint.setStrokeWidth(1.5f);
                   glowPaint.setColor(Color.parseColor("#80FFFFFF"));
               }
-
               public void setAnimationRunning(boolean running) {
                   this.isAnimating = running;
                   if (running) invalidate();
               }
-
-              @Override
-              protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+              @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
                   super.onSizeChanged(w, h, oldw, oldh);
                   bubbles.clear();
-                  int count = 28;
-                  for (int i = 0; i < count; i++) {
-                      bubbles.add(crearBurbuja(w, h, true));
-                  }
+                  for (int i = 0; i < 28; i++) bubbles.add(crearBurbuja(w, h, true));
               }
-
               private Bubble crearBurbuja(int width, int height, boolean randomY) {
                   Bubble b = new Bubble();
                   b.radius = 4f + random.nextFloat() * 14f;
@@ -318,47 +269,28 @@ jobs:
                   b.y = randomY ? (random.nextFloat() * (height > 0 ? height : 1920)) : -b.radius * 2;
                   b.speed = 1.2f + random.nextFloat() * 3.2f;
                   b.alpha = 0.25f + random.nextFloat() * 0.45f;
-
-                  if (random.nextBoolean()) {
-                      b.color = Color.parseColor("#38BDF8");
-                  } else {
-                      b.color = Color.parseColor("#39C5BB");
-                  }
+                  b.color = random.nextBoolean() ? Color.parseColor("#38BDF8") : Color.parseColor("#39C5BB");
                   return b;
               }
-
-              @Override
-              protected void onDraw(Canvas canvas) {
+              @Override protected void onDraw(Canvas canvas) {
                   super.onDraw(canvas);
-                  int w = getWidth();
-                  int h = getHeight();
+                  int w = getWidth(), h = getHeight();
                   if (w <= 0 || h <= 0) return;
-
                   for (Bubble b : bubbles) {
-                      paint.setColor(b.color);
-                      paint.setAlpha((int) (b.alpha * 255));
+                      paint.setColor(b.color); paint.setAlpha((int) (b.alpha * 255));
                       canvas.drawCircle(b.x, b.y, b.radius, paint);
                       canvas.drawCircle(b.x, b.y, b.radius, glowPaint);
-
                       if (isAnimating) {
-                          b.y += b.speed;
-                          b.x += (float) Math.sin(b.y * 0.02) * 0.4f;
-
-                          if (b.y - b.radius > h) {
-                              b.y = -b.radius * 2;
-                              b.x = random.nextFloat() * w;
-                          }
+                          b.y += b.speed; b.x += (float) Math.sin(b.y * 0.02) * 0.4f;
+                          if (b.y - b.radius > h) { b.y = -b.radius * 2; b.x = random.nextFloat() * w; }
                       }
                   }
-
-                  if (isAnimating) {
-                      postInvalidateOnAnimation();
-                  }
+                  if (isAnimating) postInvalidateOnAnimation();
               }
           }
           EOF
 
-          # 12. activity_main.xml
+          # 12. activity_main.xml (Contiene el nuevo TabManagerOverlay)
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -468,7 +400,6 @@ jobs:
                           android:background="@drawable/bg_liquid_glass_chip" />
                   </LinearLayout>
 
-                  <!-- BARRA URL ESTILO CÁPSULA FLOTANTE -->
                   <FrameLayout
                       android:id="@+id/urlBarContainer"
                       android:layout_width="match_parent"
@@ -662,13 +593,80 @@ jobs:
                   </LinearLayout>
               </LinearLayout>
 
-              <!-- BIENVENIDA MÁS CORTA -->
+              <!-- GESTOR DE PESTAÑAS (TIPO CHROME/BRAVE) -->
+              <FrameLayout
+                  android:id="@+id/tabManagerOverlay"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:background="#F2090610"
+                  android:clickable="true"
+                  android:focusable="true"
+                  android:visibility="gone"
+                  android:elevation="10dp">
+
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="match_parent"
+                      android:orientation="vertical"
+                      android:padding="16dp">
+
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:orientation="horizontal"
+                          android:gravity="center_vertical"
+                          android:layout_marginBottom="16dp">
+                          <TextView
+                              android:layout_width="0dp"
+                              android:layout_height="wrap_content"
+                              android:layout_weight="1"
+                              android:text="Pestañas Abiertas"
+                              android:textColor="#F8FAFC"
+                              android:textSize="20sp"
+                              android:textStyle="bold" />
+                          <Button
+                              android:id="@+id/btnCloseTabManager"
+                              android:layout_width="44dp"
+                              android:layout_height="44dp"
+                              android:text="✕"
+                              android:textColor="#94A3B8"
+                              android:textSize="20sp"
+                              android:background="?android:attr/selectableItemBackgroundBorderless" />
+                      </LinearLayout>
+
+                      <ScrollView
+                          android:layout_width="match_parent"
+                          android:layout_height="0dp"
+                          android:layout_weight="1"
+                          android:scrollbars="none">
+                          <LinearLayout
+                              android:id="@+id/tabListContainer"
+                              android:layout_width="match_parent"
+                              android:layout_height="wrap_content"
+                              android:orientation="vertical" />
+                      </ScrollView>
+
+                      <Button
+                          android:id="@+id/btnNewTabFromManager"
+                          android:layout_width="match_parent"
+                          android:layout_height="54dp"
+                          android:text="+ Nueva Pestaña"
+                          android:textColor="#090610"
+                          android:textSize="16sp"
+                          android:textStyle="bold"
+                          android:background="#38BDF8"
+                          android:layout_marginTop="16dp" />
+                  </LinearLayout>
+              </FrameLayout>
+
+              <!-- BIENVENIDA / ONBOARDING -->
               <FrameLayout
                   android:id="@+id/onboardingOverlay"
                   android:layout_width="match_parent"
                   android:layout_height="match_parent"
                   android:background="#D9090610"
                   android:padding="24dp"
+                  android:elevation="20dp"
                   android:visibility="gone">
 
                   <LinearLayout
@@ -939,7 +937,7 @@ jobs:
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:text="RED Y SERVIDOR PROXY"
-                      android:textColor="#38BDF8"
+                      android:textColor="#34D399"
                       android:textSize="11sp"
                       android:textStyle="bold"
                       android:layout_marginBottom="8dp" />
@@ -1216,17 +1214,17 @@ jobs:
           }
           EOF
 
-          # 15. MainActivity.java
+          # 15. MainActivity.java con TabManager estilo Chrome/Brave
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
           import android.annotation.SuppressLint;
-          import android.app.AlertDialog;
           import android.content.Intent;
           import android.content.SharedPreferences;
           import android.graphics.Bitmap;
           import android.graphics.BitmapFactory;
           import android.graphics.Color;
+          import android.graphics.Typeface;
           import android.net.Uri;
           import android.os.Bundle;
           import android.view.Gravity;
@@ -1275,6 +1273,8 @@ jobs:
               private LinearLayout tabsContainer;
               private FrameLayout homeOverlay;
               private FrameLayout onboardingOverlay;
+              private FrameLayout tabManagerOverlay;
+              private LinearLayout tabListContainer;
               private BubbleRainView bubbleRainView;
               private ImageView ivMiku;
               private TextView tvLogoTitle, tvEngineInfo;
@@ -1319,6 +1319,8 @@ jobs:
                   tabsContainer = findViewById(R.id.tabsContainer);
                   homeOverlay = findViewById(R.id.homeOverlay);
                   onboardingOverlay = findViewById(R.id.onboardingOverlay);
+                  tabManagerOverlay = findViewById(R.id.tabManagerOverlay);
+                  tabListContainer = findViewById(R.id.tabListContainer);
                   bubbleRainView = findViewById(R.id.bubbleRainView);
                   ivMiku = findViewById(R.id.ivMiku);
                   tvLogoTitle = findViewById(R.id.tvLogoTitle);
@@ -1335,10 +1337,18 @@ jobs:
                   Button btnGo = findViewById(R.id.btnGo);
                   Button btnTelegramReport = findViewById(R.id.btnTelegramReport);
                   Button btnStartBrowsing = findViewById(R.id.btnStartBrowsing);
+                  Button btnCloseTabManager = findViewById(R.id.btnCloseTabManager);
+                  Button btnNewTabFromManager = findViewById(R.id.btnNewTabFromManager);
 
                   btnNewTab.setOnClickListener(v -> crearNuevaPestana("", "Inicio Miku"));
                   btnTabCounter.setOnClickListener(v -> mostrarListaPestanas());
                   btnGo.setOnClickListener(v -> navegar());
+
+                  btnCloseTabManager.setOnClickListener(v -> tabManagerOverlay.setVisibility(View.GONE));
+                  btnNewTabFromManager.setOnClickListener(v -> {
+                      tabManagerOverlay.setVisibility(View.GONE);
+                      crearNuevaPestana("", "Inicio Miku");
+                  });
 
                   boolean onboardingDone = prefs.getBoolean("onboarding_done", false);
                   if (!onboardingDone) {
@@ -1505,7 +1515,7 @@ jobs:
                       homeOverlay.setBackgroundColor(Color.parseColor("#F8FAFC"));
                       webContainer.setBackgroundColor(Color.parseColor("#F8FAFC"));
                       tvLogoTitle.setTextColor(Color.parseColor("#0D9488"));
-                  } else { // LIQUID GLASS CYBERPUNK (PREDETERMINADO)
+                  } else { // LIQUID GLASS CYBERPUNK
                       mainRootLayout.setBackgroundColor(Color.parseColor("#090610"));
                       tabsTopBar.setBackgroundColor(Color.parseColor("#B30E0919"));
                       chipsBar.setBackgroundColor(Color.parseColor("#800B0714"));
@@ -1715,23 +1725,73 @@ jobs:
                   }
               }
 
+              // NUEVO GESTOR DE PESTAÑAS ESTILO BRAVE/CHROME
               private void mostrarListaPestanas() {
-                  List<String> items = new ArrayList<>();
-                  for (int i = 0; i < tabList.size(); i++) {
-                      items.add((i + 1) + ". " + tabTitles.get(i));
-                  }
-                  items.add("➕ Nueva Pestaña");
+                  tabManagerOverlay.setVisibility(View.VISIBLE);
+                  tabListContainer.removeAllViews();
 
-                  AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                  builder.setTitle("Pestañas Abiertas (" + tabList.size() + ")");
-                  builder.setItems(items.toArray(new String[0]), (dialog, which) -> {
-                      if (which == tabList.size()) {
-                          crearNuevaPestana("", "Inicio Miku");
-                      } else {
-                          cambiarAPestana(which);
-                      }
-                  });
-                  builder.show();
+                  int theme = prefs.getInt("theme_mode", 0);
+                  String textColor = theme == 2 ? "#0F172A" : "#F8FAFC";
+
+                  for (int i = 0; i < tabList.size(); i++) {
+                      final int tabIndex = i;
+
+                      LinearLayout card = new LinearLayout(this);
+                      card.setOrientation(LinearLayout.HORIZONTAL);
+                      LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                              ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                      params.setMargins(0, 0, 0, 24);
+                      card.setLayoutParams(params);
+                      card.setPadding(40, 32, 20, 32);
+                      card.setBackgroundResource(R.drawable.bg_liquid_glass_card);
+                      card.setGravity(Gravity.CENTER_VERTICAL);
+
+                      LinearLayout textContainer = new LinearLayout(this);
+                      textContainer.setOrientation(LinearLayout.VERTICAL);
+                      textContainer.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+
+                      TextView tvTitle = new TextView(this);
+                      tvTitle.setText(tabTitles.get(i));
+                      tvTitle.setTextColor(Color.parseColor(textColor));
+                      tvTitle.setTextSize(16);
+                      tvTitle.setMaxLines(1);
+                      tvTitle.setTypeface(null, Typeface.BOLD);
+
+                      TextView tvUrl = new TextView(this);
+                      String url = tabList.get(i).getUrl();
+                      tvUrl.setText(url != null && !url.isEmpty() ? url : "Nueva pestaña (Vacía)");
+                      tvUrl.setTextColor(Color.parseColor("#94A3B8"));
+                      tvUrl.setTextSize(12);
+                      tvUrl.setMaxLines(1);
+
+                      textContainer.addView(tvTitle);
+                      textContainer.addView(tvUrl);
+
+                      Button btnClose = new Button(this);
+                      btnClose.setText("✕");
+                      btnClose.setTextColor(Color.parseColor("#EF4444"));
+                      btnClose.setBackgroundColor(Color.TRANSPARENT);
+                      btnClose.setTextSize(18);
+                      btnClose.setLayoutParams(new LinearLayout.LayoutParams(120, 120));
+                      btnClose.setOnClickListener(v -> {
+                          cerrarPestana(tabIndex);
+                          if (tabList.isEmpty()) {
+                              tabManagerOverlay.setVisibility(View.GONE);
+                          } else {
+                              mostrarListaPestanas(); // Refrescar lista
+                          }
+                      });
+
+                      card.addView(textContainer);
+                      card.addView(btnClose);
+
+                      card.setOnClickListener(v -> {
+                          cambiarAPestana(tabIndex);
+                          tabManagerOverlay.setVisibility(View.GONE);
+                      });
+
+                      tabListContainer.addView(card);
+                  }
               }
 
               private void cerrarPestana(int index) {
@@ -1806,6 +1866,11 @@ jobs:
                       onboardingOverlay.setVisibility(View.GONE);
                       return;
                   }
+                  if (tabManagerOverlay.getVisibility() == View.VISIBLE) {
+                      tabManagerOverlay.setVisibility(View.GONE);
+                      return;
+                  }
+
                   WebView wv = getCurrentWebView();
                   if (wv != null && wv.canGoBack()) {
                       wv.goBack();
@@ -1829,8 +1894,8 @@ jobs:
       - name: Publicar Release con APK directo
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v2.8-build${{ github.run_number }}"
-          name: "Astral Browser v2.8 (Fixed Cast)"
+          tag_name: "v2.9-build${{ github.run_number }}"
+          name: "Astral Browser v2.9 (Tab Manager)"
           draft: false
           prerelease: false
           files: app/build/outputs/apk/debug/AstralBrowser.apk

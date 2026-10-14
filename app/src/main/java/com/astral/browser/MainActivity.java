@@ -36,6 +36,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
     private EditText etUrl;
@@ -171,6 +173,35 @@ public class MainActivity extends AppCompatActivity {
         panel.addView(title);
         TextView subtitle = settingsText("Toca una tarjeta para cambiar de pestaña", 12, Color.rgb(169,154,190));
         panel.addView(subtitle);
+        LinearLayout quickActions = new LinearLayout(this);
+        quickActions.setOrientation(LinearLayout.HORIZONTAL);
+        Button privateMode = new Button(this);
+        privateMode.setText("◈ Incógnito");
+        privateMode.setTextSize(12);
+        privateMode.setAllCaps(false);
+        privateMode.setTextColor(Color.WHITE);
+        privateMode.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(91,45,130)));
+        privateMode.setOnClickListener(v -> { dialog.dismiss(); startActivity(new Intent(this, IncognitoActivity.class)); });
+        Button saveFavorite = new Button(this);
+        saveFavorite.setText("☆ Guardar");
+        saveFavorite.setTextSize(12);
+        saveFavorite.setAllCaps(false);
+        saveFavorite.setTextColor(Color.WHITE);
+        saveFavorite.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(35,24,49)));
+        saveFavorite.setOnClickListener(v -> { dialog.dismiss(); saveCurrentFavorite(); });
+        Button openFavorites = new Button(this);
+        openFavorites.setText("★ Favoritos");
+        openFavorites.setTextSize(12);
+        openFavorites.setAllCaps(false);
+        openFavorites.setTextColor(Color.WHITE);
+        openFavorites.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(35,24,49)));
+        openFavorites.setOnClickListener(v -> { dialog.dismiss(); showFavorites(); });
+        quickActions.addView(privateMode,new LinearLayout.LayoutParams(0,dp(46),1));
+        quickActions.addView(saveFavorite,new LinearLayout.LayoutParams(0,dp(46),1));
+        quickActions.addView(openFavorites,new LinearLayout.LayoutParams(0,dp(46),1));
+        LinearLayout.LayoutParams actionsLp = new LinearLayout.LayoutParams(-1,-2);
+        actionsLp.setMargins(0,dp(8),0,dp(8));
+        panel.addView(quickActions,actionsLp);
         ScrollView scroll = new ScrollView(this);
         LinearLayout list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
@@ -221,6 +252,62 @@ public class MainActivity extends AppCompatActivity {
             dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.rgb(11,8,19)));
             dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels * 0.92f), (int)(getResources().getDisplayMetrics().heightPixels * 0.78f));
         }
+    }
+
+    private void saveCurrentFavorite() {
+        WebView w=current();
+        String url=w.getUrl();
+        if(url==null || url.isEmpty() || isHome(w) || url.startsWith("https://astral.local/")) {
+            Toast.makeText(this,"Abre una página web antes de guardarla",Toast.LENGTH_SHORT).show(); return;
+        }
+        android.content.SharedPreferences prefs=getSharedPreferences("astral_favorites",MODE_PRIVATE);
+        JSONArray old;
+        try { old=new JSONArray(prefs.getString("items","[]")); } catch(Exception e) { old=new JSONArray(); }
+        try {
+            for(int i=0;i<old.length();i++) if(url.equals(old.getJSONObject(i).optString("url"))) {
+                Toast.makeText(this,"Ese favorito ya está guardado",Toast.LENGTH_SHORT).show(); return;
+            }
+            JSONObject item=new JSONObject(); item.put("title",tabTitles.get(activeTab)); item.put("url",url); old.put(item);
+            prefs.edit().putString("items",old.toString()).apply();
+            Toast.makeText(this,"Favorito guardado",Toast.LENGTH_SHORT).show();
+        } catch(Exception e) { Toast.makeText(this,"No se pudo guardar el favorito",Toast.LENGTH_SHORT).show(); }
+    }
+
+    private void showFavorites() {
+        android.content.SharedPreferences prefs=getSharedPreferences("astral_favorites",MODE_PRIVATE);
+        JSONArray items;
+        try { items=new JSONArray(prefs.getString("items","[]")); } catch(Exception e) { items=new JSONArray(); }
+        if(items.length()==0) {
+            new android.app.AlertDialog.Builder(this).setTitle("Favoritos").setMessage("Todavía no tienes favoritos. Abre una página y toca ☆ Guardar en el menú de pestañas.").setPositiveButton("Entendido",null).show(); return;
+        }
+        ArrayList<JSONObject> saved=new ArrayList<>();
+        ArrayList<String> labels=new ArrayList<>();
+        for(int i=0;i<items.length();i++) try {
+            JSONObject item=items.getJSONObject(i); saved.add(item);
+            labels.add(item.optString("title","Página guardada")+"\n"+item.optString("url",""));
+        } catch(Exception ignored) {}
+        String[] choices=labels.toArray(new String[0]);
+        new android.app.AlertDialog.Builder(this).setTitle("Favoritos · "+saved.size()).setItems(choices,(d,which)->{
+            JSONObject item=saved.get(which);String url=item.optString("url","");
+            if(!url.isEmpty())current().loadUrl(url);
+        }).setNeutralButton("Administrar",(d,w)->manageFavorites()).setNegativeButton("Cerrar",null).show();
+    }
+
+    private void manageFavorites() {
+        android.content.SharedPreferences prefs=getSharedPreferences("astral_favorites",MODE_PRIVATE);
+        JSONArray items;
+        try { items=new JSONArray(prefs.getString("items","[]")); } catch(Exception e) { items=new JSONArray(); }
+        ArrayList<JSONObject> saved=new ArrayList<>();ArrayList<String> labels=new ArrayList<>();
+        for(int i=0;i<items.length();i++)try{JSONObject item=items.getJSONObject(i);saved.add(item);labels.add(item.optString("title","Página guardada")+"\n"+item.optString("url",""));}catch(Exception ignored){}
+        if(saved.isEmpty()){showFavorites();return;}
+        new android.app.AlertDialog.Builder(this).setTitle("Mantén pulsado un favorito para eliminarlo").setItems(labels.toArray(new String[0]),(d,which)->{
+            JSONObject item=saved.get(which);
+            new android.app.AlertDialog.Builder(this).setMessage("¿Eliminar "+item.optString("title","este favorito")+"?").setNegativeButton("Cancelar",null).setPositiveButton("Eliminar",(dd,ww)->{
+                JSONArray updated=new JSONArray();
+                for(JSONObject candidate:saved)if(!candidate.optString("url","").equals(item.optString("url","")))updated.put(candidate);
+                prefs.edit().putString("items",updated.toString()).apply();showFavorites();
+            }).show();
+        }).setNegativeButton("Cerrar",null).show();
     }
 
     private void addSettingsHeading(LinearLayout panel, String heading) {

@@ -86,8 +86,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 20
-                  versionName "2.9"
+                  versionCode 21
+                  versionName "3.0"
               }
 
               compileOptions {
@@ -198,6 +198,15 @@ jobs:
           </shape>
           EOF
 
+          cat << 'EOF' > app/src/main/res/drawable/bg_glass_btn.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android">
+              <solid android:color="#4D1F1435" />
+              <corners android:radius="10dp" />
+              <stroke android:width="1dp" android:color="#6638BDF8" />
+          </shape>
+          EOF
+
           # 9. Animacion Miku
           cat << 'EOF' > app/src/main/res/anim/floating_anim.xml
           <?xml version="1.0" encoding="utf-8"?>
@@ -290,7 +299,7 @@ jobs:
           }
           EOF
 
-          # 12. activity_main.xml (Contiene el nuevo TabManagerOverlay)
+          # 12. activity_main.xml (CON BOTONES DE PESTAÑAS ARREGLADOS)
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -307,7 +316,7 @@ jobs:
                   <LinearLayout
                       android:id="@+id/tabsTopBar"
                       android:layout_width="match_parent"
-                      android:layout_height="40dp"
+                      android:layout_height="44dp"
                       android:orientation="horizontal"
                       android:background="#B30E0919"
                       android:paddingLeft="8dp"
@@ -328,24 +337,34 @@ jobs:
                               android:gravity="center_vertical" />
                       </HorizontalScrollView>
 
-                      <Button
+                      <!-- BOTONES ARREGLADOS: AHORA SON TEXTVIEWS CUADRADOS VISIBLES -->
+                      <TextView
                           android:id="@+id/btnTabCounter"
-                          android:layout_width="36dp"
+                          android:layout_width="32dp"
                           android:layout_height="32dp"
                           android:text="1"
-                          android:textSize="12sp"
-                          android:textColor="#38BDF8"
+                          android:textSize="14sp"
+                          android:textColor="#F8FAFC"
                           android:textStyle="bold"
-                          android:background="?android:attr/selectableItemBackground" />
+                          android:gravity="center"
+                          android:background="@drawable/bg_glass_btn"
+                          android:layout_marginStart="8dp"
+                          android:layout_marginEnd="8dp"
+                          android:clickable="true"
+                          android:focusable="true" />
 
-                  <Button
-                      android:id="@+id/btnNewTab"
-                      android:layout_width="34dp"
-                      android:layout_height="34dp"
-                      android:text="+"
-                      android:textSize="18sp"
-                      android:textColor="#38BDF8"
-                      android:background="?android:attr/selectableItemBackground" />
+                      <TextView
+                          android:id="@+id/btnNewTab"
+                          android:layout_width="32dp"
+                          android:layout_height="32dp"
+                          android:text="+"
+                          android:textSize="20sp"
+                          android:textColor="#F8FAFC"
+                          android:textStyle="bold"
+                          android:gravity="center"
+                          android:background="@drawable/bg_glass_btn"
+                          android:clickable="true"
+                          android:focusable="true" />
                   </LinearLayout>
 
                   <LinearLayout
@@ -593,7 +612,7 @@ jobs:
                   </LinearLayout>
               </LinearLayout>
 
-              <!-- GESTOR DE PESTAÑAS (TIPO CHROME/BRAVE) -->
+              <!-- GESTOR DE PESTAÑAS PANTALLA COMPLETA -->
               <FrameLayout
                   android:id="@+id/tabManagerOverlay"
                   android:layout_width="match_parent"
@@ -659,7 +678,7 @@ jobs:
                   </LinearLayout>
               </FrameLayout>
 
-              <!-- BIENVENIDA / ONBOARDING -->
+              <!-- BIENVENIDA -->
               <FrameLayout
                   android:id="@+id/onboardingOverlay"
                   android:layout_width="match_parent"
@@ -1214,7 +1233,7 @@ jobs:
           }
           EOF
 
-          # 15. MainActivity.java con TabManager estilo Chrome/Brave
+          # 15. MainActivity.java (Cambio de Button a TextView para los botones superiores)
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
@@ -1281,7 +1300,7 @@ jobs:
               private EditText etUrl;
               private ProgressBar progressBar;
               private TextView chipProxy, chipShields, chipProtocol;
-              private Button btnTabCounter;
+              private TextView btnTabCounter;
 
               private final List<WebView> tabList = new ArrayList<>();
               private final List<String> tabTitles = new ArrayList<>();
@@ -1333,7 +1352,7 @@ jobs:
                   chipShields = findViewById(R.id.chipShields);
                   chipProtocol = findViewById(R.id.chipProtocol);
 
-                  Button btnNewTab = findViewById(R.id.btnNewTab);
+                  TextView btnNewTab = findViewById(R.id.btnNewTab);
                   Button btnGo = findViewById(R.id.btnGo);
                   Button btnTelegramReport = findViewById(R.id.btnTelegramReport);
                   Button btnStartBrowsing = findViewById(R.id.btnStartBrowsing);
@@ -1725,7 +1744,6 @@ jobs:
                   }
               }
 
-              // NUEVO GESTOR DE PESTAÑAS ESTILO BRAVE/CHROME
               private void mostrarListaPestanas() {
                   tabManagerOverlay.setVisibility(View.VISIBLE);
                   tabListContainer.removeAllViews();
@@ -1757,147 +1775,4 @@ jobs:
                       tvTitle.setMaxLines(1);
                       tvTitle.setTypeface(null, Typeface.BOLD);
 
-                      TextView tvUrl = new TextView(this);
-                      String url = tabList.get(i).getUrl();
-                      tvUrl.setText(url != null && !url.isEmpty() ? url : "Nueva pestaña (Vacía)");
-                      tvUrl.setTextColor(Color.parseColor("#94A3B8"));
-                      tvUrl.setTextSize(12);
-                      tvUrl.setMaxLines(1);
-
-                      textContainer.addView(tvTitle);
-                      textContainer.addView(tvUrl);
-
-                      Button btnClose = new Button(this);
-                      btnClose.setText("✕");
-                      btnClose.setTextColor(Color.parseColor("#EF4444"));
-                      btnClose.setBackgroundColor(Color.TRANSPARENT);
-                      btnClose.setTextSize(18);
-                      btnClose.setLayoutParams(new LinearLayout.LayoutParams(120, 120));
-                      btnClose.setOnClickListener(v -> {
-                          cerrarPestana(tabIndex);
-                          if (tabList.isEmpty()) {
-                              tabManagerOverlay.setVisibility(View.GONE);
-                          } else {
-                              mostrarListaPestanas(); // Refrescar lista
-                          }
-                      });
-
-                      card.addView(textContainer);
-                      card.addView(btnClose);
-
-                      card.setOnClickListener(v -> {
-                          cambiarAPestana(tabIndex);
-                          tabManagerOverlay.setVisibility(View.GONE);
-                      });
-
-                      tabListContainer.addView(card);
-                  }
-              }
-
-              private void cerrarPestana(int index) {
-                  if (tabList.size() <= 1) {
-                      WebView wv = tabList.get(0);
-                      wv.clearHistory();
-                      wv.loadUrl("about:blank");
-                      homeOverlay.setVisibility(View.VISIBLE);
-                      etUrl.setText("");
-                      tabTitles.set(0, "Inicio Miku");
-                      btnTabCounter.setText("1");
-                      actualizarBarraPestanasSuperior();
-                      return;
-                  }
-
-                  WebView removed = tabList.remove(index);
-                  tabTitles.remove(index);
-                  removed.destroy();
-
-                  if (currentTabIndex >= tabList.size()) {
-                      currentTabIndex = tabList.size() - 1;
-                  }
-                  cambiarAPestana(currentTabIndex);
-              }
-
-              private WebView getCurrentWebView() {
-                  if (currentTabIndex >= 0 && currentTabIndex < tabList.size()) {
-                      return tabList.get(currentTabIndex);
-                  }
-                  return null;
-              }
-
-              private void navegar() {
-                  String input = etUrl.getText().toString().trim();
-                  hideKeyboard();
-                  WebView wv = getCurrentWebView();
-                  if (wv == null) return;
-
-                  if (input.isEmpty()) {
-                      homeOverlay.setVisibility(View.VISIBLE);
-                      return;
-                  }
-
-                  homeOverlay.setVisibility(View.GONE);
-
-                  if (input.startsWith("http://") || input.startsWith("https://")) {
-                      wv.loadUrl(input);
-                  } else if (input.contains(".") && !input.contains(" ")) {
-                      wv.loadUrl("https://" + input);
-                  } else {
-                      try {
-                          String query = URLEncoder.encode(input, "UTF-8");
-                          wv.loadUrl(searchEngineUrl + query);
-                      } catch (UnsupportedEncodingException e) {
-                          wv.loadUrl(searchEngineUrl + input);
-                      }
-                  }
-              }
-
-              private void hideKeyboard() {
-                  View view = this.getCurrentFocus();
-                  if (view != null) {
-                      InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                      if (imm != null) imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                  }
-              }
-
-              @Override
-              public void onBackPressed() {
-                  if (onboardingOverlay.getVisibility() == View.VISIBLE) {
-                      prefs.edit().putBoolean("onboarding_done", true).apply();
-                      onboardingOverlay.setVisibility(View.GONE);
-                      return;
-                  }
-                  if (tabManagerOverlay.getVisibility() == View.VISIBLE) {
-                      tabManagerOverlay.setVisibility(View.GONE);
-                      return;
-                  }
-
-                  WebView wv = getCurrentWebView();
-                  if (wv != null && wv.canGoBack()) {
-                      wv.goBack();
-                  } else if (homeOverlay.getVisibility() != View.VISIBLE) {
-                      homeOverlay.setVisibility(View.VISIBLE);
-                      etUrl.setText("");
-                  } else if (tabList.size() > 1) {
-                      cerrarPestana(currentTabIndex);
-                  } else {
-                      super.onBackPressed();
-                  }
-              }
-          }
-          EOF
-
-      - name: Compilar APK con Gradle
-        run: |
-          gradle assembleDebug
-          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AstralBrowser.apk
-
-      - name: Publicar Release con APK directo
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: "v2.9-build${{ github.run_number }}"
-          name: "Astral Browser v2.9 (Tab Manager)"
-          draft: false
-          prerelease: false
-          files: app/build/outputs/apk/debug/AstralBrowser.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                      

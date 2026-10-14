@@ -29,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import java.net.URLEncoder;
+import java.io.File;
 import java.util.ArrayList;
 
 public class IncognitoActivity extends AppCompatActivity {
@@ -43,7 +44,7 @@ public class IncognitoActivity extends AppCompatActivity {
     private boolean exiting=false;
 
     @Override protected void onCreate(Bundle state) {
-        if(Build.VERSION.SDK_INT>=28) WebView.setDataDirectorySuffix("astral_incognito");
+        if(Build.VERSION.SDK_INT>=28) { deleteRecursively(new File(getApplicationInfo().dataDir, "app_webview/astral_incognito")); WebView.setDataDirectorySuffix("astral_incognito"); }
         super.onCreate(state);
         getWindow().setStatusBarColor(bg); getWindow().setNavigationBarColor(bg);
         CookieManager.getInstance().setAcceptCookie(false);
@@ -51,6 +52,7 @@ public class IncognitoActivity extends AppCompatActivity {
         createTab(true);
     }
 
+    private void deleteRecursively(File file){if(file==null||!file.exists())return;if(file.isDirectory()){File[] children=file.listFiles();if(children!=null)for(File child:children)deleteRecursively(child);}try{file.delete();}catch(Exception ignored){}}
     private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}
     private TextView label(String value,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(value);t.setTextSize(size);t.setTextColor(color);if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
     private GradientDrawable shape(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
@@ -127,5 +129,5 @@ public class IncognitoActivity extends AppCompatActivity {
     private void showTabPicker(){String[] choices=new String[tabs.size()+1];for(int i=0;i<tabs.size();i++)choices[i]=(i==active?"● ":"")+"Pestaña "+(i+1)+" · "+titles.get(i);choices[tabs.size()]="+ Nueva pestaña";new AlertDialog.Builder(this).setTitle("Pestañas privadas ("+tabs.size()+")").setItems(choices,(d,which)->{if(which==tabs.size())createTab(true);else switchTab(which);}).show();}
     private void clearSession(){for(WebView w:tabs){w.stopLoading();w.clearHistory();w.clearCache(true);w.clearFormData();}CookieManager.getInstance().removeAllCookies(null);CookieManager.getInstance().flush();android.webkit.WebStorage.getInstance().deleteAllData();while(tabs.size()>1)closeTab(tabs.size()-1);showPrivateHome(current());Toast.makeText(this,"Sesión privada borrada",Toast.LENGTH_SHORT).show();}
     @Override public void onBackPressed(){if(current().canGoBack())current().goBack();else if(tabs.size()>1)closeTab(active);else finish();}
-    @Override protected void onDestroy(){if(!exiting){exiting=true;for(WebView w:new ArrayList<>(tabs)){try{w.stopLoading();w.clearHistory();w.clearCache(true);w.clearFormData();w.destroy();}catch(Exception ignored){}}tabs.clear();titles.clear();CookieManager.getInstance().removeAllCookies(null);CookieManager.getInstance().flush();android.webkit.WebStorage.getInstance().deleteAllData();}super.onDestroy();}
+    @Override protected void onDestroy(){if(!exiting){exiting=true;for(WebView w:new ArrayList<>(tabs)){try{w.stopLoading();w.clearHistory();w.clearCache(true);w.clearFormData();w.destroy();}catch(Exception ignored){}}tabs.clear();titles.clear();CookieManager.getInstance().removeAllCookies(null);CookieManager.getInstance().flush();android.webkit.WebStorage.getInstance().deleteAllData();if(Build.VERSION.SDK_INT>=28)deleteRecursively(new File(getApplicationInfo().dataDir, "app_webview/astral_incognito"));}super.onDestroy();}
 }

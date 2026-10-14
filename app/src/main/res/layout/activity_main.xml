@@ -1,89 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#0B0813"
-    android:fitsSystemWindows="true">
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="#0B0813" android:fitsSystemWindows="true">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="#110B1F"
-        android:padding="6dp"
+    <HorizontalScrollView android:layout_width="match_parent" android:layout_height="48dp"
+        android:fillViewport="false" android:scrollbars="none" android:background="#100B1A">
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent"
+            android:gravity="center_vertical" android:orientation="horizontal">
+            <LinearLayout android:id="@+id/tabsBar" android:layout_width="wrap_content"
+                android:layout_height="match_parent" android:orientation="horizontal" android:gravity="center_vertical"/>
+            <Button android:id="@+id/btnAddTab" android:layout_width="42dp" android:layout_height="38dp"
+                android:text="+" android:textSize="22sp" android:textColor="#C084FC"
+                android:backgroundTint="#241832" android:minWidth="0dp" android:padding="0dp"/>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:background="#160F23" android:padding="7dp"
         android:gravity="center_vertical">
-
-        <Button
-            android:id="@+id/btnBack"
-            android:layout_width="36dp"
-            android:layout_height="38dp"
-            android:text="‹"
-            android:textSize="20sp"
-            android:textColor="#C084FC"
-            android:background="?android:attr/selectableItemBackground" />
-
-        <Button
-            android:id="@+id/btnForward"
-            android:layout_width="36dp"
-            android:layout_height="38dp"
-            android:text="›"
-            android:textSize="20sp"
-            android:textColor="#C084FC"
-            android:background="?android:attr/selectableItemBackground" />
-
-        <Button
-            android:id="@+id/btnRefresh"
-            android:layout_width="36dp"
-            android:layout_height="38dp"
-            android:text="↻"
-            android:textSize="18sp"
-            android:textColor="#94A3B8"
-            android:background="?android:attr/selectableItemBackground" />
-
-        <EditText
-            android:id="@+id/etUrl"
-            android:layout_width="0dp"
-            android:layout_height="38dp"
-            android:layout_weight="1"
-            android:background="#1A132C"
-            android:textColor="#F8FAFC"
-            android:textColorHint="#64748B"
-            android:hint="DuckDuckGo o URL..."
-            android:textSize="12sp"
-            android:paddingHorizontal="10dp"
-            android:singleLine="true"
-            android:imeOptions="actionGo"
-            android:inputType="textUri" />
-
-        <Button
-            android:id="@+id/btnSearch"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
-            android:text="🔍"
-            android:textSize="14sp"
-            android:background="?android:attr/selectableItemBackground" />
-
-        <Button
-            android:id="@+id/btnBurn"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
-            android:text="🔥"
-            android:textSize="16sp"
-            android:background="?android:attr/selectableItemBackground" />
+        <Button android:id="@+id/btnBack" android:layout_width="34dp" android:layout_height="40dp"
+            android:text="‹" android:textSize="22sp" android:textColor="#C084FC"
+            android:backgroundTint="#21172F" android:minWidth="0dp" android:padding="0dp"/>
+        <Button android:id="@+id/btnForward" android:layout_width="34dp" android:layout_height="40dp"
+            android:text="›" android:textSize="22sp" android:textColor="#C084FC"
+            android:backgroundTint="#21172F" android:minWidth="0dp" android:padding="0dp"/>
+        <EditText android:id="@+id/etUrl" android:layout_width="0dp" android:layout_height="40dp"
+            android:layout_weight="1" android:layout_marginHorizontal="5dp" android:background="#241832"
+            android:textColor="#F8FAFC" android:textColorHint="#A99ABF" android:hint="Buscar o escribir URL"
+            android:textSize="13sp" android:paddingHorizontal="11dp" android:singleLine="true"
+            android:imeOptions="actionGo" android:inputType="textUri"/>
+        <Button android:id="@+id/btnSearch" android:layout_width="38dp" android:layout_height="40dp"
+            android:text="↵" android:textSize="17sp" android:textColor="#FFFFFF"
+            android:backgroundTint="#7C3AED" android:minWidth="0dp" android:padding="0dp"/>
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:visibility="gone" />
+    <ProgressBar android:id="@+id/progressBar" style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent" android:layout_height="3dp" android:visibility="gone"
+        android:progressTint="#22D3EE"/>
 
-    <WebView
-        android:id="@+id/webView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#0B0813" />
+    <FrameLayout android:id="@+id/webContainer" android:layout_width="match_parent"
+        android:layout_height="0dp" android:layout_weight="1" android:background="#0B0813"/>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="56dp"
+        android:orientation="horizontal" android:gravity="center" android:background="#100B1A"
+        android:paddingHorizontal="8dp">
+        <Button android:id="@+id/btnHome" android:layout_width="0dp" android:layout_height="44dp"
+            android:layout_weight="1" android:text="⌂" android:textSize="23sp" android:textColor="#C084FC"
+            android:backgroundTint="#21172F" android:minWidth="0dp" android:layout_marginHorizontal="3dp"/>
+        <Button android:id="@+id/btnRefresh" android:layout_width="0dp" android:layout_height="44dp"
+            android:layout_weight="1" android:text="↻" android:textSize="21sp" android:textColor="#C084FC"
+            android:backgroundTint="#21172F" android:minWidth="0dp" android:layout_marginHorizontal="3dp"/>
+        <Button android:id="@+id/btnTabs" android:layout_width="0dp" android:layout_height="44dp"
+            android:layout_weight="1" android:text="▢ 1" android:textSize="15sp" android:textColor="#C084FC"
+            android:backgroundTint="#21172F" android:minWidth="0dp" android:layout_marginHorizontal="3dp"/>
+        <TextView android:id="@+id/tabCount" android:layout_width="0dp" android:layout_height="0dp"
+            android:visibility="gone" android:text="1"/>
+        <Button android:id="@+id/btnBurn" android:layout_width="0dp" android:layout_height="44dp"
+            android:layout_weight="1" android:text="✦" android:textSize="20sp" android:textColor="#22D3EE"
+            android:backgroundTint="#21172F" android:minWidth="0dp" android:layout_marginHorizontal="3dp"/>
+    </LinearLayout>
 </LinearLayout>

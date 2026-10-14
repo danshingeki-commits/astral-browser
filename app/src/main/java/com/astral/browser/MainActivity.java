@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onReceivedTitle(WebView view,String title){ int i=tabs.indexOf(view); if(i>=0){tabTitles.set(i, title==null||title.isEmpty()?"Nueva pestaña":title); renderTabs();} }
         });
         w.setWebViewClient(new WebViewClient(){
-            @Override public void onPageStarted(WebView view,String url,Bitmap icon){ if(view==current() && !url.startsWith("file:")) etUrl.setText(url.equals("about:blank")?"":url); }
+            @Override public void onPageStarted(WebView view,String url,Bitmap icon){ if(!url.startsWith("https://astral.local/")) view.setTag("web"); if(view==current() && !url.startsWith("file:")) etUrl.setText(url.equals("about:blank")||url.startsWith("https://astral.local/")?"":url); }
             @Override public void onPageFinished(WebView view,String url){ if(view==current() && !isHome(view)) etUrl.setText(url); }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req){ return false; }
         });

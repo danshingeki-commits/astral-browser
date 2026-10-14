@@ -87,8 +87,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 15
-                  versionName "2.4"
+                  versionCode 17
+                  versionName "2.6"
               }
 
               compileOptions {
@@ -153,7 +153,7 @@ jobs:
           </resources>
           EOF
 
-          # 8. ELEMENTOS LIQUID GLASS (Capsula, Burbuja interactiva y Chips)
+          # 8. ELEMENTOS LIQUID GLASS
           cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_bar.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
@@ -168,7 +168,20 @@ jobs:
           </shape>
           EOF
 
-          # Burbuja de vidrio fluido que sigue el dedo
+          cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_card.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android">
+              <gradient
+                  android:startColor="#F218102C"
+                  android:endColor="#D90E081A"
+                  android:angle="135" />
+              <corners android:radius="24dp" />
+              <stroke
+                  android:width="1.5dp"
+                  android:color="#66C084FC" />
+          </shape>
+          EOF
+
           cat << 'EOF' > app/src/main/res/drawable/bg_liquid_bubble.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
@@ -238,140 +251,251 @@ jobs:
           </vector>
           EOF
 
-          # 11. activity_main.xml con soporte gestual para la burbuja Liquid Glass
+          # 11. BubbleRainView.java (Lluvia interactiva de burbujas azules)
+          cat << 'EOF' > app/src/main/java/com/astral/browser/BubbleRainView.java
+          package com.astral.browser;
+
+          import android.content.Context;
+          import android.graphics.Canvas;
+          import android.graphics.Color;
+          import android.graphics.Paint;
+          import android.util.AttributeSet;
+          import android.view.View;
+
+          import java.util.ArrayList;
+          import java.util.List;
+          import java.util.Random;
+
+          public class BubbleRainView extends View {
+
+              private static class Bubble {
+                  float x, y, speed, radius, alpha;
+                  int color;
+              }
+
+              private final List<Bubble> bubbles = new ArrayList<>();
+              private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+              private final Paint glowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+              private final Random random = new Random();
+              private boolean isAnimating = true;
+
+              public BubbleRainView(Context context) {
+                  super(context);
+                  init();
+              }
+
+              public BubbleRainView(Context context, AttributeSet attrs) {
+                  super(context, attrs);
+                  init();
+              }
+
+              private void init() {
+                  paint.setStyle(Paint.Style.FILL);
+                  glowPaint.setStyle(Paint.Style.STROKE);
+                  glowPaint.setStrokeWidth(1.5f);
+                  glowPaint.setColor(Color.parseColor("#80FFFFFF"));
+              }
+
+              public void setAnimationRunning(boolean running) {
+                  this.isAnimating = running;
+                  if (running) invalidate();
+              }
+
+              @Override
+              protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+                  super.onSizeChanged(w, h, oldw, oldh);
+                  bubbles.clear();
+                  int count = 28;
+                  for (int i = 0; i < count; i++) {
+                      bubbles.add(crearBurbuja(w, h, true));
+                  }
+              }
+
+              private Bubble crearBurbuja(int width, int height, boolean randomY) {
+                  Bubble b = new Bubble();
+                  b.radius = 4f + random.nextFloat() * 14f;
+                  b.x = random.nextFloat() * (width > 0 ? width : 1080);
+                  b.y = randomY ? (random.nextFloat() * (height > 0 ? height : 1920)) : -b.radius * 2;
+                  b.speed = 1.2f + random.nextFloat() * 3.2f;
+                  b.alpha = 0.25f + random.nextFloat() * 0.45f;
+
+                  if (random.nextBoolean()) {
+                      b.color = Color.parseColor("#38BDF8");
+                  } else {
+                      b.color = Color.parseColor("#39C5BB");
+                  }
+                  return b;
+              }
+
+              @Override
+              protected void onDraw(Canvas canvas) {
+                  super.onDraw(canvas);
+                  int w = getWidth();
+                  int h = getHeight();
+                  if (w <= 0 || h <= 0) return;
+
+                  for (Bubble b : bubbles) {
+                      paint.setColor(b.color);
+                      paint.setAlpha((int) (b.alpha * 255));
+                      canvas.drawCircle(b.x, b.y, b.radius, paint);
+                      canvas.drawCircle(b.x, b.y, b.radius, glowPaint);
+
+                      if (isAnimating) {
+                          b.y += b.speed;
+                          b.x += (float) Math.sin(b.y * 0.02) * 0.4f;
+
+                          if (b.y - b.radius > h) {
+                              b.y = -b.radius * 2;
+                              b.x = random.nextFloat() * w;
+                          }
+                      }
+                  }
+
+                  if (isAnimating) {
+                      postInvalidateOnAnimation();
+                  }
+              }
+          }
+          EOF
+
+          # 12. activity_main.xml (Con Onboarding Modal Liquid Glass integrado)
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
-          <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/mainRootLayout"
+          <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:orientation="vertical"
               android:background="#090610">
 
-              <!-- BARRA DE PESTAÑAS -->
               <LinearLayout
-                  android:id="@+id/tabsTopBar"
+                  android:id="@+id/mainRootLayout"
                   android:layout_width="match_parent"
-                  android:layout_height="40dp"
-                  android:orientation="horizontal"
-                  android:background="#B30E0919"
-                  android:paddingLeft="8dp"
-                  android:paddingRight="8dp"
-                  android:gravity="center_vertical">
+                  android:layout_height="match_parent"
+                  android:orientation="vertical">
 
-                  <HorizontalScrollView
-                      android:layout_width="0dp"
-                      android:layout_height="match_parent"
-                      android:layout_weight="1"
-                      android:scrollbars="none">
+                  <!-- BARRA DE PESTAÑAS -->
+                  <LinearLayout
+                      android:id="@+id/tabsTopBar"
+                      android:layout_width="match_parent"
+                      android:layout_height="40dp"
+                      android:orientation="horizontal"
+                      android:background="#B30E0919"
+                      android:paddingLeft="8dp"
+                      android:paddingRight="8dp"
+                      android:gravity="center_vertical">
 
-                      <LinearLayout
-                          android:id="@+id/tabsContainer"
-                          android:layout_width="wrap_content"
+                      <HorizontalScrollView
+                          android:layout_width="0dp"
                           android:layout_height="match_parent"
-                          android:orientation="horizontal"
-                          android:gravity="center_vertical" />
-                  </HorizontalScrollView>
+                          android:layout_weight="1"
+                          android:scrollbars="none">
 
-                  <Button
-                      android:id="@+id/btnTabCounter"
-                      android:layout_width="36dp"
-                      android:layout_height="32dp"
-                      android:text="1"
-                      android:textSize="12sp"
-                      android:textColor="#38BDF8"
-                      android:textStyle="bold"
-                      android:background="?android:attr/selectableItemBackground" />
+                          <LinearLayout
+                              android:id="@+id/tabsContainer"
+                              android:layout_width="wrap_content"
+                              android:layout_height="match_parent"
+                              android:orientation="horizontal"
+                              android:gravity="center_vertical" />
+                      </HorizontalScrollView>
 
-                  <Button
-                      android:id="@+id/btnNewTab"
-                      android:layout_width="34dp"
-                      android:layout_height="34dp"
-                      android:text="+"
-                      android:textSize="18sp"
-                      android:textColor="#38BDF8"
-                      android:background="?android:attr/selectableItemBackground" />
-              </LinearLayout>
+                      <Button
+                          android:id="@+id/btnTabCounter"
+                          android:layout_width="36dp"
+                          android:layout_height="32dp"
+                          android:text="1"
+                          android:textSize="12sp"
+                          android:textColor="#38BDF8"
+                          android:textStyle="bold"
+                          android:background="?android:attr/selectableItemBackground" />
 
-              <!-- BARRA DE ESTADO / CHIPS -->
-              <LinearLayout
-                  android:id="@+id/chipsBar"
-                  android:layout_width="match_parent"
-                  android:layout_height="28dp"
-                  android:orientation="horizontal"
-                  android:background="#800B0714"
-                  android:paddingLeft="10dp"
-                  android:paddingRight="10dp"
-                  android:gravity="center_vertical">
+                      <Button
+                          android:id="@+id/btnNewTab"
+                          android:layout_width="34dp"
+                          android:layout_height="34dp"
+                          android:text="+"
+                          android:textSize="18sp"
+                          android:textColor="#38BDF8"
+                          android:background="?android:attr/selectableItemBackground" />
+                  </LinearLayout>
 
-                  <TextView
-                      android:id="@+id/chipProxy"
-                      android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:text="PROXY: DIRECTO"
-                      android:textColor="#94A3B8"
-                      android:textSize="9sp"
-                      android:paddingLeft="8dp"
-                      android:paddingRight="8dp"
-                      android:paddingTop="3dp"
-                      android:paddingBottom="3dp"
-                      android:background="@drawable/bg_liquid_glass_chip"
-                      android:layout_marginRight="6dp" />
+                  <!-- BARRA DE ESTADO / CHIPS -->
+                  <LinearLayout
+                      android:id="@+id/chipsBar"
+                      android:layout_width="match_parent"
+                      android:layout_height="28dp"
+                      android:orientation="horizontal"
+                      android:background="#800B0714"
+                      android:paddingLeft="10dp"
+                      android:paddingRight="10dp"
+                      android:gravity="center_vertical">
 
-                  <TextView
-                      android:id="@+id/chipShields"
-                      android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:text="ESCUDOS: ON"
-                      android:textColor="#34D399"
-                      android:textSize="9sp"
-                      android:paddingLeft="8dp"
-                      android:paddingRight="8dp"
-                      android:paddingTop="3dp"
-                      android:paddingBottom="3dp"
-                      android:background="@drawable/bg_liquid_glass_chip"
-                      android:layout_marginRight="6dp" />
+                      <TextView
+                          android:id="@+id/chipProxy"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="PROXY: DIRECTO"
+                          android:textColor="#94A3B8"
+                          android:textSize="9sp"
+                          android:paddingLeft="8dp"
+                          android:paddingRight="8dp"
+                          android:paddingTop="3dp"
+                          android:paddingBottom="3dp"
+                          android:background="@drawable/bg_liquid_glass_chip"
+                          android:layout_marginRight="6dp" />
 
-                  <TextView
-                      android:id="@+id/chipProtocol"
-                      android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:text="HTTPS"
-                      android:textColor="#38BDF8"
-                      android:textSize="9sp"
-                      android:paddingLeft="8dp"
-                      android:paddingRight="8dp"
-                      android:paddingTop="3dp"
-                      android:paddingBottom="3dp"
-                      android:background="@drawable/bg_liquid_glass_chip" />
-              </LinearLayout>
+                      <TextView
+                          android:id="@+id/chipShields"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="ESCUDOS: ON"
+                          android:textColor="#34D399"
+                          android:textSize="9sp"
+                          android:paddingLeft="8dp"
+                          android:paddingRight="8dp"
+                          android:paddingTop="3dp"
+                          android:paddingBottom="3dp"
+                          android:background="@drawable/bg_liquid_glass_chip"
+                          android:layout_marginRight="6dp" />
 
-              <!-- BARRA DE ENTRADA URL -->
-              <LinearLayout
-                  android:id="@+id/urlBar"
-                  android:layout_width="match_parent"
-                  android:layout_height="46dp"
-                  android:orientation="horizontal"
-                  android:background="#99110B1F"
-                  android:paddingLeft="10dp"
-                  android:paddingRight="10dp"
-                  android:gravity="center_vertical">
+                      <TextView
+                          android:id="@+id/chipProtocol"
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="HTTPS"
+                          android:textColor="#38BDF8"
+                          android:textSize="9sp"
+                          android:paddingLeft="8dp"
+                          android:paddingRight="8dp"
+                          android:paddingTop="3dp"
+                          android:paddingBottom="3dp"
+                          android:background="@drawable/bg_liquid_glass_chip" />
+                  </LinearLayout>
 
-                  <EditText
-                      android:id="@+id/etUrl"
-                      android:layout_width="0dp"
-                      android:layout_height="36dp"
-                      android:layout_weight="1"
-                      android:background="@drawable/bg_liquid_glass_input"
-                      android:textColor="#F8FAFC"
-                      android:textColorHint="#64748B"
-                      android:hint="@string/url_hint"
-                      android:textSize="12sp"
-                      android:paddingLeft="12dp"
-                      android:paddingRight="12dp"
-                      android:singleLine="true"
-                      android:imeOptions="actionGo"
-                      android:inputType="textUri" />
+                  <!-- BARRA DE ENTRADA URL -->
+                  <LinearLayout
+                      android:id="@+id/urlBar"
+                      android:layout_width="match_parent"
+                      android:layout_height="46dp"
+                      android:orientation="horizontal"
+                      android:background="#99110B1F"
+                      android:paddingLeft="10dp"
+                      android:paddingRight="10dp"
+                      android:gravity="center_vertical">
+
+                      <EditText
+                          android:id="@+id/etUrl"
+                          android:layout_width="0dp"
+                          android:layout_height="36dp"
+                          android:layout_weight="1"
+                          android:background="@drawable/bg_liquid_glass_input"
+                          android:textColor="#F8FAFC"
+                          android:textColorHint="#64748B"
+                          android:hint="@string/url_hint"
+                          android:textSize="12sp"
+                          android:paddingLeft="12dp"
+                          android:paddingRight="12dp"
+                          android:singleLine="true"
+                          android:imeOptions="actionGo"
+                          android:inputType="textUri" />
 
                   <Button
                       android:id="@+id/btnGo"
@@ -381,153 +505,233 @@ jobs:
                       android:textColor="#38BDF8"
                       android:textSize="12sp"
                       android:background="?android:attr/selectableItemBackground" />
-              </LinearLayout>
-
-              <ProgressBar
-                  android:id="@+id/progressBar"
-                  style="?android:attr/progressBarStyleHorizontal"
-                  android:layout_width="match_parent"
-                  android:layout_height="2dp"
-                  android:visibility="gone" />
-
-              <!-- CONTENEDOR PRINCIPAL -->
-              <FrameLayout
-                  android:layout_width="match_parent"
-                  android:layout_height="0dp"
-                  android:layout_weight="1">
-
-                  <FrameLayout
-                      android:id="@+id/webContainer"
-                      android:layout_width="match_parent"
-                      android:layout_height="match_parent"
-                      android:background="#090610" />
-
-                  <LinearLayout
-                      android:id="@+id/homeOverlay"
-                      android:layout_width="match_parent"
-                      android:layout_height="match_parent"
-                      android:orientation="vertical"
-                      android:gravity="center"
-                      android:background="#090610"
-                      android:padding="20dp"
-                      android:visibility="visible">
-
-                      <ImageView
-                          android:id="@+id/ivMiku"
-                          android:layout_width="190dp"
-                          android:layout_height="230dp"
-                          android:scaleType="fitCenter"
-                          android:src="@drawable/ic_miku_fallback"
-                          android:contentDescription="Hatsune Miku" />
-
-                      <TextView
-                          android:id="@+id/tvLogoTitle"
-                          android:layout_width="wrap_content"
-                          android:layout_height="wrap_content"
-                          android:text="A S T R A L"
-                          android:textColor="#39C5BB"
-                          android:textSize="18sp"
-                          android:textStyle="bold"
-                          android:letterSpacing="0.25"
-                          android:layout_marginTop="14dp" />
-
-                      <TextView
-                          android:id="@+id/tvEngineInfo"
-                          android:layout_width="wrap_content"
-                          android:layout_height="wrap_content"
-                          android:text="Liquid Glass Edition • Sin Rastreo"
-                          android:textColor="#64748B"
-                          android:textSize="12sp"
-                          android:layout_marginTop="4dp" />
                   </LinearLayout>
-              </FrameLayout>
 
-              <!-- BARRA INFERIOR CON BURBUJA INTERACTIVA LIQUID GLASS -->
-              <LinearLayout
-                  android:id="@+id/bottomBarContainer"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:background="#660E0919"
-                  android:padding="8dp">
-
-                  <FrameLayout
-                      android:id="@+id/interactiveBarFrame"
+                  <ProgressBar
+                      android:id="@+id/progressBar"
+                      style="?android:attr/progressBarStyleHorizontal"
                       android:layout_width="match_parent"
-                      android:layout_height="54dp"
-                      android:background="@drawable/bg_liquid_glass_bar">
+                      android:layout_height="2dp"
+                      android:visibility="gone" />
 
-                      <!-- Burbuja de cristal líquido que sigue el dedo -->
-                      <View
-                          android:id="@+id/liquidBubble"
-                          android:layout_width="80dp"
-                          android:layout_height="44dp"
-                          android:layout_gravity="center_vertical"
-                          android:background="@drawable/bg_liquid_bubble"
-                          android:visibility="invisible" />
+                  <!-- ÁREA PRINCIPAL -->
+                  <FrameLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="0dp"
+                      android:layout_weight="1">
 
-                      <!-- Etiquetas de navegación perfectamente distribuidas -->
-                      <LinearLayout
-                          android:id="@+id/barLabelsLayout"
+                      <FrameLayout
+                          android:id="@+id/webContainer"
                           android:layout_width="match_parent"
                           android:layout_height="match_parent"
-                          android:orientation="horizontal"
-                          android:weightSum="4"
-                          android:gravity="center_vertical">
+                          android:background="#090610" />
 
-                          <TextView
-                              android:id="@+id/lblBack"
-                              android:layout_width="0dp"
-                              android:layout_height="match_parent"
-                              android:layout_weight="1"
-                              android:text="‹ Atrás"
-                              android:gravity="center"
-                              android:textColor="#F8FAFC"
-                              android:textSize="12sp"
-                              android:textStyle="bold"
-                              android:singleLine="true" />
+                      <FrameLayout
+                          android:id="@+id/homeOverlay"
+                          android:layout_width="match_parent"
+                          android:layout_height="match_parent"
+                          android:background="#090610"
+                          android:visibility="visible">
 
-                          <TextView
-                              android:id="@+id/lblForward"
-                              android:layout_width="0dp"
-                              android:layout_height="match_parent"
-                              android:layout_weight="1"
-                              android:text="Adelante ›"
-                              android:gravity="center"
-                              android:textColor="#F8FAFC"
-                              android:textSize="12sp"
-                              android:textStyle="bold"
-                              android:singleLine="true" />
+                          <com.astral.browser.BubbleRainView
+                              android:id="@+id/bubbleRainView"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent" />
 
-                          <TextView
-                              android:id="@+id/lblRefresh"
-                              android:layout_width="0dp"
+                          <LinearLayout
+                              android:layout_width="match_parent"
                               android:layout_height="match_parent"
-                              android:layout_weight="1"
-                              android:text="Recargar"
+                              android:orientation="vertical"
                               android:gravity="center"
-                              android:textColor="#38BDF8"
-                              android:textSize="12sp"
-                              android:textStyle="bold"
-                              android:singleLine="true" />
+                              android:padding="20dp">
 
-                          <TextView
-                              android:id="@+id/lblSettings"
-                              android:layout_width="0dp"
-                              android:layout_height="match_parent"
-                              android:layout_weight="1"
-                              android:text="Ajustes ⚙"
-                              android:gravity="center"
-                              android:textColor="#C084FC"
-                              android:textSize="12sp"
-                              android:textStyle="bold"
-                              android:singleLine="true" />
-                      </LinearLayout>
+                              <ImageView
+                                  android:id="@+id/ivMiku"
+                                  android:layout_width="190dp"
+                                  android:layout_height="230dp"
+                                  android:scaleType="fitCenter"
+                                  android:src="@drawable/ic_miku_fallback"
+                                  android:contentDescription="Hatsune Miku" />
+
+                              <TextView
+                                  android:id="@+id/tvLogoTitle"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="A S T R A L"
+                                  android:textColor="#39C5BB"
+                                  android:textSize="18sp"
+                                  android:textStyle="bold"
+                                  android:letterSpacing="0.25"
+                                  android:layout_marginTop="14dp" />
+
+                              <TextView
+                                  android:id="@+id/tvEngineInfo"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="Liquid Glass Edition • Sin Rastreo"
+                                  android:textColor="#64748B"
+                                  android:textSize="12sp"
+                                  android:layout_marginTop="4dp" />
+                          </LinearLayout>
+                      </FrameLayout>
                   </FrameLayout>
+
+                  <!-- BARRA INFERIOR CON BURBUJA INTERACTIVA -->
+                  <LinearLayout
+                      android:id="@+id/bottomBarContainer"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:background="#660E0919"
+                      android:padding="8dp">
+
+                      <FrameLayout
+                          android:id="@+id/interactiveBarFrame"
+                          android:layout_width="match_parent"
+                          android:layout_height="54dp"
+                          android:background="@drawable/bg_liquid_glass_bar">
+
+                          <View
+                              android:id="@+id/liquidBubble"
+                              android:layout_width="80dp"
+                              android:layout_height="44dp"
+                              android:layout_gravity="center_vertical"
+                              android:background="@drawable/bg_liquid_bubble"
+                              android:visibility="invisible" />
+
+                          <LinearLayout
+                              android:id="@+id/barLabelsLayout"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              android:orientation="horizontal"
+                              android:weightSum="4"
+                              android:gravity="center_vertical">
+
+                              <TextView
+                                  android:id="@+id/lblBack"
+                                  android:layout_width="0dp"
+                                  android:layout_height="match_parent"
+                                  android:layout_weight="1"
+                                  android:text="‹ Atrás"
+                                  android:gravity="center"
+                                  android:textColor="#F8FAFC"
+                                  android:textSize="12sp"
+                                  android:textStyle="bold"
+                                  android:singleLine="true" />
+
+                              <TextView
+                                  android:id="@+id/lblForward"
+                                  android:layout_width="0dp"
+                                  android:layout_height="match_parent"
+                                  android:layout_weight="1"
+                                  android:text="Adelante ›"
+                                  android:gravity="center"
+                                  android:textColor="#F8FAFC"
+                                  android:textSize="12sp"
+                                  android:textStyle="bold"
+                                  android:singleLine="true" />
+
+                              <TextView
+                                  android:id="@+id/lblRefresh"
+                                  android:layout_width="0dp"
+                                  android:layout_height="match_parent"
+                                  android:layout_weight="1"
+                                  android:text="Recargar"
+                                  android:gravity="center"
+                                  android:textColor="#38BDF8"
+                                  android:textSize="12sp"
+                                  android:textStyle="bold"
+                                  android:singleLine="true" />
+
+                              <TextView
+                                  android:id="@+id/lblSettings"
+                                  android:layout_width="0dp"
+                                  android:layout_height="match_parent"
+                                  android:layout_weight="1"
+                                  android:text="Ajustes ⚙"
+                                  android:gravity="center"
+                                  android:textColor="#C084FC"
+                                  android:textSize="12sp"
+                                  android:textStyle="bold"
+                                  android:singleLine="true" />
+                          </LinearLayout>
+                      </FrameLayout>
+                  </LinearLayout>
               </LinearLayout>
-          </LinearLayout>
+
+              <!-- BIENVENIDA / ONBOARDING EN PRIMER INICIO (LIQUID GLASS OVERLAY) -->
+              <FrameLayout
+                  android:id="@+id/onboardingOverlay"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:background="#D9090610"
+                  android:padding="24dp"
+                  android:visibility="gone">
+
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_gravity="center"
+                      android:orientation="vertical"
+                      android:background="@drawable/bg_liquid_glass_card"
+                      android:padding="24dp"
+                      android:gravity="center_horizontal">
+
+                      <TextView
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="BETA ABIERTA"
+                          android:textColor="#38BDF8"
+                          android:textSize="10sp"
+                          android:textStyle="bold"
+                          android:letterSpacing="0.2"
+                          android:paddingHorizontal="10dp"
+                          android:paddingVertical="4dp"
+                          android:background="@drawable/bg_liquid_glass_chip"
+                          android:layout_marginBottom="12dp" />
+
+                      <TextView
+                          android:layout_width="wrap_content"
+                          android:layout_height="wrap_content"
+                          android:text="Bienvenido a Astral"
+                          android:textColor="#F8FAFC"
+                          android:textSize="20sp"
+                          android:textStyle="bold"
+                          android:layout_marginBottom="10dp" />
+
+                      <TextView
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Todavía estamos en fase de desarrollo activo. Si encuentras algún error o fallo al navegar, por favor avísame a mi Telegram para solucionarlo."
+                          android:textColor="#94A3B8"
+                          android:textSize="13sp"
+                          android:lineSpacingExtra="4dp"
+                          android:gravity="center"
+                          android:layout_marginBottom="22dp" />
+
+                      <Button
+                          android:id="@+id/btnTelegramReport"
+                          android:layout_width="match_parent"
+                          android:layout_height="46dp"
+                          android:text="Avisar o Reportar en Telegram 💬"
+                          android:textColor="#FFFFFF"
+                          android:textStyle="bold"
+                          android:background="#229ED9"
+                          android:layout_marginBottom="10dp" />
+
+                      <Button
+                          android:id="@+id/btnStartBrowsing"
+                          android:layout_width="match_parent"
+                          android:layout_height="48dp"
+                          android:text="Empezar a navegar"
+                          android:textColor="#FFFFFF"
+                          android:textStyle="bold"
+                          android:background="#A855F7" />
+                  </LinearLayout>
+              </FrameLayout>
+          </FrameLayout>
           EOF
 
-          # 12. activity_settings.xml
+          # 13. activity_settings.xml (Categorizado completo estilo Brave)
           cat << 'EOF' > app/src/main/res/layout/activity_settings.xml
           <?xml version="1.0" encoding="utf-8"?>
           <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
@@ -568,11 +772,101 @@ jobs:
                           android:layout_marginLeft="8dp" />
                   </LinearLayout>
 
-                  <!-- APARIENCIA -->
+                  <!-- 1. ESCUDOS Y PRIVACIDAD -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
-                      android:text="APARIENCIA Y ANIMACIONES"
+                      android:text="ESCUDOS Y PRIVACIDAD"
+                      android:textColor="#38BDF8"
+                      android:textSize="11sp"
+                      android:textStyle="bold"
+                      android:layout_marginBottom="8dp" />
+
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical"
+                      android:background="#150E24"
+                      android:padding="12dp"
+                      android:layout_marginBottom="16dp">
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchBlockTrackers"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Bloquear Rastreadores y Cookies Cruzadas"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp" />
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchForceHttps"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Forzar Conexiones Seguras HTTPS"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp"
+                          android:layout_marginTop="10dp" />
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchBlockPopups"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Bloquear Ventanas Emergentes (Pop-ups)"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp"
+                          android:layout_marginTop="10dp" />
+                  </LinearLayout>
+
+                  <!-- 2. MULTIMEDIA Y REPRODUCCIÓN (ESTILO BRAVE) -->
+                  <TextView
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="MULTIMEDIA"
+                      android:textColor="#34D399"
+                      android:textSize="11sp"
+                      android:textStyle="bold"
+                      android:layout_marginBottom="8dp" />
+
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical"
+                      android:background="#150E24"
+                      android:padding="12dp"
+                      android:layout_marginBottom="16dp">
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchBackgroundAudio"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Reproducción en Segundo Plano (Audio activo)"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp" />
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchDesktopMode"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Sitio para Computadora por Defecto"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp"
+                          android:layout_marginTop="10dp" />
+
+                      <androidx.appcompat.widget.SwitchCompat
+                          android:id="@+id/switchBlockImages"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:text="Bloquear Imagenes (Ahorro de Datos)"
+                          android:textColor="#F8FAFC"
+                          android:textSize="13sp"
+                          android:layout_marginTop="10dp" />
+                  </LinearLayout>
+
+                  <!-- 3. DISEÑO & LIQUID GLASS -->
+                  <TextView
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="DISEÑO Y ANIMACIONES"
                       android:textColor="#C084FC"
                       android:textSize="11sp"
                       android:textStyle="bold"
@@ -629,80 +923,17 @@ jobs:
                           android:id="@+id/switchAnimations"
                           android:layout_width="match_parent"
                           android:layout_height="wrap_content"
-                          android:text="Animacion Flotante de Miku"
+                          android:text="Lluvia de Burbujas y Levitacion de Miku"
                           android:textColor="#F8FAFC"
                           android:textSize="13sp" />
                   </LinearLayout>
 
-                  <!-- ESCUDOS BRAVE -->
-                  <TextView
-                      android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:text="ESCUDOS ASTRAL (BRAVE SHIELDS)"
-                      android:textColor="#38BDF8"
-                      android:textSize="11sp"
-                      android:textStyle="bold"
-                      android:layout_marginBottom="8dp" />
-
-                  <LinearLayout
-                      android:layout_width="match_parent"
-                      android:layout_height="wrap_content"
-                      android:orientation="vertical"
-                      android:background="#150E24"
-                      android:padding="12dp"
-                      android:layout_marginBottom="16dp">
-
-                      <androidx.appcompat.widget.SwitchCompat
-                          android:id="@+id/switchBlockTrackers"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:text="Bloquear Rastreadores y Cookies Cruzadas"
-                          android:textColor="#F8FAFC"
-                          android:textSize="13sp" />
-
-                      <androidx.appcompat.widget.SwitchCompat
-                          android:id="@+id/switchForceHttps"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:text="Forzar Conexiones Seguras HTTPS"
-                          android:textColor="#F8FAFC"
-                          android:textSize="13sp"
-                          android:layout_marginTop="10dp" />
-
-                      <androidx.appcompat.widget.SwitchCompat
-                          android:id="@+id/switchBlockPopups"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:text="Bloquear Ventanas Emergentes (Pop-ups)"
-                          android:textColor="#F8FAFC"
-                          android:textSize="13sp"
-                          android:layout_marginTop="10dp" />
-
-                      <androidx.appcompat.widget.SwitchCompat
-                          android:id="@+id/switchDesktopMode"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:text="Sitio para Computadora por Defecto"
-                          android:textColor="#F8FAFC"
-                          android:textSize="13sp"
-                          android:layout_marginTop="10dp" />
-
-                      <androidx.appcompat.widget.SwitchCompat
-                          android:id="@+id/switchBlockImages"
-                          android:layout_width="match_parent"
-                          android:layout_height="wrap_content"
-                          android:text="Bloquear Imagenes (Ahorro de Datos)"
-                          android:textColor="#F8FAFC"
-                          android:textSize="13sp"
-                          android:layout_marginTop="10dp" />
-                  </LinearLayout>
-
-                  <!-- CONEXION Y PROXY -->
+                  <!-- 4. RED Y PROXY -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:text="RED Y SERVIDOR PROXY"
-                      android:textColor="#34D399"
+                      android:textColor="#38BDF8"
                       android:textSize="11sp"
                       android:textStyle="bold"
                       android:layout_marginBottom="8dp" />
@@ -753,7 +984,7 @@ jobs:
                           android:singleLine="true" />
                   </LinearLayout>
 
-                  <!-- BUSCADOR -->
+                  <!-- 5. MOTOR DE BUSQUEDA -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
@@ -796,12 +1027,31 @@ jobs:
                           android:textSize="12sp" />
                   </RadioGroup>
 
-                  <!-- PURGA -->
+                  <!-- 6. COMUNIDAD Y REPORTE TELEGRAM -->
+                  <TextView
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:text="SOPORTE Y COMUNIDAD"
+                      android:textColor="#229ED9"
+                      android:textSize="11sp"
+                      android:textStyle="bold"
+                      android:layout_marginBottom="8dp" />
+
+                  <Button
+                      android:id="@+id/btnSettingsTelegram"
+                      android:layout_width="match_parent"
+                      android:layout_height="44dp"
+                      android:text="Reportar error en mi Telegram 💬"
+                      android:textColor="#FFFFFF"
+                      android:background="#229ED9"
+                      android:textStyle="bold"
+                      android:layout_marginBottom="12dp" />
+
                   <Button
                       android:id="@+id/btnClearData"
                       android:layout_width="match_parent"
                       android:layout_height="44dp"
-                      android:text="Borrar Historial, Cache y Cookies Ahora"
+                      android:text="Borrar Historial, Cache y Cookies"
                       android:textColor="#EF4444"
                       android:background="?android:attr/selectableItemBackground"
                       android:textStyle="bold"
@@ -819,11 +1069,13 @@ jobs:
           </ScrollView>
           EOF
 
-          # 13. SettingsActivity.java
+          # 14. SettingsActivity.java
           cat << 'EOF' > app/src/main/java/com/astral/browser/SettingsActivity.java
           package com.astral.browser;
 
+          import android.content.Intent;
           import android.content.SharedPreferences;
+          import android.net.Uri;
           import android.os.Bundle;
           import android.webkit.CookieManager;
           import android.widget.Button;
@@ -846,6 +1098,7 @@ jobs:
               private SwitchCompat switchBlockTrackers;
               private SwitchCompat switchForceHttps;
               private SwitchCompat switchBlockPopups;
+              private SwitchCompat switchBackgroundAudio;
               private SwitchCompat switchDesktopMode;
               private SwitchCompat switchBlockImages;
 
@@ -868,6 +1121,7 @@ jobs:
                   switchBlockTrackers = findViewById(R.id.switchBlockTrackers);
                   switchForceHttps = findViewById(R.id.switchForceHttps);
                   switchBlockPopups = findViewById(R.id.switchBlockPopups);
+                  switchBackgroundAudio = findViewById(R.id.switchBackgroundAudio);
                   switchDesktopMode = findViewById(R.id.switchDesktopMode);
                   switchBlockImages = findViewById(R.id.switchBlockImages);
 
@@ -880,11 +1134,17 @@ jobs:
                   etProxyHost = findViewById(R.id.etProxyHost);
                   etProxyPort = findViewById(R.id.etProxyPort);
 
+                  Button btnSettingsTelegram = findViewById(R.id.btnSettingsTelegram);
                   Button btnClearData = findViewById(R.id.btnClearData);
                   Button btnBackSettings = findViewById(R.id.btnBackSettings);
                   Button btnSaveSettings = findViewById(R.id.btnSaveSettings);
 
                   cargar();
+
+                  btnSettingsTelegram.setOnClickListener(v -> {
+                      Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/"));
+                      startActivity(intent);
+                  });
 
                   btnClearData.setOnClickListener(v -> {
                       CookieManager.getInstance().removeAllCookies(null);
@@ -906,6 +1166,7 @@ jobs:
                   switchBlockTrackers.setChecked(prefs.getBoolean("block_trackers", true));
                   switchForceHttps.setChecked(prefs.getBoolean("force_https", true));
                   switchBlockPopups.setChecked(prefs.getBoolean("block_popups", true));
+                  switchBackgroundAudio.setChecked(prefs.getBoolean("background_audio", true));
                   switchDesktopMode.setChecked(prefs.getBoolean("desktop_mode", false));
                   switchBlockImages.setChecked(prefs.getBoolean("block_images", false));
 
@@ -934,6 +1195,7 @@ jobs:
                           .putBoolean("block_trackers", switchBlockTrackers.isChecked())
                           .putBoolean("force_https", switchForceHttps.isChecked())
                           .putBoolean("block_popups", switchBlockPopups.isChecked())
+                          .putBoolean("background_audio", switchBackgroundAudio.isChecked())
                           .putBoolean("desktop_mode", switchDesktopMode.isChecked())
                           .putBoolean("block_images", switchBlockImages.isChecked())
                           .putInt("search_engine", engine)
@@ -948,7 +1210,7 @@ jobs:
           }
           EOF
 
-          # 14. MainActivity.java con seguidor gestual interactivo y Liquid Glass
+          # 15. MainActivity.java con Onboarding y Reporte a Telegram
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
@@ -959,6 +1221,7 @@ jobs:
           import android.graphics.Bitmap;
           import android.graphics.BitmapFactory;
           import android.graphics.Color;
+          import android.net.Uri;
           import android.os.Bundle;
           import android.view.Gravity;
           import android.view.KeyEvent;
@@ -1002,7 +1265,9 @@ jobs:
 
               private FrameLayout webContainer;
               private LinearLayout tabsContainer;
-              private LinearLayout homeOverlay;
+              private FrameLayout homeOverlay;
+              private FrameLayout onboardingOverlay;
+              private BubbleRainView bubbleRainView;
               private ImageView ivMiku;
               private TextView tvLogoTitle, tvEngineInfo;
               private EditText etUrl;
@@ -1045,6 +1310,8 @@ jobs:
                   webContainer = findViewById(R.id.webContainer);
                   tabsContainer = findViewById(R.id.tabsContainer);
                   homeOverlay = findViewById(R.id.homeOverlay);
+                  onboardingOverlay = findViewById(R.id.onboardingOverlay);
+                  bubbleRainView = findViewById(R.id.bubbleRainView);
                   ivMiku = findViewById(R.id.ivMiku);
                   tvLogoTitle = findViewById(R.id.tvLogoTitle);
                   tvEngineInfo = findViewById(R.id.tvEngineInfo);
@@ -1058,10 +1325,28 @@ jobs:
 
                   Button btnNewTab = findViewById(R.id.btnNewTab);
                   Button btnGo = findViewById(R.id.btnGo);
+                  Button btnTelegramReport = findViewById(R.id.btnTelegramReport);
+                  Button btnStartBrowsing = findViewById(R.id.btnStartBrowsing);
 
                   btnNewTab.setOnClickListener(v -> crearNuevaPestana("", "Inicio Miku"));
                   btnTabCounter.setOnClickListener(v -> mostrarListaPestanas());
                   btnGo.setOnClickListener(v -> navegar());
+
+                  // Comprobación de Bienvenida en Primer Inicio
+                  boolean onboardingDone = prefs.getBoolean("onboarding_done", false);
+                  if (!onboardingDone) {
+                      onboardingOverlay.setVisibility(View.VISIBLE);
+                  }
+
+                  btnTelegramReport.setOnClickListener(v -> {
+                      Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/"));
+                      startActivity(intent);
+                  });
+
+                  btnStartBrowsing.setOnClickListener(v -> {
+                      prefs.edit().putBoolean("onboarding_done", true).apply();
+                      onboardingOverlay.setVisibility(View.GONE);
+                  });
 
                   configurarControlGestualLiquidGlass();
 
@@ -1100,7 +1385,6 @@ jobs:
                               liquidBubble.setVisibility(View.VISIBLE);
                               liquidBubble.setX(targetBubbleX);
 
-                              // Detección de la zona donde está el dedo (4 cuadrantes)
                               int zone = (int) ((x / (float) width) * 4);
                               if (zone < 0) zone = 0;
                               if (zone > 3) zone = 3;
@@ -1112,8 +1396,6 @@ jobs:
                           case MotionEvent.ACTION_UP:
                               liquidBubble.setVisibility(View.INVISIBLE);
                               resetearColorEtiquetas();
-
-                              // Ejecuta la acción de la zona donde te detuviste y soltaste el dedo
                               ejecutarAccionZona(selectedGestureZone);
                               selectedGestureZone = -1;
                               break;
@@ -1190,8 +1472,10 @@ jobs:
                   if (enableAnim) {
                       Animation floatAnim = AnimationUtils.loadAnimation(this, R.anim.floating_anim);
                       ivMiku.startAnimation(floatAnim);
+                      bubbleRainView.setAnimationRunning(true);
                   } else {
                       ivMiku.clearAnimation();
+                      bubbleRainView.setAnimationRunning(false);
                   }
 
                   if (theme == 1) { // AMOLED NEGRO PURO
@@ -1275,6 +1559,10 @@ jobs:
                   s.setJavaScriptCanOpenWindowsAutomatically(!blockPopups);
                   s.setSupportMultipleWindows(false);
 
+                  // Soporte de audio en segundo plano estilo Brave
+                  boolean bgAudio = prefs.getBoolean("background_audio", true);
+                  s.setMediaPlaybackRequiresUserGesture(!bgAudio);
+
                   boolean blockTrackers = prefs.getBoolean("block_trackers", true);
                   CookieManager.getInstance().setAcceptThirdPartyCookies(wv, !blockTrackers);
               }
@@ -1327,7 +1615,7 @@ jobs:
                       }
 
                       @Override
-                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                      public shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                           String dest = request.getUrl().toString();
                           boolean forceHttps = prefs.getBoolean("force_https", true);
                           if (forceHttps && dest.startsWith("http://")) {
@@ -1507,6 +1795,11 @@ jobs:
 
               @Override
               public void onBackPressed() {
+                  if (onboardingOverlay.getVisibility() == View.VISIBLE) {
+                      prefs.edit().putBoolean("onboarding_done", true).apply();
+                      onboardingOverlay.setVisibility(View.GONE);
+                      return;
+                  }
                   WebView wv = getCurrentWebView();
                   if (wv != null && wv.canGoBack()) {
                       wv.goBack();
@@ -1530,8 +1823,8 @@ jobs:
       - name: Publicar Release con APK directo
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v2.4-build${{ github.run_number }}"
-          name: "Astral Browser v2.4 (Liquid Glass Touch)"
+          tag_name: "v2.6-build${{ github.run_number }}"
+          name: "Astral Browser v2.6 (Brave Suite + Welcome Beta)"
           draft: false
           prerelease: false
           files: app/build/outputs/apk/debug/AstralBrowser.apk

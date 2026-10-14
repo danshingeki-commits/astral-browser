@@ -87,8 +87,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 17
-                  versionName "2.6"
+                  versionCode 18
+                  versionName "2.7"
               }
 
               compileOptions {
@@ -153,7 +153,7 @@ jobs:
           </resources>
           EOF
 
-          # 8. ELEMENTOS LIQUID GLASS
+          # 8. RECURSOS LIQUID GLASS
           cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_bar.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
@@ -251,7 +251,7 @@ jobs:
           </vector>
           EOF
 
-          # 11. BubbleRainView.java (Lluvia interactiva de burbujas azules)
+          # 11. BubbleRainView.java
           cat << 'EOF' > app/src/main/java/com/astral/browser/BubbleRainView.java
           package com.astral.browser;
 
@@ -358,7 +358,7 @@ jobs:
           }
           EOF
 
-          # 12. activity_main.xml (Con Onboarding Modal Liquid Glass integrado)
+          # 12. activity_main.xml
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -407,14 +407,14 @@ jobs:
                           android:textStyle="bold"
                           android:background="?android:attr/selectableItemBackground" />
 
-                      <Button
-                          android:id="@+id/btnNewTab"
-                          android:layout_width="34dp"
-                          android:layout_height="34dp"
-                          android:text="+"
-                          android:textSize="18sp"
-                          android:textColor="#38BDF8"
-                          android:background="?android:attr/selectableItemBackground" />
+                  <Button
+                      android:id="@+id/btnNewTab"
+                      android:layout_width="34dp"
+                      android:layout_height="34dp"
+                      android:text="+"
+                      android:textSize="18sp"
+                      android:textColor="#38BDF8"
+                      android:background="?android:attr/selectableItemBackground" />
                   </LinearLayout>
 
                   <!-- BARRA DE ESTADO / CHIPS -->
@@ -497,14 +497,14 @@ jobs:
                           android:imeOptions="actionGo"
                           android:inputType="textUri" />
 
-                  <Button
-                      android:id="@+id/btnGo"
-                      android:layout_width="44dp"
-                      android:layout_height="36dp"
-                      android:text="Ir"
-                      android:textColor="#38BDF8"
-                      android:textSize="12sp"
-                      android:background="?android:attr/selectableItemBackground" />
+                      <Button
+                          android:id="@+id/btnGo"
+                          android:layout_width="44dp"
+                          android:layout_height="36dp"
+                          android:text="Ir"
+                          android:textColor="#38BDF8"
+                          android:textSize="12sp"
+                          android:background="?android:attr/selectableItemBackground" />
                   </LinearLayout>
 
                   <ProgressBar
@@ -658,7 +658,7 @@ jobs:
                   </LinearLayout>
               </LinearLayout>
 
-              <!-- BIENVENIDA / ONBOARDING EN PRIMER INICIO (LIQUID GLASS OVERLAY) -->
+              <!-- BIENVENIDA / ONBOARDING EN PRIMER INICIO -->
               <FrameLayout
                   android:id="@+id/onboardingOverlay"
                   android:layout_width="match_parent"
@@ -684,8 +684,10 @@ jobs:
                           android:textSize="10sp"
                           android:textStyle="bold"
                           android:letterSpacing="0.2"
-                          android:paddingHorizontal="10dp"
-                          android:paddingVertical="4dp"
+                          android:paddingLeft="10dp"
+                          android:paddingRight="10dp"
+                          android:paddingTop="4dp"
+                          android:paddingBottom="4dp"
                           android:background="@drawable/bg_liquid_glass_chip"
                           android:layout_marginBottom="12dp" />
 
@@ -731,7 +733,7 @@ jobs:
           </FrameLayout>
           EOF
 
-          # 13. activity_settings.xml (Categorizado completo estilo Brave)
+          # 13. activity_settings.xml
           cat << 'EOF' > app/src/main/res/layout/activity_settings.xml
           <?xml version="1.0" encoding="utf-8"?>
           <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
@@ -817,7 +819,7 @@ jobs:
                           android:layout_marginTop="10dp" />
                   </LinearLayout>
 
-                  <!-- 2. MULTIMEDIA Y REPRODUCCIÓN (ESTILO BRAVE) -->
+                  <!-- 2. MULTIMEDIA -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
@@ -1027,7 +1029,7 @@ jobs:
                           android:textSize="12sp" />
                   </RadioGroup>
 
-                  <!-- 6. COMUNIDAD Y REPORTE TELEGRAM -->
+                  <!-- 6. SOPORTE TELEGRAM -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
@@ -1210,7 +1212,7 @@ jobs:
           }
           EOF
 
-          # 15. MainActivity.java con Onboarding y Reporte a Telegram
+          # 15. MainActivity.java (Con corrección de return type boolean en linea 404)
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
@@ -1332,7 +1334,6 @@ jobs:
                   btnTabCounter.setOnClickListener(v -> mostrarListaPestanas());
                   btnGo.setOnClickListener(v -> navegar());
 
-                  // Comprobación de Bienvenida en Primer Inicio
                   boolean onboardingDone = prefs.getBoolean("onboarding_done", false);
                   if (!onboardingDone) {
                       onboardingOverlay.setVisibility(View.VISIBLE);
@@ -1559,7 +1560,6 @@ jobs:
                   s.setJavaScriptCanOpenWindowsAutomatically(!blockPopups);
                   s.setSupportMultipleWindows(false);
 
-                  // Soporte de audio en segundo plano estilo Brave
                   boolean bgAudio = prefs.getBoolean("background_audio", true);
                   s.setMediaPlaybackRequiresUserGesture(!bgAudio);
 
@@ -1615,7 +1615,7 @@ jobs:
                       }
 
                       @Override
-                      public shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                           String dest = request.getUrl().toString();
                           boolean forceHttps = prefs.getBoolean("force_https", true);
                           if (forceHttps && dest.startsWith("http://")) {
@@ -1823,8 +1823,8 @@ jobs:
       - name: Publicar Release con APK directo
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v2.6-build${{ github.run_number }}"
-          name: "Astral Browser v2.6 (Brave Suite + Welcome Beta)"
+          tag_name: "v2.7-build${{ github.run_number }}"
+          name: "Astral Browser v2.7"
           draft: false
           prerelease: false
           files: app/build/outputs/apk/debug/AstralBrowser.apk

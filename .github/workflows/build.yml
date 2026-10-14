@@ -37,7 +37,7 @@ jobs:
           mkdir -p app/src/main/res/anim
           mkdir -p app/src/main/res/drawable
 
-          # Descarga de imagen oficial de Hatsune Miku
+          # Descargar imagen oficial de Hatsune Miku
           curl -L -s -A "Mozilla/5.0" -o app/src/main/res/drawable/miku_avatar.png "https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Hatsune_Miku_V4x.png/440px-Hatsune_Miku_V4x.png" || true
 
           # 1. settings.gradle
@@ -87,8 +87,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 14
-                  versionName "2.3"
+                  versionCode 15
+                  versionName "2.4"
               }
 
               compileOptions {
@@ -153,18 +153,33 @@ jobs:
           </resources>
           EOF
 
-          # 8. RECURSOS LIQUID GLASS (Degradados vidriados y bordes reflectantes)
+          # 8. ELEMENTOS LIQUID GLASS (Capsula, Burbuja interactiva y Chips)
           cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_bar.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
               <gradient
-                  android:startColor="#B31A122A"
-                  android:endColor="#80100A1C"
+                  android:startColor="#CC181028"
+                  android:endColor="#990E081A"
                   android:angle="90" />
-              <corners android:radius="26dp" />
+              <corners android:radius="28dp" />
               <stroke
                   android:width="1.2dp"
-                  android:color="#4DFFFFFF" />
+                  android:color="#40C084FC" />
+          </shape>
+          EOF
+
+          # Burbuja de vidrio fluido que sigue el dedo
+          cat << 'EOF' > app/src/main/res/drawable/bg_liquid_bubble.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android">
+              <gradient
+                  android:startColor="#E638BDF8"
+                  android:endColor="#80A855F7"
+                  android:angle="45" />
+              <corners android:radius="22dp" />
+              <stroke
+                  android:width="1.5dp"
+                  android:color="#FFFFFFFF" />
           </shape>
           EOF
 
@@ -190,7 +205,7 @@ jobs:
           </shape>
           EOF
 
-          # 9. Animacion de levitacion suave para Miku
+          # 9. Animacion Miku
           cat << 'EOF' > app/src/main/res/anim/floating_anim.xml
           <?xml version="1.0" encoding="utf-8"?>
           <set xmlns:android="http://schemas.android.com/apk/res/android"
@@ -204,7 +219,7 @@ jobs:
           </set>
           EOF
 
-          # 10. Vectorial de respaldo Miku
+          # 10. Respaldo Miku
           cat << 'EOF' > app/src/main/res/drawable/ic_miku_fallback.xml
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
               android:width="160dp"
@@ -223,7 +238,7 @@ jobs:
           </vector>
           EOF
 
-          # 11. activity_main.xml con Liquid Glass y Barra Telegram completa
+          # 11. activity_main.xml con soporte gestual para la burbuja Liquid Glass
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -233,7 +248,7 @@ jobs:
               android:orientation="vertical"
               android:background="#090610">
 
-              <!-- BARRA DE PESTAÑAS VIDRIADA -->
+              <!-- BARRA DE PESTAÑAS -->
               <LinearLayout
                   android:id="@+id/tabsTopBar"
                   android:layout_width="match_parent"
@@ -278,7 +293,7 @@ jobs:
                       android:background="?android:attr/selectableItemBackground" />
               </LinearLayout>
 
-              <!-- BARRA DE ESTADO / CHIPS DE CRISTAL -->
+              <!-- BARRA DE ESTADO / CHIPS -->
               <LinearLayout
                   android:id="@+id/chipsBar"
                   android:layout_width="match_parent"
@@ -331,7 +346,7 @@ jobs:
                       android:background="@drawable/bg_liquid_glass_chip" />
               </LinearLayout>
 
-              <!-- BARRA DE ENTRADA URL CRISTAL AHUMADO -->
+              <!-- BARRA DE ENTRADA URL -->
               <LinearLayout
                   android:id="@+id/urlBar"
                   android:layout_width="match_parent"
@@ -375,7 +390,7 @@ jobs:
                   android:layout_height="2dp"
                   android:visibility="gone" />
 
-              <!-- ÁREA PRINCIPAL -->
+              <!-- CONTENEDOR PRINCIPAL -->
               <FrameLayout
                   android:layout_width="match_parent"
                   android:layout_height="0dp"
@@ -427,7 +442,7 @@ jobs:
                   </LinearLayout>
               </FrameLayout>
 
-              <!-- BARRA INFERIOR LIQUID GLASS ESTILO TELEGRAM -->
+              <!-- BARRA INFERIOR CON BURBUJA INTERACTIVA LIQUID GLASS -->
               <LinearLayout
                   android:id="@+id/bottomBarContainer"
                   android:layout_width="match_parent"
@@ -435,57 +450,79 @@ jobs:
                   android:background="#660E0919"
                   android:padding="8dp">
 
-                  <LinearLayout
-                      android:id="@+id/telegramStyleBar"
+                  <FrameLayout
+                      android:id="@+id/interactiveBarFrame"
                       android:layout_width="match_parent"
-                      android:layout_height="52dp"
-                      android:orientation="horizontal"
-                      android:background="@drawable/bg_liquid_glass_bar"
-                      android:gravity="center_vertical"
-                      android:weightSum="4"
-                      android:paddingLeft="8dp"
-                      android:paddingRight="8dp">
+                      android:layout_height="54dp"
+                      android:background="@drawable/bg_liquid_glass_bar">
 
-                      <Button
-                          android:id="@+id/btnBack"
-                          android:layout_width="0dp"
-                          android:layout_height="match_parent"
-                          android:layout_weight="1"
-                          android:text="‹ Atrás"
-                          android:textSize="12sp"
-                          android:textColor="#94A3B8"
-                          android:background="?android:attr/selectableItemBackground" />
+                      <!-- Burbuja de cristal líquido que sigue el dedo -->
+                      <View
+                          android:id="@+id/liquidBubble"
+                          android:layout_width="80dp"
+                          android:layout_height="44dp"
+                          android:layout_gravity="center_vertical"
+                          android:background="@drawable/bg_liquid_bubble"
+                          android:visibility="invisible" />
 
-                      <Button
-                          android:id="@+id/btnForward"
-                          android:layout_width="0dp"
+                      <!-- Etiquetas de navegación perfectamente distribuidas -->
+                      <LinearLayout
+                          android:id="@+id/barLabelsLayout"
+                          android:layout_width="match_parent"
                           android:layout_height="match_parent"
-                          android:layout_weight="1"
-                          android:text="Adelante ›"
-                          android:textSize="12sp"
-                          android:textColor="#94A3B8"
-                          android:background="?android:attr/selectableItemBackground" />
+                          android:orientation="horizontal"
+                          android:weightSum="4"
+                          android:gravity="center_vertical">
 
-                      <Button
-                          android:id="@+id/btnRefresh"
-                          android:layout_width="0dp"
-                          android:layout_height="match_parent"
-                          android:layout_weight="1"
-                          android:text="Recargar"
-                          android:textSize="12sp"
-                          android:textColor="#38BDF8"
-                          android:background="?android:attr/selectableItemBackground" />
+                          <TextView
+                              android:id="@+id/lblBack"
+                              android:layout_width="0dp"
+                              android:layout_height="match_parent"
+                              android:layout_weight="1"
+                              android:text="‹ Atrás"
+                              android:gravity="center"
+                              android:textColor="#F8FAFC"
+                              android:textSize="12sp"
+                              android:textStyle="bold"
+                              android:singleLine="true" />
 
-                      <Button
-                          android:id="@+id/btnSettings"
-                          android:layout_width="0dp"
-                          android:layout_height="match_parent"
-                          android:layout_weight="1"
-                          android:text="Ajustes"
-                          android:textSize="12sp"
-                          android:textColor="#C084FC"
-                          android:background="?android:attr/selectableItemBackground" />
-                  </LinearLayout>
+                          <TextView
+                              android:id="@+id/lblForward"
+                              android:layout_width="0dp"
+                              android:layout_height="match_parent"
+                              android:layout_weight="1"
+                              android:text="Adelante ›"
+                              android:gravity="center"
+                              android:textColor="#F8FAFC"
+                              android:textSize="12sp"
+                              android:textStyle="bold"
+                              android:singleLine="true" />
+
+                          <TextView
+                              android:id="@+id/lblRefresh"
+                              android:layout_width="0dp"
+                              android:layout_height="match_parent"
+                              android:layout_weight="1"
+                              android:text="Recargar"
+                              android:gravity="center"
+                              android:textColor="#38BDF8"
+                              android:textSize="12sp"
+                              android:textStyle="bold"
+                              android:singleLine="true" />
+
+                          <TextView
+                              android:id="@+id/lblSettings"
+                              android:layout_width="0dp"
+                              android:layout_height="match_parent"
+                              android:layout_weight="1"
+                              android:text="Ajustes ⚙"
+                              android:gravity="center"
+                              android:textColor="#C084FC"
+                              android:textSize="12sp"
+                              android:textStyle="bold"
+                              android:singleLine="true" />
+                      </LinearLayout>
+                  </FrameLayout>
               </LinearLayout>
           </LinearLayout>
           EOF
@@ -911,7 +948,7 @@ jobs:
           }
           EOF
 
-          # 14. MainActivity.java con Miku Oficial y soporte Liquid Glass
+          # 14. MainActivity.java con seguidor gestual interactivo y Liquid Glass
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
@@ -925,6 +962,7 @@ jobs:
           import android.os.Bundle;
           import android.view.Gravity;
           import android.view.KeyEvent;
+          import android.view.MotionEvent;
           import android.view.View;
           import android.view.ViewGroup;
           import android.view.animation.Animation;
@@ -957,7 +995,11 @@ jobs:
 
           public class MainActivity extends AppCompatActivity {
 
-              private LinearLayout mainRootLayout, tabsTopBar, chipsBar, urlBar, bottomBarContainer, telegramStyleBar;
+              private LinearLayout mainRootLayout, tabsTopBar, chipsBar, urlBar, bottomBarContainer;
+              private FrameLayout interactiveBarFrame;
+              private View liquidBubble;
+              private TextView lblBack, lblForward, lblRefresh, lblSettings;
+
               private FrameLayout webContainer;
               private LinearLayout tabsContainer;
               private LinearLayout homeOverlay;
@@ -978,6 +1020,8 @@ jobs:
               private static final String DESKTOP_UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
               private static final String MIKU_URL = "https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Hatsune_Miku_V4x.png/440px-Hatsune_Miku_V4x.png";
 
+              private int selectedGestureZone = -1;
+
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
@@ -990,7 +1034,13 @@ jobs:
                   chipsBar = findViewById(R.id.chipsBar);
                   urlBar = findViewById(R.id.urlBar);
                   bottomBarContainer = findViewById(R.id.bottomBarContainer);
-                  telegramStyleBar = findViewById(R.id.telegramStyleBar);
+                  interactiveBarFrame = findViewById(R.id.interactiveBarFrame);
+                  liquidBubble = findViewById(R.id.liquidBubble);
+
+                  lblBack = findViewById(R.id.lblBack);
+                  lblForward = findViewById(R.id.lblForward);
+                  lblRefresh = findViewById(R.id.lblRefresh);
+                  lblSettings = findViewById(R.id.lblSettings);
 
                   webContainer = findViewById(R.id.webContainer);
                   tabsContainer = findViewById(R.id.tabsContainer);
@@ -1008,34 +1058,12 @@ jobs:
 
                   Button btnNewTab = findViewById(R.id.btnNewTab);
                   Button btnGo = findViewById(R.id.btnGo);
-                  Button btnBack = findViewById(R.id.btnBack);
-                  Button btnForward = findViewById(R.id.btnForward);
-                  Button btnRefresh = findViewById(R.id.btnRefresh);
-                  Button btnSettings = findViewById(R.id.btnSettings);
 
                   btnNewTab.setOnClickListener(v -> crearNuevaPestana("", "Inicio Miku"));
                   btnTabCounter.setOnClickListener(v -> mostrarListaPestanas());
                   btnGo.setOnClickListener(v -> navegar());
 
-                  btnBack.setOnClickListener(v -> {
-                      WebView wv = getCurrentWebView();
-                      if (wv != null && wv.canGoBack()) wv.goBack();
-                  });
-
-                  btnForward.setOnClickListener(v -> {
-                      WebView wv = getCurrentWebView();
-                      if (wv != null && wv.canGoForward()) wv.goForward();
-                  });
-
-                  btnRefresh.setOnClickListener(v -> {
-                      WebView wv = getCurrentWebView();
-                      if (wv != null) wv.reload();
-                  });
-
-                  btnSettings.setOnClickListener(v -> {
-                      Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-                      startActivity(intent);
-                  });
+                  configurarControlGestualLiquidGlass();
 
                   etUrl.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
                       if (actionId == EditorInfo.IME_ACTION_GO || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
@@ -1052,6 +1080,80 @@ jobs:
                       crearNuevaPestana("", "Inicio Miku");
                   }
                   actualizarAjustesDeRed();
+              }
+
+              @SuppressLint("ClickableViewAccessibility")
+              private void configurarControlGestualLiquidGlass() {
+                  interactiveBarFrame.setOnTouchListener((v, event) -> {
+                      int width = v.getWidth();
+                      if (width <= 0) return true;
+
+                      float x = event.getX();
+                      float bubbleWidth = liquidBubble.getWidth();
+                      if (bubbleWidth <= 0) bubbleWidth = 140;
+
+                      float targetBubbleX = Math.max(0, Math.min(x - (bubbleWidth / 2f), width - bubbleWidth));
+
+                      switch (event.getAction()) {
+                          case MotionEvent.ACTION_DOWN:
+                          case MotionEvent.ACTION_MOVE:
+                              liquidBubble.setVisibility(View.VISIBLE);
+                              liquidBubble.setX(targetBubbleX);
+
+                              // Detección de la zona donde está el dedo (4 cuadrantes)
+                              int zone = (int) ((x / (float) width) * 4);
+                              if (zone < 0) zone = 0;
+                              if (zone > 3) zone = 3;
+                              selectedGestureZone = zone;
+
+                              resaltarEtiquetas(selectedGestureZone);
+                              break;
+
+                          case MotionEvent.ACTION_UP:
+                              liquidBubble.setVisibility(View.INVISIBLE);
+                              resetearColorEtiquetas();
+
+                              // Ejecuta la acción de la zona donde te detuviste y soltaste el dedo
+                              ejecutarAccionZona(selectedGestureZone);
+                              selectedGestureZone = -1;
+                              break;
+
+                          case MotionEvent.ACTION_CANCEL:
+                              liquidBubble.setVisibility(View.INVISIBLE);
+                              resetearColorEtiquetas();
+                              selectedGestureZone = -1;
+                              break;
+                      }
+                      return true;
+                  });
+              }
+
+              private void resaltarEtiquetas(int zone) {
+                  lblBack.setTextColor(zone == 0 ? Color.parseColor("#38BDF8") : Color.parseColor("#64748B"));
+                  lblForward.setTextColor(zone == 1 ? Color.parseColor("#38BDF8") : Color.parseColor("#64748B"));
+                  lblRefresh.setTextColor(zone == 2 ? Color.parseColor("#38BDF8") : Color.parseColor("#64748B"));
+                  lblSettings.setTextColor(zone == 3 ? Color.parseColor("#C084FC") : Color.parseColor("#64748B"));
+              }
+
+              private void resetearColorEtiquetas() {
+                  lblBack.setTextColor(Color.parseColor("#F8FAFC"));
+                  lblForward.setTextColor(Color.parseColor("#F8FAFC"));
+                  lblRefresh.setTextColor(Color.parseColor("#38BDF8"));
+                  lblSettings.setTextColor(Color.parseColor("#C084FC"));
+              }
+
+              private void ejecutarAccionZona(int zone) {
+                  WebView wv = getCurrentWebView();
+                  if (zone == 0) {
+                      if (wv != null && wv.canGoBack()) wv.goBack();
+                  } else if (zone == 1) {
+                      if (wv != null && wv.canGoForward()) wv.goForward();
+                  } else if (zone == 2) {
+                      if (wv != null) wv.reload();
+                  } else if (zone == 3) {
+                      Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                      startActivity(intent);
+                  }
               }
 
               private void cargarMikuOficial() {
@@ -1428,8 +1530,8 @@ jobs:
       - name: Publicar Release con APK directo
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v2.3-build${{ github.run_number }}"
-          name: "Astral Browser v2.3 (Liquid Glass Edition)"
+          tag_name: "v2.4-build${{ github.run_number }}"
+          name: "Astral Browser v2.4 (Liquid Glass Touch)"
           draft: false
           prerelease: false
           files: app/build/outputs/apk/debug/AstralBrowser.apk

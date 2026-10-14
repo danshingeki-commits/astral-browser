@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
         Button back = findViewById(R.id.btnBack), forward = findViewById(R.id.btnForward);
         Button refresh = findViewById(R.id.btnRefresh), go = findViewById(R.id.btnSearch);
         Button burn = findViewById(R.id.btnBurn), addTab = findViewById(R.id.btnAddTab);
-        Button home = findViewById(R.id.btnHome), tabsButton = findViewById(R.id.btnTabs), settingsButton = findViewById(R.id.btnSettings);
+        Button home = findViewById(R.id.btnHome), tabsButton = findViewById(R.id.btnTabs);
 
         back.setOnClickListener(v -> { WebView w=current(); if(w.canGoBack()) w.goBack(); else showHome(w); });
         forward.setOnClickListener(v -> { if(current().canGoForward()) current().goForward(); });
@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
         addTab.setOnClickListener(v -> newTab(true));
         home.setOnClickListener(v -> showHome(current()));
         tabsButton.setOnClickListener(v -> showTabsMenu());
-        settingsButton.setOnClickListener(v -> showSettings());
         etUrl.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH ||
                 (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {

@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
         WebSettings s=w.getSettings();
         s.setJavaScriptEnabled(getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("javascript_enabled", true)); s.setDomStorageEnabled(true); s.setTextZoom(getSharedPreferences("astral_settings", MODE_PRIVATE).getInt("text_zoom", 100)); s.setJavaScriptCanOpenWindowsAutomatically(!getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("block_popups", true)); s.setMediaPlaybackRequiresUserGesture(!getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("autoplay_media", false));
         s.setSupportZoom(true); s.setBuiltInZoomControls(true); s.setDisplayZoomControls(false);
+        applyDesktopMode(w);
         CookieManager.getInstance().setAcceptThirdPartyCookies(w,getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("third_party_cookies", false));
         w.setWebChromeClient(new WebChromeClient(){
             @Override public void onProgressChanged(WebView view,int p){ if(view==current()){ progressBar.setVisibility(p<100?View.VISIBLE:View.GONE); progressBar.setProgress(p); } }
@@ -156,6 +157,18 @@ public class MainActivity extends AppCompatActivity {
         else if(input.contains(".")&&!input.contains(" ")) current().loadUrl("https://"+input);
         else { try{String engine=getSharedPreferences("astral_settings", MODE_PRIVATE).getString("search_engine","duckduckgo"); String base=engine.equals("google")?"https://www.google.com/search?q=":engine.equals("bing")?"https://www.bing.com/search?q=":"https://duckduckgo.com/?q="; current().loadUrl(base+URLEncoder.encode(input,"UTF-8"));}catch(Exception e){current().loadUrl("https://duckduckgo.com");} }
     }
+    private void applyDesktopMode(WebView webView) {
+        boolean desktop = getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("desktop_mode", false);
+        String userAgent = WebSettings.getDefaultUserAgent(this);
+        if (desktop) {
+            userAgent = userAgent.replace("Mobile", "").replace("Android", "X11; Linux x86_64");
+            if (!userAgent.contains("X11; Linux x86_64")) userAgent += " X11; Linux x86_64";
+        }
+        webView.getSettings().setUserAgentString(userAgent);
+        webView.getSettings().setLoadWithOverviewMode(desktop);
+        webView.getSettings().setUseWideViewPort(desktop);
+    }
+
     private void showSettings() {
         Intent settings = new Intent(this, SettingsActivity.class);
         settings.putExtra("open_tabs_count", tabs.size());
@@ -202,6 +215,21 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout.LayoutParams actionsLp = new LinearLayout.LayoutParams(-1,-2);
         actionsLp.setMargins(0,dp(8),0,dp(8));
         panel.addView(quickActions,actionsLp);
+        Button desktopMode = new Button(this);
+        boolean desktopEnabled = getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("desktop_mode", false);
+        desktopMode.setText(desktopEnabled ? "▣  Modo escritorio: ACTIVADO" : "▣  Modo escritorio: desactivado");
+        desktopMode.setAllCaps(false);
+        desktopMode.setTextSize(13);
+        desktopMode.setTextColor(Color.WHITE);
+        desktopMode.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(35,24,49)));
+        desktopMode.setOnClickListener(v -> {
+            boolean enabled = !getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("desktop_mode", false);
+            getSharedPreferences("astral_settings", MODE_PRIVATE).edit().putBoolean("desktop_mode", enabled).apply();
+            for (WebView tab : tabs) { applyDesktopMode(tab); if (!isHome(tab) && tab.getUrl() != null) tab.reload(); }
+            dialog.dismiss();
+            Toast.makeText(this, enabled ? "Modo escritorio activado" : "Modo móvil activado", Toast.LENGTH_SHORT).show();
+        });
+        panel.addView(desktopMode, new LinearLayout.LayoutParams(-1, dp(46)));
         ScrollView scroll = new ScrollView(this);
         LinearLayout list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);

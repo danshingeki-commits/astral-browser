@@ -10,6 +10,7 @@
         android:label="Astral Browser"
         android:theme="@style/AppTheme"
         android:supportsRtl="true">
+        <activity android:name=".SettingsActivity" android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

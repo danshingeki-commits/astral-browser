@@ -22,7 +22,7 @@ public class SettingsActivity extends Activity {
     private SharedPreferences prefs;
     private LinearLayout root, content, nav;
     private String active="General";
-    private final String[] sections={"General","Diseño","Buscadores","Privacidad y seguridad","Multimedia","Pestañas y grupos","Avanzado"};
+    private final String[] sections={"General","Diseño","Buscadores","Privacidad y seguridad","Multimedia","Pestañas y grupos","Accesibilidad","Avanzado"};
     @Override public void onCreate(Bundle b){super.onCreate(b);prefs=getSharedPreferences("astral_settings",MODE_PRIVATE);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg); buildShell();}
     private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}
     private GradientDrawable shape(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
@@ -87,7 +87,7 @@ public class SettingsActivity extends Activity {
         list.setPadding(dp(14),dp(4),dp(14),dp(24));
         scroll.addView(list);
         screen.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
-        String[] icons={"◇","✧","⌕","⬡","♫","▣","⚙"};
+        String[] icons={"◇","✧","⌕","⬡","♫","▣","Aa","⚙"};
         String[] descriptions={
             "Inicio y datos de navegación",
             "Tema y apariencia del navegador",
@@ -95,7 +95,8 @@ public class SettingsActivity extends Activity {
             "Cookies y protección de datos",
             "Reproducción y permisos de sitios",
             "Organización de tus pestañas",
-            "Proxy y opciones avanzadas"
+            "Zoom y lectura de páginas",
+            "JavaScript, ventanas emergentes y proxy"
         };
         java.util.ArrayList<View> categoryCards=new java.util.ArrayList<>();
         for(int i=0;i<sections.length;i++){
@@ -205,14 +206,33 @@ public class SettingsActivity extends Activity {
             card("DNS privado","Esta opción se configura en los ajustes de Android y afecta al dispositivo.",button("Abrir ajustes de red",()->{try{startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));}catch(Exception e){Toast.makeText(this,"Abre Ajustes > Red e Internet",Toast.LENGTH_LONG).show();}}));
             break;
         case "Multimedia":
-            card("Reproducción web","Los controles de audio y vídeo dependen de cada página.",text("Administrados por el sitio web",14,cyan,true));
+            CheckBox autoplay=new CheckBox(this);autoplay.setText("Permitir reproducción automática de audio y vídeo");autoplay.setTextColor(Color.WHITE);autoplay.setButtonTintList(android.content.res.ColorStateList.valueOf(cyan));autoplay.setChecked(prefs.getBoolean("autoplay_media",false));
+            card("Reproducción automática","Desactivada por defecto para evitar que los sitios reproduzcan contenido sin tocarlo.",autoplay);
+            card("Guardar preferencia","Se aplica a las pestañas que abras después de guardar.",button("Guardar multimedia",()->{prefs.edit().putBoolean("autoplay_media",autoplay.isChecked()).apply();Toast.makeText(this,"Preferencia multimedia guardada",Toast.LENGTH_SHORT).show();}));
             card("Permisos del sitio","Gestiona permisos desde los ajustes de Android si una página no funciona como esperas.",button("Abrir ajustes de la aplicación",()->{Intent i=new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:"+getPackageName()));startActivity(i);}));
             break;
         case "Pestañas y grupos":
-            card("Pestañas abiertas","Crea y cambia de pestaña desde la barra superior.",text("Pestañas independientes",14,cyan,true));
-            card("Cerrar pestaña","Usa la × de cada pestaña para cerrarla.",null);
+            int openTabs=getIntent().getIntExtra("open_tabs_count",1);
+            card("Pestañas abiertas","Recuento actual del navegador.",text(openTabs+" pestaña(s) abiertas",18,cyan,true));
+            card("Administrar pestañas","Vuelve al navegador y toca el botón ▢ de la barra inferior para ver, cambiar o cerrar pestañas.",button("Volver al navegador",()->finish()));
+            card("Cerrar pestaña","Usa la × de cada tarjeta en el menú de pestañas. Siempre queda al menos una pestaña disponible.",null);
+            break;
+        case "Accesibilidad":
+            Spinner zoom=new Spinner(this);
+            String[] zoomOptions={"80%","90%","100%","110%","125%","150%"};
+            zoom.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,zoomOptions));
+            int currentZoom=prefs.getInt("text_zoom",100);int selectedZoom=2;
+            for(int i=0;i<zoomOptions.length;i++){if(Integer.parseInt(zoomOptions[i].replace("%",""))==currentZoom)selectedZoom=i;}
+            zoom.setSelection(selectedZoom);
+            card("Tamaño del texto","Ajusta la escala del texto en páginas web nuevas.",zoom);
+            card("Guardar accesibilidad","El cambio se aplica al abrir nuevas pestañas.",button("Guardar zoom",()->{int[] values={80,90,100,110,125,150};prefs.edit().putInt("text_zoom",values[zoom.getSelectedItemPosition()]).apply();Toast.makeText(this,"Zoom guardado",Toast.LENGTH_SHORT).show();}));
             break;
         case "Avanzado":
+            CheckBox javascript=new CheckBox(this);javascript.setText("Activar JavaScript");javascript.setTextColor(Color.WHITE);javascript.setButtonTintList(android.content.res.ColorStateList.valueOf(purple));javascript.setChecked(prefs.getBoolean("javascript_enabled",true));
+            card("JavaScript","Algunos sitios dejan de funcionar si lo desactivas. Se aplica a pestañas nuevas.",javascript);
+            CheckBox popups=new CheckBox(this);popups.setText("Bloquear ventanas emergentes automáticas");popups.setTextColor(Color.WHITE);popups.setButtonTintList(android.content.res.ColorStateList.valueOf(cyan));popups.setChecked(prefs.getBoolean("block_popups",true));
+            card("Ventanas emergentes","Reduce las ventanas abiertas automáticamente por páginas web.",popups);
+            card("Guardar seguridad web","Guarda JavaScript y el bloqueo de ventanas emergentes para pestañas nuevas.",button("Guardar preferencias",()->{prefs.edit().putBoolean("javascript_enabled",javascript.isChecked()).putBoolean("block_popups",popups.isChecked()).apply();Toast.makeText(this,"Preferencias web guardadas",Toast.LENGTH_SHORT).show();}));
             EditText proxy=new EditText(this);
             proxy.setSingleLine(true);proxy.setTextColor(Color.WHITE);proxy.setHintTextColor(muted);proxy.setHint("host:puerto");proxy.setText(prefs.getString("proxy",""));
             card("Servidor proxy","Solo configura un proxy de un proveedor de confianza.",proxy);

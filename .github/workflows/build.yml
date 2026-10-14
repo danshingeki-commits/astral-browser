@@ -37,6 +37,7 @@ jobs:
           mkdir -p app/src/main/res/anim
           mkdir -p app/src/main/res/drawable
 
+          # Descargar imagen oficial de Hatsune Miku
           curl -L -s -A "Mozilla/5.0" -o app/src/main/res/drawable/miku_avatar.png "https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Hatsune_Miku_V4x.png/440px-Hatsune_Miku_V4x.png" || true
 
           # 1. settings.gradle
@@ -86,8 +87,8 @@ jobs:
                   applicationId "com.astral.browser"
                   minSdk 24
                   targetSdk 34
-                  versionCode 18
-                  versionName "2.7"
+                  versionCode 19
+                  versionName "2.8"
               }
 
               compileOptions {
@@ -152,7 +153,7 @@ jobs:
           </resources>
           EOF
 
-          # 8. ELEMENTOS LIQUID GLASS Y BURBUJA REDONDA
+          # 8. ELEMENTOS LIQUID GLASS
           cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_bar.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
@@ -195,7 +196,6 @@ jobs:
           </shape>
           EOF
 
-          # La barra de URL redondeada (Cápsula)
           cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_input.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
@@ -358,7 +358,7 @@ jobs:
           }
           EOF
 
-          # 12. activity_main.xml (Barra URL estilo cápsula)
+          # 12. activity_main.xml
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -581,7 +581,6 @@ jobs:
                       </FrameLayout>
                   </FrameLayout>
 
-                  <!-- BARRA INFERIOR GESTUAL -->
                   <LinearLayout
                       android:id="@+id/bottomBarContainer"
                       android:layout_width="match_parent"
@@ -1034,7 +1033,7 @@ jobs:
                           android:textSize="12sp" />
                   </RadioGroup>
 
-                  <!-- 6. COMUNIDAD Y REPORTE TELEGRAM -->
+                  <!-- 6. SOPORTE TELEGRAM -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
@@ -1265,7 +1264,9 @@ jobs:
 
           public class MainActivity extends AppCompatActivity {
 
-              private LinearLayout mainRootLayout, tabsTopBar, chipsBar, urlBarContainer, bottomBarContainer;
+              private LinearLayout mainRootLayout, tabsTopBar, chipsBar;
+              private FrameLayout urlBarContainer;
+              private LinearLayout bottomBarContainer;
               private FrameLayout interactiveBarFrame;
               private View liquidBubble;
               private TextView lblBack, lblForward, lblRefresh, lblSettings;
@@ -1829,7 +1830,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v2.8-build${{ github.run_number }}"
-          name: "Astral Browser v2.8 (URL Capsule)"
+          name: "Astral Browser v2.8 (Fixed Cast)"
           draft: false
           prerelease: false
           files: app/build/outputs/apk/debug/AstralBrowser.apk

@@ -10,6 +10,9 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.content.Context;
+import android.app.DownloadManager;
+import android.net.Uri;
+import android.database.Cursor;
 import android.content.SharedPreferences;
 import android.content.Intent;
 import android.provider.Settings;
@@ -94,6 +97,22 @@ public class MainActivity extends AppCompatActivity {
         s.setSupportZoom(true); s.setBuiltInZoomControls(true); s.setDisplayZoomControls(false);
         applyDesktopMode(w);
         CookieManager.getInstance().setAcceptThirdPartyCookies(w,getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("third_party_cookies", false));
+        w.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
+            try {
+                String fileName = android.webkit.URLUtil.guessFileName(url, contentDisposition, mimeType);
+                DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+                request.setTitle(fileName);
+                request.setDescription("Descargando desde Astral Browser");
+                request.setMimeType(mimeType);
+                request.addRequestHeader("User-Agent", userAgent);
+                String cookie = CookieManager.getInstance().getCookie(url);
+                if (cookie != null) request.addRequestHeader("Cookie", cookie);
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                request.setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, fileName);
+                DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                if (manager != null) { manager.enqueue(request); Toast.makeText(this, "Descarga iniciada: " + fileName, Toast.LENGTH_LONG).show(); }
+            } catch (Exception e) { Toast.makeText(this, "No se pudo iniciar la descarga", Toast.LENGTH_SHORT).show(); }
+        });
         w.setWebChromeClient(new WebChromeClient(){
             @Override public void onProgressChanged(WebView view,int p){ if(view==current()){ progressBar.setVisibility(p<100?View.VISIBLE:View.GONE); progressBar.setProgress(p); } }
             @Override public void onReceivedTitle(WebView view,String title){ int i=tabs.indexOf(view); if(i>=0){tabTitles.set(i, title==null||title.isEmpty()?"Nueva pestaña":title); renderTabs();} }
@@ -230,6 +249,15 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, enabled ? "Modo escritorio activado" : "Modo móvil activado", Toast.LENGTH_SHORT).show();
         });
         panel.addView(desktopMode, new LinearLayout.LayoutParams(-1, dp(46)));
+        LinearLayout browserActions = new LinearLayout(this);
+        browserActions.setOrientation(LinearLayout.VERTICAL);
+        browserActions.setPadding(0, dp(5), 0, dp(5));
+        addMenuAction(browserActions, "◷   Historial", "Páginas visitadas en esta pestaña", () -> { dialog.dismiss(); showHistory(); });
+        addMenuAction(browserActions, "↓   Descargas", "Archivos descargados", () -> { dialog.dismiss(); showDownloads(); });
+        addMenuAction(browserActions, "☆   Favoritos", "Tus páginas guardadas", () -> { dialog.dismiss(); showFavorites(); });
+        addMenuAction(browserActions, "⌫   Borrar datos de navegación", "Cookies, caché e historial", () -> { dialog.dismiss(); confirmClearData(); });
+        addMenuAction(browserActions, "⚙   Configuración", "Ajustes de Astral Browser", () -> { dialog.dismiss(); showSettings(); });
+        panel.addView(browserActions, new LinearLayout.LayoutParams(-1, -2));
         ScrollView scroll = new ScrollView(this);
         LinearLayout list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
@@ -280,6 +308,93 @@ public class MainActivity extends AppCompatActivity {
             dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.rgb(11,8,19)));
             dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels * 0.92f), (int)(getResources().getDisplayMetrics().heightPixels * 0.78f));
         }
+    }
+
+    private void addMenuAction(LinearLayout parent, String title, String subtitle, Runnable action) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.VERTICAL);
+        row.setPadding(dp(12), dp(8), dp(8), dp(8));
+        TextView primary = settingsText(title, 14, Color.WHITE);
+        row.addView(primary);
+        TextView secondary = settingsText(subtitle, 11, Color.rgb(169,154,190));
+        row.addView(secondary);
+        row.setBackgroundResource(android.R.drawable.list_selector_background);
+        row.setOnClickListener(v -> action.run());
+        parent.addView(row, new LinearLayout.LayoutParams(-1, -2));
+    }
+
+    private void showHistory() {
+        WebView w = current();
+        android.webkit.WebBackForwardList history = w.copyBackForwardList();
+        ArrayList<String> labels = new ArrayList<>();
+        ArrayList<String> urls = new ArrayList<>();
+        for (int i = history.getSize() - 1; i >= 0; i--) {
+            android.webkit.WebHistoryItem item = history.getItemAtIndex(i);
+            String url = item.getUrl();
+            if (url == null || url.startsWith("https://astral.local/")) continue;
+            labels.add((item.getTitle() == null || item.getTitle().isEmpty() ? url : item.getTitle()) + "\\n" + url);
+            urls.add(url);
+        }
+        if (labels.isEmpty()) {
+            new android.app.AlertDialog.Builder(this).setTitle("Historial").setMessage("No hay páginas en el historial de esta pestaña todavía.").setPositiveButton("Aceptar", null).show();
+            return;
+        }
+        new android.app.AlertDialog.Builder(this).setTitle("Historial de esta pestaña").setItems(labels.toArray(new String[0]), (d, which) -> current().loadUrl(urls.get(which))).setNeutralButton("Borrar historial", (d, which) -> {
+            for (WebView tab : tabs) tab.clearHistory();
+            Toast.makeText(this, "Historial de las pestañas borrado", Toast.LENGTH_SHORT).show();
+        }).setNegativeButton("Cerrar", null).show();
+    }
+
+    private void showDownloads() {
+        DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+        if (manager == null) {
+            Toast.makeText(this, "Descargas no disponibles en este dispositivo", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ArrayList<Long> ids = new ArrayList<>();
+        ArrayList<String> labels = new ArrayList<>();
+        DownloadManager.Query query = new DownloadManager.Query();
+        Cursor cursor = manager.query(query);
+        if (cursor != null) {
+            try {
+                int idCol = cursor.getColumnIndex(DownloadManager.COLUMN_ID);
+                int titleCol = cursor.getColumnIndex(DownloadManager.COLUMN_TITLE);
+                int statusCol = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                while (cursor.moveToNext()) {
+                    ids.add(cursor.getLong(idCol));
+                    int status = cursor.getInt(statusCol);
+                    String state = status == DownloadManager.STATUS_SUCCESSFUL ? "Completada" :
+                        status == DownloadManager.STATUS_FAILED ? "Fallida" :
+                        status == DownloadManager.STATUS_RUNNING ? "En curso" : "Pendiente";
+                    labels.add(cursor.getString(titleCol) + " · " + state);
+                }
+            } finally { cursor.close(); }
+        }
+        if (labels.isEmpty()) {
+            new android.app.AlertDialog.Builder(this).setTitle("Descargas").setMessage("Todavía no hay descargas registradas.").setPositiveButton("Aceptar", null).show();
+            return;
+        }
+        new android.app.AlertDialog.Builder(this).setTitle("Descargas").setItems(labels.toArray(new String[0]), (d, which) -> {
+            DownloadManager.Query one = new DownloadManager.Query().setFilterById(ids.get(which));
+            Cursor item = manager.query(one);
+            if (item != null) {
+                try {
+                    if (item.moveToFirst() && item.getInt(item.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
+                        Intent view = new Intent(Intent.ACTION_VIEW);
+                        view.setDataAndType(manager.getUriForDownloadedFile(ids.get(which)), "*/*");
+                        view.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        try { startActivity(view); } catch (Exception e) { Toast.makeText(this, "Archivo descargado en la carpeta Descargas", Toast.LENGTH_LONG).show(); }
+                    } else Toast.makeText(this, "La descarga aún no está lista", Toast.LENGTH_SHORT).show();
+                } finally { item.close(); }
+            }
+        }).setNegativeButton("Cerrar", null).show();
+    }
+
+    private void confirmClearData() {
+        new android.app.AlertDialog.Builder(this).setTitle("Borrar datos de navegación")
+            .setMessage("Se borrarán cookies, caché e historial de las pestañas abiertas.")
+            .setNegativeButton("Cancelar", null)
+            .setPositiveButton("Borrar", (d, which) -> destroySession()).show();
     }
 
     private void saveCurrentFavorite() {

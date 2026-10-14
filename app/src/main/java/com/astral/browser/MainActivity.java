@@ -1,12 +1,16 @@
 package com.astral.browser;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -15,149 +19,137 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-
-    private WebView webView;
     private EditText etUrl;
     private ProgressBar progressBar;
-    private final String HOME_URL = "https://duckduckgo.com";
+    private FrameLayout webContainer;
+    private LinearLayout tabsBar;
+    private final ArrayList<WebView> tabs = new ArrayList<>();
+    private final ArrayList<String> tabTitles = new ArrayList<>();
+    private int activeTab = 0;
+    private final String HOME_URL = "astral://home";
 
-    @SuppressLint("SetJavaScriptEnabled")
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
+    @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        webView = findViewById(R.id.webView);
         etUrl = findViewById(R.id.etUrl);
         progressBar = findViewById(R.id.progressBar);
+        webContainer = findViewById(R.id.webContainer);
+        tabsBar = findViewById(R.id.tabsBar);
+        Button back = findViewById(R.id.btnBack), forward = findViewById(R.id.btnForward);
+        Button refresh = findViewById(R.id.btnRefresh), go = findViewById(R.id.btnSearch);
+        Button burn = findViewById(R.id.btnBurn), addTab = findViewById(R.id.btnAddTab);
+        Button home = findViewById(R.id.btnHome), tabsButton = findViewById(R.id.btnTabs);
 
-        Button btnBack = findViewById(R.id.btnBack);
-        Button btnForward = findViewById(R.id.btnForward);
-        Button btnRefresh = findViewById(R.id.btnRefresh);
-        Button btnSearch = findViewById(R.id.btnSearch);
-        Button btnBurn = findViewById(R.id.btnBurn);
-
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setSaveFormData(false);
-        settings.setDatabaseEnabled(false);
-        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
-        settings.setSupportZoom(true);
-        settings.setBuiltInZoomControls(true);
-        settings.setDisplayZoomControls(false);
-
-        CookieManager.getInstance().setAcceptCookie(true);
-        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false);
-
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                if (newProgress < 100) {
-                    progressBar.setVisibility(View.VISIBLE);
-                    progressBar.setProgress(newProgress);
-                } else {
-                    progressBar.setVisibility(View.GONE);
-                }
-            }
-        });
-
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                etUrl.setText(url);
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                etUrl.setText(url);
-            }
-
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return false;
-            }
-        });
-
-        btnBack.setOnClickListener(v -> {
-            if (webView.canGoBack()) webView.goBack();
-        });
-
-        btnForward.setOnClickListener(v -> {
-            if (webView.canGoForward()) webView.goForward();
-        });
-
-        btnRefresh.setOnClickListener(v -> webView.reload());
-        btnSearch.setOnClickListener(v -> loadUrlFromInput());
-
+        back.setOnClickListener(v -> { WebView w=current(); if(w.canGoBack()) w.goBack(); else showHome(w); });
+        forward.setOnClickListener(v -> { if(current().canGoForward()) current().goForward(); });
+        refresh.setOnClickListener(v -> { if (isHome(current())) showHome(current()); else current().reload(); });
+        go.setOnClickListener(v -> loadUrlFromInput());
+        burn.setOnClickListener(v -> destroySession());
+        addTab.setOnClickListener(v -> newTab(true));
+        home.setOnClickListener(v -> showHome(current()));
+        tabsButton.setOnClickListener(v -> { renderTabs(); Toast.makeText(this, tabs.size()+" pestaña(s) abiertas", Toast.LENGTH_SHORT).show(); });
         etUrl.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH ||
                 (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
-                loadUrlFromInput();
-                return true;
+                loadUrlFromInput(); return true;
             }
             return false;
         });
-
-        btnBurn.setOnClickListener(v -> destroySession());
-        webView.loadUrl(HOME_URL);
+        CookieManager.getInstance().setAcceptCookie(true);
+        newTab(true);
     }
 
-    private void loadUrlFromInput() {
-        String input = etUrl.getText().toString().trim();
-        hideKeyboard();
-        if (input.isEmpty()) {
-            webView.loadUrl(HOME_URL);
-            return;
-        }
+    private WebView current() { return tabs.get(activeTab); }
+    private boolean isHome(WebView w) { return w.getTag()!=null && "home".equals(w.getTag()); }
 
-        if (input.startsWith("http://") || input.startsWith("https://")) {
-            webView.loadUrl(input);
-        } else if (input.contains(".") && !input.contains(" ")) {
-            webView.loadUrl("https://" + input);
-        } else {
-            try {
-                String query = URLEncoder.encode(input, "UTF-8");
-                webView.loadUrl("https://duckduckgo.com/?q=" + query);
-            } catch (UnsupportedEncodingException e) {
-                webView.loadUrl("https://duckduckgo.com/?q=" + input);
-            }
-        }
+    @SuppressLint("SetJavaScriptEnabled")
+    private void newTab(boolean show) {
+        WebView w = new WebView(this);
+        w.setBackgroundColor(Color.rgb(11,8,19));
+        WebSettings s=w.getSettings();
+        s.setJavaScriptEnabled(true); s.setDomStorageEnabled(true);
+        s.setSupportZoom(true); s.setBuiltInZoomControls(true); s.setDisplayZoomControls(false);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(w,false);
+        w.setWebChromeClient(new WebChromeClient(){
+            @Override public void onProgressChanged(WebView view,int p){ if(view==current()){ progressBar.setVisibility(p<100?View.VISIBLE:View.GONE); progressBar.setProgress(p); } }
+            @Override public void onReceivedTitle(WebView view,String title){ int i=tabs.indexOf(view); if(i>=0){tabTitles.set(i, title==null||title.isEmpty()?"Nueva pestaña":title); renderTabs();} }
+        });
+        w.setWebViewClient(new WebViewClient(){
+            @Override public void onPageStarted(WebView view,String url,Bitmap icon){ if(view==current() && !url.startsWith("file:")) etUrl.setText(url.equals("about:blank")?"":url); }
+            @Override public void onPageFinished(WebView view,String url){ if(view==current() && !isHome(view)) etUrl.setText(url); }
+            @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req){ return false; }
+        });
+        tabs.add(w); tabTitles.add("Nueva pestaña");
+        webContainer.addView(w,new FrameLayout.LayoutParams(-1,-1));
+        if(show){ activeTab=tabs.size()-1; switchTab(activeTab); showHome(w); }
+        renderTabs();
     }
 
-    private void destroySession() {
-        webView.clearCache(true);
-        webView.clearHistory();
-        CookieManager.getInstance().removeAllCookies(null);
-        CookieManager.getInstance().flush();
-        webView.loadUrl(HOME_URL);
+    private void switchTab(int index) {
+        if(index<0||index>=tabs.size()) return;
+        activeTab=index;
+        for(int i=0;i<tabs.size();i++) tabs.get(i).setVisibility(i==index?View.VISIBLE:View.GONE);
+        etUrl.setText(isHome(current())?"":current().getUrl());
+        renderTabs();
+    }
+
+    private void renderTabs() {
+        tabsBar.removeAllViews();
+        for(int i=0;i<tabs.size();i++){
+            final int index=i;
+            LinearLayout chip=new LinearLayout(this); chip.setGravity( android.view.Gravity.CENTER_VERTICAL);
+            chip.setPadding(dp(10),0,dp(4),0);
+            GradientDrawable bg=new GradientDrawable(); bg.setColor(i==activeTab?Color.rgb(48,31,72):Color.rgb(24,18,37)); bg.setCornerRadius(dp(14)); chip.setBackground(bg);
+            TextView title=new TextView(this); title.setText((tabTitles.get(i).length()>13?tabTitles.get(i).substring(0,12)+"…":tabTitles.get(i))); title.setTextColor(i==activeTab?Color.WHITE:Color.rgb(184,165,208)); title.setTextSize(12); title.setMaxWidth(dp(105)); title.setSingleLine(true);
+            chip.addView(title,new LinearLayout.LayoutParams(-2,dp(38)));
+            TextView close=new TextView(this); close.setText(" × "); close.setTextColor(Color.rgb(192,132,252)); close.setTextSize(17);
+            close.setOnClickListener(v -> closeTab(index)); chip.addView(close);
+            chip.setOnClickListener(v -> switchTab(index));
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,dp(38)); lp.setMargins(dp(4),dp(4),dp(3),dp(4)); tabsBar.addView(chip,lp);
+        }
+        TextView count=findViewById(R.id.tabCount); count.setText(String.valueOf(tabs.size()));
+    }
+
+    private void closeTab(int index){
+        if(tabs.size()==1){ WebView w=current(); w.stopLoading(); w.clearHistory(); showHome(w); tabTitles.set(0,"Nueva pestaña"); renderTabs(); return; }
+        WebView w=tabs.remove(index); tabTitles.remove(index); webContainer.removeView(w); w.destroy();
+        if(activeTab>=tabs.size()) activeTab=tabs.size()-1; else if(index<activeTab) activeTab--;
+        switchTab(activeTab);
+    }
+
+    private void showHome(WebView w){
+        w.setTag("home");
+        String html = "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><style>*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 18%,#281342 0%,#100b1c 48%,#0b0813 100%);color:#f8f5ff;font-family:Arial,sans-serif;min-height:100vh;display:flex;justify-content:center}.wrap{width:100%;max-width:520px;padding:48px 22px 35px;text-align:center}.orb{margin:12px auto 16px;width:82px;height:82px;border-radius:26px;background:linear-gradient(135deg,#a855f7,#22d3ee);display:flex;align-items:center;justify-content:center;box-shadow:0 0 42px #9333ea55;font-size:39px;font-weight:800;color:#100b1c}.brand{font-size:32px;font-weight:800;letter-spacing:1px}.brand span{color:#c084fc}.tag{color:#a99abf;font-size:13px;margin:8px 0 30px}.search{display:flex;padding:6px;border:1px solid #47305e;background:#1a1329;border-radius:18px;box-shadow:0 8px 32px #0004}.search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:white;font-size:15px;padding:12px}.search button{border:0;border-radius:13px;background:linear-gradient(135deg,#a855f7,#6d28d9);color:white;padding:0 16px;font-size:18px}.label{margin:31px 0 14px;text-align:left;font-size:12px;color:#a99abf;letter-spacing:1.4px}.links{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.link{padding:14px 4px;border:1px solid #2d2240;background:#171122;border-radius:16px;color:#e9ddfa;text-decoration:none;font-size:12px}.ico{display:block;font-size:23px;margin-bottom:9px}.foot{margin-top:38px;color:#706080;font-size:11px}</style></head><body><div class='wrap'><div class='orb'>✦</div><div class='brand'>ASTRAL<span>.</span></div><div class='tag'>Tu espacio. Tu universo. Tu navegador.</div><form class='search' action='https://duckduckgo.com/'><input name='q' placeholder='Busca o escribe una dirección…' autocomplete='off'><button type='submit'>⌕</button></form><div class='label'>ACCESOS RÁPIDOS</div><div class='links'><a class='link' href='https://www.youtube.com'><span class='ico'>▶</span>YouTube</a><a class='link' href='https://www.wikipedia.org'><span class='ico'>◈</span>Wiki</a><a class='link' href='https://www.google.com'><span class='ico'>◎</span>Google</a><a class='link' href='https://github.com'><span class='ico'>⌘</span>GitHub</a></div><div class='foot'>ASTRAL BROWSER · EXPLORA A TU MANERA</div></div></body></html>";
+        w.loadDataWithBaseURL("https://astral.local/",html,"text/html","UTF-8",null);
         etUrl.setText("");
-        Toast.makeText(this, "🔥 Rastro destruido: Cookies y caché eliminadas", Toast.LENGTH_SHORT).show();
     }
 
-    private void hideKeyboard() {
-        View view = this.getCurrentFocus();
-        if (view != null) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            if (imm != null) imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        }
+    private void loadUrlFromInput(){
+        String input=etUrl.getText().toString().trim(); hideKeyboard();
+        if(input.isEmpty()){showHome(current());return;}
+        current().setTag("web");
+        if(input.startsWith("http://")||input.startsWith("https://")) current().loadUrl(input);
+        else if(input.contains(".")&&!input.contains(" ")) current().loadUrl("https://"+input);
+        else { try{current().loadUrl("https://duckduckgo.com/?q="+URLEncoder.encode(input,"UTF-8"));}catch(Exception e){current().loadUrl("https://duckduckgo.com");} }
     }
-
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+    private void destroySession(){
+        for(WebView w:tabs){w.clearCache(true);w.clearHistory();}
+        CookieManager.getInstance().removeAllCookies(null); CookieManager.getInstance().flush();
+        showHome(current()); Toast.makeText(this,"Rastro borrado: cookies y caché eliminadas",Toast.LENGTH_SHORT).show();
     }
+    private void hideKeyboard(){View v=getCurrentFocus(); if(v!=null){InputMethodManager im=(InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);if(im!=null)im.hideSoftInputFromWindow(v.getWindowToken(),0);}}
+    private int dp(int value){return (int)(value*getResources().getDisplayMetrics().density+0.5f);}
+    @Override public void onBackPressed(){if(current().canGoBack())current().goBack();else if(!isHome(current()))showHome(current());else if(tabs.size()>1)closeTab(activeTab);else super.onBackPressed();}
 }

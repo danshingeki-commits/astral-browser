@@ -37,7 +37,6 @@ jobs:
           mkdir -p app/src/main/res/anim
           mkdir -p app/src/main/res/drawable
 
-          # Descargar imagen oficial de Hatsune Miku
           curl -L -s -A "Mozilla/5.0" -o app/src/main/res/drawable/miku_avatar.png "https://upload.wikimedia.org/wikipedia/en/thumb/1/1e/Hatsune_Miku_V4x.png/440px-Hatsune_Miku_V4x.png" || true
 
           # 1. settings.gradle
@@ -153,7 +152,7 @@ jobs:
           </resources>
           EOF
 
-          # 8. RECURSOS LIQUID GLASS
+          # 8. ELEMENTOS LIQUID GLASS Y BURBUJA REDONDA
           cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_bar.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
@@ -196,14 +195,15 @@ jobs:
           </shape>
           EOF
 
+          # La barra de URL redondeada (Cápsula)
           cat << 'EOF' > app/src/main/res/drawable/bg_liquid_glass_input.xml
           <?xml version="1.0" encoding="utf-8"?>
           <shape xmlns:android="http://schemas.android.com/apk/res/android">
-              <solid android:color="#4D1F1435" />
-              <corners android:radius="18dp" />
+              <solid android:color="#331A122E" />
+              <corners android:radius="24dp" />
               <stroke
                   android:width="1dp"
-                  android:color="#33C084FC" />
+                  android:color="#4D94A3B8" />
           </shape>
           EOF
 
@@ -358,7 +358,7 @@ jobs:
           }
           EOF
 
-          # 12. activity_main.xml
+          # 12. activity_main.xml (Barra URL estilo cápsula)
           cat << 'EOF' > app/src/main/res/layout/activity_main.xml
           <?xml version="1.0" encoding="utf-8"?>
           <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -372,7 +372,6 @@ jobs:
                   android:layout_height="match_parent"
                   android:orientation="vertical">
 
-                  <!-- BARRA DE PESTAÑAS -->
                   <LinearLayout
                       android:id="@+id/tabsTopBar"
                       android:layout_width="match_parent"
@@ -417,7 +416,6 @@ jobs:
                       android:background="?android:attr/selectableItemBackground" />
                   </LinearLayout>
 
-                  <!-- BARRA DE ESTADO / CHIPS -->
                   <LinearLayout
                       android:id="@+id/chipsBar"
                       android:layout_width="match_parent"
@@ -470,42 +468,50 @@ jobs:
                           android:background="@drawable/bg_liquid_glass_chip" />
                   </LinearLayout>
 
-                  <!-- BARRA DE ENTRADA URL -->
-                  <LinearLayout
-                      android:id="@+id/urlBar"
+                  <!-- BARRA URL ESTILO CÁPSULA FLOTANTE -->
+                  <FrameLayout
+                      android:id="@+id/urlBarContainer"
                       android:layout_width="match_parent"
-                      android:layout_height="46dp"
-                      android:orientation="horizontal"
-                      android:background="#99110B1F"
-                      android:paddingLeft="10dp"
-                      android:paddingRight="10dp"
-                      android:gravity="center_vertical">
+                      android:layout_height="wrap_content"
+                      android:background="#090610"
+                      android:paddingLeft="12dp"
+                      android:paddingRight="12dp"
+                      android:paddingTop="8dp"
+                      android:paddingBottom="6dp">
 
-                      <EditText
-                          android:id="@+id/etUrl"
-                          android:layout_width="0dp"
-                          android:layout_height="36dp"
-                          android:layout_weight="1"
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="44dp"
+                          android:orientation="horizontal"
                           android:background="@drawable/bg_liquid_glass_input"
-                          android:textColor="#F8FAFC"
-                          android:textColorHint="#64748B"
-                          android:hint="@string/url_hint"
-                          android:textSize="12sp"
-                          android:paddingLeft="12dp"
-                          android:paddingRight="12dp"
-                          android:singleLine="true"
-                          android:imeOptions="actionGo"
-                          android:inputType="textUri" />
+                          android:gravity="center_vertical">
 
-                      <Button
-                          android:id="@+id/btnGo"
-                          android:layout_width="44dp"
-                          android:layout_height="36dp"
-                          android:text="Ir"
-                          android:textColor="#38BDF8"
-                          android:textSize="12sp"
-                          android:background="?android:attr/selectableItemBackground" />
-                  </LinearLayout>
+                          <EditText
+                              android:id="@+id/etUrl"
+                              android:layout_width="0dp"
+                              android:layout_height="match_parent"
+                              android:layout_weight="1"
+                              android:background="@null"
+                              android:textColor="#F8FAFC"
+                              android:textColorHint="#94A3B8"
+                              android:hint="@string/url_hint"
+                              android:textSize="13sp"
+                              android:paddingLeft="16dp"
+                              android:paddingRight="10dp"
+                              android:singleLine="true"
+                              android:imeOptions="actionGo"
+                              android:inputType="textUri" />
+
+                          <Button
+                              android:id="@+id/btnGo"
+                              android:layout_width="48dp"
+                              android:layout_height="match_parent"
+                              android:text="Ir"
+                              android:textColor="#38BDF8"
+                              android:textSize="12sp"
+                              android:background="?android:attr/selectableItemBackgroundBorderless" />
+                      </LinearLayout>
+                  </FrameLayout>
 
                   <ProgressBar
                       android:id="@+id/progressBar"
@@ -514,7 +520,6 @@ jobs:
                       android:layout_height="2dp"
                       android:visibility="gone" />
 
-                  <!-- ÁREA PRINCIPAL -->
                   <FrameLayout
                       android:layout_width="match_parent"
                       android:layout_height="0dp"
@@ -576,7 +581,7 @@ jobs:
                       </FrameLayout>
                   </FrameLayout>
 
-                  <!-- BARRA INFERIOR CON BURBUJA INTERACTIVA -->
+                  <!-- BARRA INFERIOR GESTUAL -->
                   <LinearLayout
                       android:id="@+id/bottomBarContainer"
                       android:layout_width="match_parent"
@@ -658,7 +663,7 @@ jobs:
                   </LinearLayout>
               </LinearLayout>
 
-              <!-- BIENVENIDA / ONBOARDING EN PRIMER INICIO -->
+              <!-- BIENVENIDA MÁS CORTA -->
               <FrameLayout
                   android:id="@+id/onboardingOverlay"
                   android:layout_width="match_parent"
@@ -1029,7 +1034,7 @@ jobs:
                           android:textSize="12sp" />
                   </RadioGroup>
 
-                  <!-- 6. SOPORTE TELEGRAM -->
+                  <!-- 6. COMUNIDAD Y REPORTE TELEGRAM -->
                   <TextView
                       android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
@@ -1212,7 +1217,7 @@ jobs:
           }
           EOF
 
-          # 15. MainActivity.java (Con corrección de return type boolean en linea 404)
+          # 15. MainActivity.java
           cat << 'EOF' > app/src/main/java/com/astral/browser/MainActivity.java
           package com.astral.browser;
 
@@ -1260,7 +1265,7 @@ jobs:
 
           public class MainActivity extends AppCompatActivity {
 
-              private LinearLayout mainRootLayout, tabsTopBar, chipsBar, urlBar, bottomBarContainer;
+              private LinearLayout mainRootLayout, tabsTopBar, chipsBar, urlBarContainer, bottomBarContainer;
               private FrameLayout interactiveBarFrame;
               private View liquidBubble;
               private TextView lblBack, lblForward, lblRefresh, lblSettings;
@@ -1299,7 +1304,7 @@ jobs:
                   mainRootLayout = findViewById(R.id.mainRootLayout);
                   tabsTopBar = findViewById(R.id.tabsTopBar);
                   chipsBar = findViewById(R.id.chipsBar);
-                  urlBar = findViewById(R.id.urlBar);
+                  urlBarContainer = findViewById(R.id.urlBarContainer);
                   bottomBarContainer = findViewById(R.id.bottomBarContainer);
                   interactiveBarFrame = findViewById(R.id.interactiveBarFrame);
                   liquidBubble = findViewById(R.id.liquidBubble);
@@ -1483,7 +1488,7 @@ jobs:
                       mainRootLayout.setBackgroundColor(Color.parseColor("#000000"));
                       tabsTopBar.setBackgroundColor(Color.parseColor("#000000"));
                       chipsBar.setBackgroundColor(Color.parseColor("#050505"));
-                      urlBar.setBackgroundColor(Color.parseColor("#0A0A0A"));
+                      urlBarContainer.setBackgroundColor(Color.parseColor("#000000"));
                       etUrl.setBackgroundColor(Color.parseColor("#121212"));
                       bottomBarContainer.setBackgroundColor(Color.parseColor("#000000"));
                       homeOverlay.setBackgroundColor(Color.parseColor("#000000"));
@@ -1492,7 +1497,7 @@ jobs:
                       mainRootLayout.setBackgroundColor(Color.parseColor("#F1F5F9"));
                       tabsTopBar.setBackgroundColor(Color.parseColor("#E2E8F0"));
                       chipsBar.setBackgroundColor(Color.parseColor("#CBD5E1"));
-                      urlBar.setBackgroundColor(Color.parseColor("#FFFFFF"));
+                      urlBarContainer.setBackgroundColor(Color.parseColor("#F1F5F9"));
                       etUrl.setBackgroundColor(Color.parseColor("#F8FAFC"));
                       etUrl.setTextColor(Color.parseColor("#0F172A"));
                       bottomBarContainer.setBackgroundColor(Color.parseColor("#E2E8F0"));
@@ -1503,7 +1508,7 @@ jobs:
                       mainRootLayout.setBackgroundColor(Color.parseColor("#090610"));
                       tabsTopBar.setBackgroundColor(Color.parseColor("#B30E0919"));
                       chipsBar.setBackgroundColor(Color.parseColor("#800B0714"));
-                      urlBar.setBackgroundColor(Color.parseColor("#99110B1F"));
+                      urlBarContainer.setBackgroundColor(Color.parseColor("#090610"));
                       etUrl.setBackgroundResource(R.drawable.bg_liquid_glass_input);
                       etUrl.setTextColor(Color.parseColor("#F8FAFC"));
                       bottomBarContainer.setBackgroundColor(Color.parseColor("#660E0919"));
@@ -1823,8 +1828,8 @@ jobs:
       - name: Publicar Release con APK directo
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v2.7-build${{ github.run_number }}"
-          name: "Astral Browser v2.7"
+          tag_name: "v2.8-build${{ github.run_number }}"
+          name: "Astral Browser v2.8 (URL Capsule)"
           draft: false
           prerelease: false
           files: app/build/outputs/apk/debug/AstralBrowser.apk

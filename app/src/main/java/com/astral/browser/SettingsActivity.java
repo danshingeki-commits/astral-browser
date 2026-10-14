@@ -11,6 +11,8 @@ import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.*;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.webkit.CookieManager;
 import androidx.webkit.ProxyController;
 import androidx.webkit.ProxyConfig;
@@ -66,6 +68,18 @@ public class SettingsActivity extends Activity {
         TextView intro=text("TU ASTRAL, A TU MANERA",11,muted,true);
         intro.setPadding(dp(22),dp(18),dp(22),dp(10));
         screen.addView(intro);
+        EditText search=new EditText(this);
+        search.setSingleLine(true);
+        search.setTextSize(14);
+        search.setTextColor(Color.WHITE);
+        search.setHintTextColor(muted);
+        search.setHint("⌕  Buscar en configuración");
+        search.setPadding(dp(15),0,dp(15),0);
+        search.setBackground(shape(panel,14));
+        LinearLayout.LayoutParams searchParams=new LinearLayout.LayoutParams(-1,dp(48));
+        searchParams.setMargins(dp(14),dp(4),dp(14),dp(8));
+        screen.addView(search,searchParams);
+
         ScrollView scroll=new ScrollView(this);
         scroll.setFillViewport(true);
         LinearLayout list=new LinearLayout(this);
@@ -83,6 +97,7 @@ public class SettingsActivity extends Activity {
             "Organización de tus pestañas",
             "Proxy y opciones avanzadas"
         };
+        java.util.ArrayList<View> categoryCards=new java.util.ArrayList<>();
         for(int i=0;i<sections.length;i++){
             final String section=sections[i];
             LinearLayout item=new LinearLayout(this);
@@ -105,11 +120,23 @@ public class SettingsActivity extends Activity {
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);
             lp.setMargins(0,dp(5),0,dp(5));
             list.addView(item,lp);
+            categoryCards.add(item);
             item.setOnClickListener(v->showSection(section));
             item.setAlpha(animate?0f:1f);
             item.setTranslationY(animate?dp(10):0);
             if(animate)item.animate().alpha(1f).translationY(0).setStartDelay(i*35L).setDuration(220).start();
         }
+        search.addTextChangedListener(new TextWatcher(){
+            @Override public void beforeTextChanged(CharSequence s,int start,int count,int after){}
+            @Override public void onTextChanged(CharSequence s,int start,int before,int count){
+                String query=s.toString().trim().toLowerCase(java.util.Locale.ROOT);
+                for(int i=0;i<categoryCards.size();i++){
+                    String searchable=(sections[i]+" "+descriptions[i]).toLowerCase(java.util.Locale.ROOT);
+                    categoryCards.get(i).setVisibility(searchable.contains(query)?View.VISIBLE:View.GONE);
+                }
+            }
+            @Override public void afterTextChanged(Editable s){}
+        });
         transitionTo(screen,animate,false);
     }
 

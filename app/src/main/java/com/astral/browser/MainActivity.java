@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
         Button refresh = findViewById(R.id.btnRefresh), go = findViewById(R.id.btnSearch);
         Button burn = findViewById(R.id.btnBurn), addTab = findViewById(R.id.btnAddTab);
         Button home = findViewById(R.id.btnHome), tabsButton = findViewById(R.id.btnTabs);
+        applyBrowserTheme(back,forward,refresh,go,burn,addTab,home,tabsButton);
 
         back.setOnClickListener(v -> { WebView w=current(); if(w.canGoBack()) w.goBack(); else showHome(w); });
         forward.setOnClickListener(v -> { if(current().canGoForward()) current().goForward(); });
@@ -82,6 +83,14 @@ public class MainActivity extends AppCompatActivity {
         });
         CookieManager.getInstance().setAcceptCookie(true);
         newTab(true);
+    }
+
+    private void applyBrowserTheme(Button... controls) {
+        int idx=Math.max(0,Math.min(5,getSharedPreferences("astral_settings",MODE_PRIVATE).getInt("theme_index",0)));
+        int[][] colors={{75,234,255,39,223,245,6,60,74},{192,132,252,167,139,250,52,34,74},{74,222,128,34,197,94,13,57,36},{251,113,133,244,63,94,71,22,36},{251,191,36,245,158,11,73,48,7},{125,211,252,56,189,248,16,52,71}};
+        int[] p=colors[idx]; int accent=Color.rgb(p[0],p[1],p[2]); int fill=Color.rgb(p[6],p[7],p[8]);
+        getWindow().setStatusBarColor(Color.rgb(3,7,11)); getWindow().setNavigationBarColor(Color.rgb(3,7,11));
+        for(Button b:controls){if(b!=null){b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(fill));b.setTextColor(accent);}}
     }
 
     private final class HomeBridge {

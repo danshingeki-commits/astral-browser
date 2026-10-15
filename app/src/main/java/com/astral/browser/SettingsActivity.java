@@ -27,7 +27,12 @@ public class SettingsActivity extends Activity {
     private LinearLayout root, content, nav;
     private String active="General";
     private final String[] sections={"General","Diseño","Buscadores","Privacidad y seguridad","Multimedia","Pestañas y grupos","Accesibilidad","Avanzado","Red y proxy"};
-    @Override public void onCreate(Bundle b){super.onCreate(b);prefs=getSharedPreferences("astral_settings",MODE_PRIVATE);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg); buildShell();}
+    @Override public void onCreate(Bundle b){super.onCreate(b);prefs=getSharedPreferences("astral_settings",MODE_PRIVATE);applySavedTheme();getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg); buildShell();}
+    private void applySavedTheme(){
+        int idx=Math.max(0,Math.min(themeColors.length-1,prefs.getInt("theme_index",0)));
+        int[] t=themeColors[idx]; purple=Color.rgb(t[0],t[1],t[2]); cyan=Color.rgb(t[3],t[4],t[5]);
+        bg=Color.rgb(3,7,11); panel=Color.rgb(7,21,27);
+    }
     private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}
     private GradientDrawable shape(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
     private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);if(bold)t.setTypeface(null,Typeface.BOLD);return t;}

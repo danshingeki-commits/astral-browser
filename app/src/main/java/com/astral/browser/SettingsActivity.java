@@ -20,7 +20,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class SettingsActivity extends Activity {
-    private final int bg=Color.rgb(3,7,11), panel=Color.rgb(7,21,27), purple=Color.rgb(75,234,255), cyan=Color.rgb(39,223,245), muted=Color.rgb(122,157,168);
+    private int bg=Color.rgb(3,7,11), panel=Color.rgb(7,21,27), purple=Color.rgb(75,234,255), cyan=Color.rgb(39,223,245), muted=Color.rgb(122,157,168);
+    private final String[] themeNames={"Cian neón","Violeta astral","Verde matrix","Rojo cyber","Ámbar","Azul hielo"};
+    private final int[][] themeColors={{75,234,255,39,223,245},{192,132,252,167,139,250},{74,222,128,34,197,94},{251,113,133,244,63,94},{251,191,36,245,158,11},{125,211,252,56,189,248}};
     private SharedPreferences prefs;
     private LinearLayout root, content, nav;
     private String active="General";
@@ -218,12 +220,18 @@ public class SettingsActivity extends Activity {
             card("DNS DEL DISPOSITIVO","Abre las opciones de red de Android para administrar DNS privado.",button("Abrir ajustes de red",()->{try{startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));}catch(Exception e){Toast.makeText(this,"Abre los ajustes de red de Android",Toast.LENGTH_LONG).show();}}));
             break;
         case "General":
-            card("Página de inicio","Al abrir una pestaña, Astral muestra su página de inicio.",text("Página Astral · activa",14,cyan,true));
+            Spinner home=new Spinner(this);String[] homes={"Página Astral","about:blank","Página personalizada (próximamente)"};home.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,homes));home.setSelection(prefs.getInt("home_page_choice",0));card("Página de inicio","Elige qué opción prefieres al abrir el navegador.",home);card("Guardar inicio","La elección queda guardada para futuras versiones; la página personalizada aún no está disponible.",button("Guardar preferencia",()->{prefs.edit().putInt("home_page_choice",home.getSelectedItemPosition()).apply();Toast.makeText(this,"Preferencia de inicio guardada",Toast.LENGTH_SHORT).show();}));
             card("Borrar datos de navegación","Elimina cookies, caché e historial de las pestañas.",button("Borrar datos",()->new android.app.AlertDialog.Builder(this).setTitle("Borrar datos").setMessage("Se eliminarán cookies, caché e historial. Puede cerrar sesiones web.").setNegativeButton("Cancelar",null).setPositiveButton("Borrar",(d,w)->{android.webkit.WebStorage.getInstance().deleteAllData();CookieManager.getInstance().removeAllCookies(null);CookieManager.getInstance().flush();Toast.makeText(this,"Datos de navegación borrados",Toast.LENGTH_SHORT).show();}).show()));
             break;
         case "Diseño":
-            card("Tema","Elige el aspecto de Astral.",text("Oscuro · Neón morado y cian",14,cyan,true));
-            card("Barra de herramientas","La barra de navegación mantiene el acceso a inicio, pestañas y ajustes.",null);
+            Spinner theme=new Spinner(this);
+            theme.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,themeNames));
+            theme.setSelection(Math.max(0,Math.min(themeNames.length-1,prefs.getInt("theme_index",0))));
+            card("ACENTO DE COLOR","Elige el color principal de botones, iconos y detalles.",theme);
+            CheckBox compact=new CheckBox(this); compact.setText("Modo compacto en tarjetas de ajustes"); compact.setTextColor(Color.WHITE); compact.setButtonTintList(android.content.res.ColorStateList.valueOf(cyan)); compact.setChecked(prefs.getBoolean("compact_settings",false));
+            card("DENSIDAD","Ajusta el espacio entre las opciones.",compact);
+            card("Guardar apariencia","El tema se guarda en este dispositivo. Algunos elementos pueden requerir reiniciar Astral para actualizarse.",button("Aplicar diseño",()->{int idx=theme.getSelectedItemPosition();prefs.edit().putInt("theme_index",idx).putBoolean("compact_settings",compact.isChecked()).apply();int[] t=themeColors[idx];Toast.makeText(this,"Tema "+themeNames[idx]+" guardado. Reinicia Astral si algún color no cambia.",Toast.LENGTH_LONG).show();}));
+            card("Interfaz","La página de inicio tiene accesos rápidos y recomendaciones. Las opciones de diseño se irán conectando a más componentes.",null);
             break;
         case "Buscadores":
             Spinner engine=new Spinner(this);
@@ -246,9 +254,16 @@ public class SettingsActivity extends Activity {
             break;
         case "Multimedia":
             CheckBox autoplay=new CheckBox(this);autoplay.setText("Permitir reproducción automática de audio y vídeo");autoplay.setTextColor(Color.WHITE);autoplay.setButtonTintList(android.content.res.ColorStateList.valueOf(cyan));autoplay.setChecked(prefs.getBoolean("autoplay_media",false));
-            card("Reproducción automática","Desactivada por defecto para evitar que los sitios reproduzcan contenido sin tocarlo.",autoplay);
-            card("Guardar preferencia","Se aplica a las pestañas que abras después de guardar.",button("Guardar multimedia",()->{prefs.edit().putBoolean("autoplay_media",autoplay.isChecked()).apply();Toast.makeText(this,"Preferencia multimedia guardada",Toast.LENGTH_SHORT).show();}));
-            card("Permisos del sitio","Gestiona permisos desde los ajustes de Android si una página no funciona como esperas.",button("Abrir ajustes de la aplicación",()->{Intent i=new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:"+getPackageName()));startActivity(i);}));
+            card("REPRODUCCIÓN AUTOMÁTICA","Desactivada por defecto para que las páginas no reproduzcan contenido sin interacción.",autoplay);
+            CheckBox inline=new CheckBox(this);inline.setText("Reproducir vídeos dentro de la página");inline.setTextColor(Color.WHITE);inline.setButtonTintList(android.content.res.ColorStateList.valueOf(cyan));inline.setChecked(prefs.getBoolean("inline_video",true));
+            card("VÍDEO EN LA PÁGINA","Permite la reproducción integrada cuando el sitio y WebView lo admiten.",inline);
+            CheckBox mediaGesture=new CheckBox(this);mediaGesture.setText("Exigir tocar para iniciar audio");mediaGesture.setTextColor(Color.WHITE);mediaGesture.setButtonTintList(android.content.res.ColorStateList.valueOf(cyan));mediaGesture.setChecked(prefs.getBoolean("media_gesture",true));
+            card("CONTROL DE AUDIO","Preferencia para evitar reproducciones inesperadas.",mediaGesture);
+            Spinner mediaQuality=new Spinner(this);String[] qualities={"Automática (recomendada)","Ahorrar datos","Priorizar calidad"};
+            mediaQuality.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,qualities));mediaQuality.setSelection(prefs.getInt("media_quality",0));
+            card("PREFERENCIA DE CALIDAD","Es una preferencia guardada; la calidad real depende del sitio web.",mediaQuality);
+            card("Guardar multimedia","Guarda tus preferencias para futuras pestañas. No todos los sitios respetan estas opciones.",button("Guardar multimedia",()->{prefs.edit().putBoolean("autoplay_media",autoplay.isChecked()).putBoolean("inline_video",inline.isChecked()).putBoolean("media_gesture",mediaGesture.isChecked()).putInt("media_quality",mediaQuality.getSelectedItemPosition()).apply();Toast.makeText(this,"Preferencias multimedia guardadas",Toast.LENGTH_SHORT).show();}));
+            card("Permisos del sitio","Gestiona permisos del navegador desde Android.",button("Abrir ajustes de Astral",()->{Intent i=new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:"+getPackageName()));startActivity(i);}));
             break;
         case "Pestañas y grupos":
             int openTabs=getIntent().getIntExtra("open_tabs_count",1);

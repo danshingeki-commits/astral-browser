@@ -51,8 +51,8 @@ public class SettingsActivity extends Activity {
         }
         LinearLayout titleBox=new LinearLayout(this);
         titleBox.setOrientation(1);
-        titleBox.addView(text("ASTRAL",21,Color.WHITE,true));
-        titleBox.addView(text(subtitle,13,cyan,false));
+        titleBox.addView(text("ASTRAL BROWSER",20,Color.WHITE,true));
+        titleBox.addView(text("NEON EDITION  •  "+subtitle.toUpperCase(java.util.Locale.ROOT),11,cyan,true));
         top.addView(titleBox,new LinearLayout.LayoutParams(0,-2,1));
         TextView done=text("LISTO",12,cyan,true);
         done.setPadding(dp(10),dp(12),0,dp(12));
@@ -67,8 +67,8 @@ public class SettingsActivity extends Activity {
         screen.setOrientation(1);
         screen.setBackgroundColor(bg);
         screen.addView(makeHeader("Configuración",false));
-        TextView intro=text("TU ASTRAL, A TU MANERA",11,muted,true);
-        intro.setPadding(dp(22),dp(18),dp(22),dp(10));
+        TextView intro=text("CENTRO DE CONTROL",12,cyan,true);
+        intro.setPadding(dp(22),dp(16),dp(22),dp(8));
         screen.addView(intro);
         EditText search=new EditText(this);
         search.setSingleLine(true);
@@ -89,7 +89,7 @@ public class SettingsActivity extends Activity {
         list.setPadding(dp(14),dp(4),dp(14),dp(24));
         scroll.addView(list);
         screen.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
-        String[] icons={"◇","✧","⌕","⬡","♫","▣","Aa","⚙"};
+        String[] icons={"⌂","✧","⌕","⬡","♫","▣","Aa","◈"};
         String[] descriptions={
             "Inicio y datos de navegación",
             "Tema y apariencia del navegador",
@@ -98,7 +98,7 @@ public class SettingsActivity extends Activity {
             "Reproducción y permisos de sitios",
             "Organización de tus pestañas",
             "Zoom y lectura de páginas",
-            "JavaScript, ventanas emergentes y proxy"
+            "Proxy, red y opciones avanzadas"
         };
         java.util.ArrayList<View> categoryCards=new java.util.ArrayList<>();
         for(int i=0;i<sections.length;i++){
@@ -106,9 +106,9 @@ public class SettingsActivity extends Activity {
             LinearLayout item=new LinearLayout(this);
             item.setOrientation(0);
             item.setGravity(Gravity.CENTER_VERTICAL);
-            item.setPadding(dp(16),dp(13),dp(14),dp(13));
-            item.setBackground(shape(panel,16));
-            TextView symbol=text(icons[i],24,purple,true);
+            item.setPadding(dp(16),dp(15),dp(14),dp(15));
+            item.setBackground(shape(Color.rgb(22,17,34),18));
+            TextView symbol=text(icons[i],25,(i==7?cyan:purple),true);
             symbol.setGravity(Gravity.CENTER);
             item.addView(symbol,new LinearLayout.LayoutParams(dp(42),dp(44)));
             LinearLayout labels=new LinearLayout(this);
@@ -119,7 +119,7 @@ public class SettingsActivity extends Activity {
             desc.setPadding(0,dp(4),0,0);
             labels.addView(desc);
             item.addView(labels,new LinearLayout.LayoutParams(0,-2,1));
-            item.addView(text("›",27,cyan,false));
+            item.addView(text("↗",20,cyan,true));
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);
             lp.setMargins(0,dp(5),0,dp(5));
             list.addView(item,lp);

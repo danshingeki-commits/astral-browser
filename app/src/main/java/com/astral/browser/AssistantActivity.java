@@ -15,6 +15,9 @@ import android.graphics.drawable.GradientDrawable;
 import android.widget.*;
 import java.util.ArrayList;
 import java.util.Locale;
+import android.content.SharedPreferences;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * Astral Assistant first-stage UI.
@@ -36,8 +39,11 @@ public class AssistantActivity extends Activity {
         getWindow().setNavigationBarColor(Color.rgb(7,10,22));
         tts = new TextToSpeech(this, status -> { if (status == TextToSpeech.SUCCESS) tts.setLanguage(new Locale("es","CO")); });
         buildUi();
-        addMessage("Astral Assistant", "¡Oe, cole! Soy Astral Assistant ✦. Esta primera versión ya tiene voz, búsqueda web y contexto de la página. La inteligencia generativa real se conectará de forma segura en el siguiente paso.", false);
-        addMessage("Página actual", pageUrl, false);
+        loadHistory();
+        if (messages.getChildCount() == 0) {
+            addMessage("Astral Assistant", "¡Oe, cole! Soy Astral Assistant ✦. Ya puedo guardar esta conversación en tu teléfono y responder en voz alta. Mi cerebro generativo se conectará en una siguiente etapa.", false);
+            addMessage("Página actual", pageUrl, false);
+        }
     }
 
     private GradientDrawable shape(int color, int stroke) {
@@ -88,7 +94,34 @@ public class AssistantActivity extends Activity {
         input.setOnEditorActionListener((v, action, event) -> { if(action==EditorInfo.IME_ACTION_SEND){sendMessage();return true;} return false; });
         mic.setOnClickListener(v -> startVoice());
     }
+    private void loadHistory() {
+        try {
+            JSONArray history = new JSONArray(getPreferences(MODE_PRIVATE).getString("chat_history", "[]"));
+            for (int i = 0; i < history.length(); i++) {
+                JSONObject item = history.getJSONObject(i);
+                displayMessage(item.optString("who"), item.optString("body"), item.optBoolean("user"));
+            }
+        } catch (Exception ignored) { }
+    }
+    private void saveMessage(String who, String body, boolean user) {
+        try {
+            SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+            JSONArray history = new JSONArray(prefs.getString("chat_history", "[]"));
+            JSONObject item = new JSONObject();
+            item.put("who", who); item.put("body", body); item.put("user", user);
+            history.put(item);
+            // Keep the latest 100 messages to limit local storage.
+            JSONArray limited = new JSONArray();
+            for (int i = Math.max(0, history.length() - 100); i < history.length(); i++) limited.put(history.get(i));
+            prefs.edit().putString("chat_history", limited.toString()).apply();
+        } catch (Exception ignored) { }
+    }
     private void addMessage(String who, String body, boolean user) {
+        displayMessage(who, body, user);
+        saveMessage(who, body, user);
+        if (!user && tts != null && !body.isEmpty()) tts.speak(body, TextToSpeech.QUEUE_FLUSH, null, "astral_reply");
+    }
+    private void displayMessage(String who, String body, boolean user) {
         LinearLayout card = new LinearLayout(this); card.setOrientation(LinearLayout.VERTICAL); card.setPadding(dp(14),dp(11),dp(14),dp(11));
         card.setBackground(shape(user?Color.rgb(16,69,94):Color.rgb(20,28,49),user?Color.rgb(35,178,214):Color.rgb(57,70,112)));
         TextView label=text(who,10,Color.rgb(105,229,255)); label.setTypeface(null,1); card.addView(label);

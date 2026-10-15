@@ -218,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
         }
         // A host/domain/path is a direct navigation, not a search query.
         // Examples: spotify.com/premium, surfshark.com, example.org/page.
-        if(!candidate.contains(" ") && candidate.matches("(?i)^(localhost|([a-z0-9-]+\\.)+[a-z]{2,})(:[0-9]{1,5})?(/[^ ]*)?(\\?[^ ]*)?(#.*)?$")) {
+        if(!candidate.contains(" ") && candidate.matches("(?i)^(localhost|(([a-z0-9-]+\\.)+[a-z]{2,})|([0-9]{1,3}\\.){3}[0-9]{1,3})(:[0-9]{1,5})?(/[^ ]*)?(\\?[^ ]*)?(#.*)?$")) {
             current().loadUrl("https://" + candidate);
             return;
         }

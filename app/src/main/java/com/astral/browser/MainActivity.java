@@ -96,6 +96,13 @@ public class MainActivity extends AppCompatActivity {
     private final class HomeBridge {
         @android.webkit.JavascriptInterface
         public void openMenu() { runOnUiThread(() -> showTabsMenu()); }
+        @android.webkit.JavascriptInterface
+        public void navigate(String value) {
+            runOnUiThread(() -> {
+                etUrl.setText(value == null ? "" : value);
+                loadUrlFromInput();
+            });
+        }
     }
 
     private WebView current() { return tabs.get(activeTab); }
@@ -245,11 +252,12 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(dp(18), dp(16), dp(18), dp(12));
-        panel.setBackgroundColor(Color.rgb(11, 8, 19));
-        TextView title = settingsText("Pestañas abiertas · " + tabs.size(), 20, Color.WHITE);
+        panel.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+            new int[]{Color.rgb(19,25,43),Color.rgb(8,11,20)}));
+        TextView title = settingsText("Menú de Astral", 20, Color.WHITE);
         title.setTypeface(null, Typeface.BOLD);
         panel.addView(title);
-        TextView subtitle = settingsText("Toca una tarjeta para cambiar de pestaña", 12, Color.rgb(122,157,168));
+        TextView subtitle = settingsText("Pestañas abiertas · " + tabs.size() + "  ·  Herramientas del navegador", 12, Color.rgb(150,169,199));
         panel.addView(subtitle);
         LinearLayout quickActions = new LinearLayout(this);
         quickActions.setOrientation(LinearLayout.HORIZONTAL);
@@ -313,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
             row.setGravity(android.view.Gravity.CENTER_VERTICAL);
             row.setPadding(dp(12), dp(8), dp(8), dp(8));
             GradientDrawable rowBg = new GradientDrawable();
-            rowBg.setColor(i == activeTab ? Color.rgb(5,54,66) : Color.rgb(7,21,27));
+            rowBg.setColor(i == activeTab ? Color.rgb(28,42,68) : Color.rgb(15,21,35));
             rowBg.setCornerRadius(dp(13));
             row.setBackground(rowBg);
             LinearLayout labels = new LinearLayout(this);

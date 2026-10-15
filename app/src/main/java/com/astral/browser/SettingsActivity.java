@@ -24,7 +24,7 @@ public class SettingsActivity extends Activity {
     private SharedPreferences prefs;
     private LinearLayout root, content, nav;
     private String active="General";
-    private final String[] sections={"General","Diseño","Buscadores","Privacidad y seguridad","Multimedia","Pestañas y grupos","Accesibilidad","Avanzado"};
+    private final String[] sections={"General","Diseño","Buscadores","Privacidad y seguridad","Multimedia","Pestañas y grupos","Accesibilidad","Avanzado","Red y proxy"};
     @Override public void onCreate(Bundle b){super.onCreate(b);prefs=getSharedPreferences("astral_settings",MODE_PRIVATE);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg); buildShell();}
     private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}
     private GradientDrawable shape(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
@@ -67,9 +67,23 @@ public class SettingsActivity extends Activity {
         screen.setOrientation(1);
         screen.setBackgroundColor(bg);
         screen.addView(makeHeader("Configuración",false));
-        TextView intro=text("CENTRO DE CONTROL",12,cyan,true);
-        intro.setPadding(dp(22),dp(16),dp(22),dp(8));
-        screen.addView(intro);
+        LinearLayout hero=new LinearLayout(this);
+        hero.setOrientation(1);
+        hero.setPadding(dp(18),dp(18),dp(18),dp(18));
+        GradientDrawable heroBg=new GradientDrawable(GradientDrawable.Orientation.TL_BR,new int[]{Color.rgb(7,45,56),Color.rgb(9,19,29),Color.rgb(10,12,20)});
+        heroBg.setCornerRadius(dp(22)); heroBg.setStroke(dp(1),Color.rgb(25,113,132)); hero.setBackground(heroBg);
+        TextView intro=text("CENTRO DE CONTROL  /  ASTRAL OS",11,cyan,true);
+        hero.addView(intro);
+        TextView heroTitle=text("Tu navegador.\nTus reglas.",27,Color.WHITE,true);
+        heroTitle.setPadding(0,dp(10),0,dp(5)); hero.addView(heroTitle);
+        TextView heroDesc=text("Personaliza apariencia, privacidad y conexión desde un solo lugar.",13,muted,false);
+        heroDesc.setPadding(0,0,0,dp(12)); hero.addView(heroDesc);
+        LinearLayout metrics=new LinearLayout(this); metrics.setOrientation(0);
+        metrics.addView(metric("TEMA","NEÓN"),new LinearLayout.LayoutParams(0,dp(48),1));
+        metrics.addView(metric("MOTOR",prefs.getString("search_engine","duckduckgo").toUpperCase(java.util.Locale.ROOT)),new LinearLayout.LayoutParams(0,dp(48),1));
+        metrics.addView(metric("PROXY",prefs.getBoolean("proxy_enabled",false)?"ACTIVO":"LISTO"),new LinearLayout.LayoutParams(0,dp(48),1));
+        hero.addView(metrics);
+        LinearLayout.LayoutParams heroLp=new LinearLayout.LayoutParams(-1,-2); heroLp.setMargins(dp(14),dp(12),dp(14),dp(12)); screen.addView(hero,heroLp);
         EditText search=new EditText(this);
         search.setSingleLine(true);
         search.setTextSize(14);
@@ -89,7 +103,7 @@ public class SettingsActivity extends Activity {
         list.setPadding(dp(14),dp(4),dp(14),dp(24));
         scroll.addView(list);
         screen.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
-        String[] icons={"⌂","✧","⌕","⬡","♫","▣","Aa","◈"};
+        String[] icons={"⌂","✧","⌕","⬡","♫","▣","Aa","◈","⌁"};
         String[] descriptions={
             "Inicio y datos de navegación",
             "Tema y apariencia del navegador",
@@ -98,7 +112,8 @@ public class SettingsActivity extends Activity {
             "Reproducción y permisos de sitios",
             "Organización de tus pestañas",
             "Zoom y lectura de páginas",
-            "Proxy, red y opciones avanzadas"
+            "Opciones técnicas y perfiles proxy",
+            "Perfiles, servidor y estado de conexión"
         };
         java.util.ArrayList<View> categoryCards=new java.util.ArrayList<>();
         for(int i=0;i<sections.length;i++){
@@ -107,8 +122,8 @@ public class SettingsActivity extends Activity {
             item.setOrientation(0);
             item.setGravity(Gravity.CENTER_VERTICAL);
             item.setPadding(dp(16),dp(15),dp(14),dp(15));
-            item.setBackground(shape(Color.rgb(22,17,34),18));
-            TextView symbol=text(icons[i],25,(i==7?cyan:purple),true);
+            item.setBackground(shape(Color.rgb(7,21,27),14)); item.setElevation(dp(1));
+            TextView symbol=text(icons[i],25,(i==7||i==8?cyan:purple),true);
             symbol.setGravity(Gravity.CENTER);
             item.addView(symbol,new LinearLayout.LayoutParams(dp(42),dp(44)));
             LinearLayout labels=new LinearLayout(this);
@@ -119,7 +134,11 @@ public class SettingsActivity extends Activity {
             desc.setPadding(0,dp(4),0,0);
             labels.addView(desc);
             item.addView(labels,new LinearLayout.LayoutParams(0,-2,1));
-            item.addView(text("↗",20,cyan,true));
+            LinearLayout right=new LinearLayout(this); right.setOrientation(1); right.setGravity(Gravity.CENTER);
+            TextView badge=text(i==8?(prefs.getBoolean("proxy_enabled",false)?"ON":"HTTP"):(i==1?"UI":i==3?"SAFE":"OPEN"),9,cyan,true);
+            badge.setGravity(Gravity.CENTER); badge.setPadding(dp(7),dp(4),dp(7),dp(4)); badge.setBackground(shape(Color.rgb(8,39,48),8));
+            right.addView(badge); TextView arrow=text("↗",18,cyan,true); arrow.setGravity(Gravity.CENTER); right.addView(arrow);
+            item.addView(right);
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);
             lp.setMargins(0,dp(5),0,dp(5));
             list.addView(item,lp);
@@ -162,8 +181,20 @@ public class SettingsActivity extends Activity {
             next.animate().alpha(1f).translationX(0).setDuration(220).start();
         }).start();
     }
-    private void heading(String s,String sub){content.addView(text(s,23,Color.WHITE,true));TextView t=text(sub,13,muted,false);t.setPadding(0,dp(6),0,dp(16));content.addView(t);}
-    private void card(String label,String description,View control){LinearLayout box=new LinearLayout(this);box.setOrientation(1);box.setPadding(dp(14),dp(12),dp(14),dp(12));box.setBackground(shape(panel,16));TextView a=text(label,15,Color.WHITE,true);box.addView(a);if(description!=null&&!description.isEmpty()){TextView d=text(description,12,muted,false);d.setPadding(0,dp(5),0,dp(7));box.addView(d);}if(control!=null){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.topMargin=dp(4);box.addView(control,p);}LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.setMargins(0,0,0,dp(10));content.addView(box,lp);}
+    private View metric(String label,String value){
+        LinearLayout m=new LinearLayout(this); m.setOrientation(1); m.setPadding(dp(9),dp(7),dp(6),dp(5));
+        m.setBackground(shape(Color.rgb(4,28,36),9));
+        m.addView(text(label,9,muted,true)); TextView v=text(value.length()>13?value.substring(0,13):value,11,cyan,true); v.setPadding(0,dp(3),0,0); m.addView(v); return m;
+    }
+    private void heading(String s,String sub){
+        TextView eyebrow=text("CONFIGURACIÓN / "+s.toUpperCase(java.util.Locale.ROOT),10,cyan,true);
+        eyebrow.setLetterSpacing(.12f); eyebrow.setPadding(0,0,0,dp(8)); content.addView(eyebrow);
+        content.addView(text(s,26,Color.WHITE,true));
+        TextView t=text(sub,13,muted,false);t.setPadding(0,dp(6),0,dp(18));content.addView(t);
+    }
+    private void card(String label,String description,View control){LinearLayout box=new LinearLayout(this);box.setOrientation(1);box.setPadding(dp(14),dp(12),dp(14),dp(12));GradientDrawable cardBg=shape(panel,14); cardBg.setStroke(dp(1),Color.rgb(17,56,66)); box.setBackground(cardBg);
+        View accent=new View(this); accent.setBackground(shape(cyan,2)); box.addView(accent,new LinearLayout.LayoutParams(dp(28),dp(3)));
+        TextView a=text(label,15,Color.WHITE,true); a.setPadding(0,dp(9),0,0); box.addView(a);if(description!=null&&!description.isEmpty()){TextView d=text(description,12,muted,false);d.setPadding(0,dp(5),0,dp(7));box.addView(d);}if(control!=null){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.topMargin=dp(4);box.addView(control,p);}LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.setMargins(0,0,0,dp(10));content.addView(box,lp);}
     private void showSection(String section){
         active=section;
         showingDetail=true;
@@ -180,6 +211,12 @@ public class SettingsActivity extends Activity {
         screen.addView(bodyScroll,new LinearLayout.LayoutParams(-1,0,1));
         heading(section,"Personaliza tu experiencia en Astral Browser");
         switch(section){
+        case "Red y proxy":
+            card("ESTADO DE RED","Configuración guardada en este dispositivo.",text(prefs.getBoolean("proxy_enabled",false)?"● Proxy activado para WebView":"○ Conexión directa / proxy apagado",14,cyan,true));
+            card("PERFILES PROXY","Guarda varios servidores y selecciona uno en las opciones avanzadas.",button("Administrar proxy",()->showSection("Avanzado")));
+            card("LÍMITE DE CONEXIÓN","Astral aplica proxy HTTP al tráfico de WebView. No oculta automáticamente la IP de otras aplicaciones ni sustituye una VPN.",null);
+            card("DNS DEL DISPOSITIVO","Abre las opciones de red de Android para administrar DNS privado.",button("Abrir ajustes de red",()->{try{startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));}catch(Exception e){Toast.makeText(this,"Abre los ajustes de red de Android",Toast.LENGTH_LONG).show();}}));
+            break;
         case "General":
             card("Página de inicio","Al abrir una pestaña, Astral muestra su página de inicio.",text("Página Astral · activa",14,cyan,true));
             card("Borrar datos de navegación","Elimina cookies, caché e historial de las pestañas.",button("Borrar datos",()->new android.app.AlertDialog.Builder(this).setTitle("Borrar datos").setMessage("Se eliminarán cookies, caché e historial. Puede cerrar sesiones web.").setNegativeButton("Cancelar",null).setPositiveButton("Borrar",(d,w)->{android.webkit.WebStorage.getInstance().deleteAllData();CookieManager.getInstance().removeAllCookies(null);CookieManager.getInstance().flush();Toast.makeText(this,"Datos de navegación borrados",Toast.LENGTH_SHORT).show();}).show()));

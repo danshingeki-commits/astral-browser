@@ -20,7 +20,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class SettingsActivity extends Activity {
-    private final int bg=Color.rgb(11,8,19), panel=Color.rgb(24,18,37), purple=Color.rgb(192,132,252), cyan=Color.rgb(34,211,238), muted=Color.rgb(169,154,190);
+    private final int bg=Color.rgb(3,7,11), panel=Color.rgb(7,21,27), purple=Color.rgb(75,234,255), cyan=Color.rgb(39,223,245), muted=Color.rgb(122,157,168);
     private SharedPreferences prefs;
     private LinearLayout root, content, nav;
     private String active="General";
@@ -244,7 +244,7 @@ public class SettingsActivity extends Activity {
             EditText proxy=new EditText(this);
             proxy.setSingleLine(true);proxy.setTextColor(Color.WHITE);proxy.setHintTextColor(muted);proxy.setHint("host:puerto");proxy.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
             proxy.setText(prefs.getString("proxy",""));
-            card("Servidor proxy","Introduce el host y puerto de un proveedor de confianza.",proxy);
+            card("Servidor proxy HTTP","Formato host:puerto (por ejemplo, proxy.ejemplo.net:8080). Este campo no admite SOCKS ni autenticación de usuario/contraseña.",proxy);
             profiles.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
                 @Override public void onNothingSelected(android.widget.AdapterView<?> parent){}
                 @Override public void onItemSelected(android.widget.AdapterView<?> parent,View view,int position,long id){
@@ -270,7 +270,7 @@ public class SettingsActivity extends Activity {
                 }catch(Exception e){Toast.makeText(this,"No se pudo eliminar el perfil",Toast.LENGTH_SHORT).show();}
             }));
             CheckBox enabled=new CheckBox(this);enabled.setText("Activar proxy para Astral");enabled.setTextColor(Color.WHITE);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(cyan));enabled.setChecked(prefs.getBoolean("proxy_enabled",false));
-            card("Conexión proxy","El proxy de WebView no enruta automáticamente todo el tráfico del teléfono.",enabled);
+            card("Conexión proxy · HTTP","Se aplica al contenido web de Astral mediante WebView. No es una VPN y no enruta otras aplicaciones del teléfono.",enabled);
             card("Aplicar proxy","Valida el host y puerto antes de aplicar la configuración.",button("Aplicar perfil",()->saveProxy(proxy.getText().toString().trim(),enabled.isChecked())));
             card("Desactivar proxy","Quita la configuración de proxy de WebView.",button("Desactivar",()->{prefs.edit().putBoolean("proxy_enabled",false).apply();try{ProxyController.getInstance().clearProxyOverride(Runnable::run,()->runOnUiThread(()->Toast.makeText(this,"Proxy desactivado",Toast.LENGTH_SHORT).show()));}catch(Exception e){Toast.makeText(this,"No se pudo desactivar el proxy",Toast.LENGTH_SHORT).show();}}));
             break;
@@ -282,7 +282,7 @@ public class SettingsActivity extends Activity {
         if(showingDetail) showCategories(true);
         else super.onBackPressed();
     }
-    private Button button(String label,Runnable action){Button b=new Button(this);b.setText(label);b.setTextColor(Color.WHITE);b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(91,45,130)));b.setOnClickListener(v->action.run());return b;}
+    private Button button(String label,Runnable action){Button b=new Button(this);b.setText(label);b.setTextColor(Color.WHITE);b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(5,110,132)));b.setOnClickListener(v->action.run());return b;}
     private boolean validProxyAddress(String value){
         try{String[] p=value.trim().split(":",2);if(p.length!=2||p[0].trim().isEmpty())return false;int port=Integer.parseInt(p[1].trim());return port>=1&&port<=65535&&!p[0].contains(" ");}
         catch(Exception e){return false;}

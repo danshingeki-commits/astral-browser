@@ -332,6 +332,14 @@ public class SettingsActivity extends Activity {
             card("Desactivar proxy","Quita la configuración de proxy de WebView.",button("Desactivar",()->{prefs.edit().putBoolean("proxy_enabled",false).apply();try{ProxyController.getInstance().clearProxyOverride(Runnable::run,()->runOnUiThread(()->Toast.makeText(this,"Proxy desactivado",Toast.LENGTH_SHORT).show()));}catch(Exception e){Toast.makeText(this,"No se pudo desactivar el proxy",Toast.LENGTH_SHORT).show();}}));
             break;
         }
+        card("APLICAR CAMBIOS","Si cambiaste el tema o una opción que requiere reinicio, puedes reiniciar Astral desde aquí.",button("↻  Reiniciar Astral ahora",()->{
+            new android.app.AlertDialog.Builder(this).setTitle("Reiniciar Astral Browser").setMessage("Se cerrará y volverá a abrir el navegador para aplicar los cambios. Las pestañas actuales pueden perderse.").setNegativeButton("Cancelar",null).setPositiveButton("Reiniciar",(d,w)->{
+                Intent launch=new Intent(this,MainActivity.class);
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(launch);
+                finishAffinity();
+            }).show();
+        }));
         transitionTo(screen,true,true);
     }
 

@@ -16,6 +16,8 @@ import android.text.TextWatcher;
 import android.webkit.CookieManager;
 import androidx.webkit.ProxyController;
 import androidx.webkit.ProxyConfig;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class SettingsActivity extends Activity {
     private final int bg=Color.rgb(11,8,19), panel=Color.rgb(24,18,37), purple=Color.rgb(192,132,252), cyan=Color.rgb(34,211,238), muted=Color.rgb(169,154,190);
@@ -233,12 +235,43 @@ public class SettingsActivity extends Activity {
             CheckBox popups=new CheckBox(this);popups.setText("Bloquear ventanas emergentes automáticas");popups.setTextColor(Color.WHITE);popups.setButtonTintList(android.content.res.ColorStateList.valueOf(cyan));popups.setChecked(prefs.getBoolean("block_popups",true));
             card("Ventanas emergentes","Reduce las ventanas abiertas automáticamente por páginas web.",popups);
             card("Guardar seguridad web","Guarda JavaScript y el bloqueo de ventanas emergentes para pestañas nuevas.",button("Guardar preferencias",()->{prefs.edit().putBoolean("javascript_enabled",javascript.isChecked()).putBoolean("block_popups",popups.isChecked()).apply();Toast.makeText(this,"Preferencias web guardadas",Toast.LENGTH_SHORT).show();}));
+            Spinner profiles=new Spinner(this);
+            refreshProxyProfiles(profiles);
+            card("Perfiles guardados","Selecciona un perfil para cargar su servidor.",profiles);
+            EditText profileName=new EditText(this);
+            profileName.setSingleLine(true);profileName.setTextColor(Color.WHITE);profileName.setHintTextColor(muted);profileName.setHint("Nombre del perfil");
+            card("Nombre del perfil","Ejemplo: Casa, Datos móviles o Trabajo.",profileName);
             EditText proxy=new EditText(this);
-            proxy.setSingleLine(true);proxy.setTextColor(Color.WHITE);proxy.setHintTextColor(muted);proxy.setHint("host:puerto");proxy.setText(prefs.getString("proxy",""));
-            card("Servidor proxy","Solo configura un proxy de un proveedor de confianza.",proxy);
+            proxy.setSingleLine(true);proxy.setTextColor(Color.WHITE);proxy.setHintTextColor(muted);proxy.setHint("host:puerto");proxy.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
+            proxy.setText(prefs.getString("proxy",""));
+            card("Servidor proxy","Introduce el host y puerto de un proveedor de confianza.",proxy);
+            profiles.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
+                @Override public void onNothingSelected(android.widget.AdapterView<?> parent){}
+                @Override public void onItemSelected(android.widget.AdapterView<?> parent,View view,int position,long id){
+                    try{JSONArray a=new JSONArray(prefs.getString("proxy_profiles","[]"));if(position>=0&&position<a.length()){JSONObject p=a.getJSONObject(position);profileName.setText(p.optString("name",""));proxy.setText(p.optString("server",""));}}
+                    catch(Exception ignored){}
+                }
+            });
+            card("Guardar perfil","Guarda o actualiza el perfil con ese nombre.",button("Guardar perfil",()->{
+                String name=profileName.getText().toString().trim(),server=proxy.getText().toString().trim();
+                if(name.isEmpty()||!validProxyAddress(server)){Toast.makeText(this,"Escribe un nombre y un host:puerto válido",Toast.LENGTH_LONG).show();return;}
+                try{JSONArray a=new JSONArray(prefs.getString("proxy_profiles","[]"));boolean found=false;
+                    for(int i=0;i<a.length();i++){JSONObject p=a.getJSONObject(i);if(name.equalsIgnoreCase(p.optString("name",""))){p.put("server",server);found=true;break;}}
+                    if(!found){JSONObject p=new JSONObject();p.put("name",name);p.put("server",server);a.put(p);}
+                    prefs.edit().putString("proxy_profiles",a.toString()).putString("proxy",server).apply();
+                    refreshProxyProfiles(profiles);Toast.makeText(this,"Perfil guardado",Toast.LENGTH_SHORT).show();
+                }catch(Exception e){Toast.makeText(this,"No se pudo guardar el perfil",Toast.LENGTH_SHORT).show();}
+            }));
+            card("Eliminar perfil","Elimina el perfil seleccionado de este dispositivo.",button("Eliminar perfil",()->{
+                int pos=profiles.getSelectedItemPosition();
+                try{JSONArray a=new JSONArray(prefs.getString("proxy_profiles","[]"));if(pos<0||pos>=a.length()){Toast.makeText(this,"Selecciona un perfil",Toast.LENGTH_SHORT).show();return;}
+                    a.remove(pos);prefs.edit().putString("proxy_profiles",a.toString()).apply();refreshProxyProfiles(profiles);
+                    profileName.setText("");proxy.setText("");Toast.makeText(this,"Perfil eliminado",Toast.LENGTH_SHORT).show();
+                }catch(Exception e){Toast.makeText(this,"No se pudo eliminar el perfil",Toast.LENGTH_SHORT).show();}
+            }));
             CheckBox enabled=new CheckBox(this);enabled.setText("Activar proxy para Astral");enabled.setTextColor(Color.WHITE);enabled.setButtonTintList(android.content.res.ColorStateList.valueOf(cyan));enabled.setChecked(prefs.getBoolean("proxy_enabled",false));
-            card("Proxy","El soporte depende de la versión de Android System WebView.",enabled);
-            card("Guardar proxy","Revisa host y puerto antes de guardar.",button("Guardar proxy",()->saveProxy(proxy.getText().toString().trim(),enabled.isChecked())));
+            card("Conexión proxy","El proxy de WebView no enruta automáticamente todo el tráfico del teléfono.",enabled);
+            card("Aplicar proxy","Valida el host y puerto antes de aplicar la configuración.",button("Aplicar perfil",()->saveProxy(proxy.getText().toString().trim(),enabled.isChecked())));
             card("Desactivar proxy","Quita la configuración de proxy de WebView.",button("Desactivar",()->{prefs.edit().putBoolean("proxy_enabled",false).apply();try{ProxyController.getInstance().clearProxyOverride(Runnable::run,()->runOnUiThread(()->Toast.makeText(this,"Proxy desactivado",Toast.LENGTH_SHORT).show()));}catch(Exception e){Toast.makeText(this,"No se pudo desactivar el proxy",Toast.LENGTH_SHORT).show();}}));
             break;
         }
@@ -250,5 +283,18 @@ public class SettingsActivity extends Activity {
         else super.onBackPressed();
     }
     private Button button(String label,Runnable action){Button b=new Button(this);b.setText(label);b.setTextColor(Color.WHITE);b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(91,45,130)));b.setOnClickListener(v->action.run());return b;}
-    private void saveProxy(String value,boolean enabled){prefs.edit().putString("proxy",value).putBoolean("proxy_enabled",enabled).apply();if(!enabled){Toast.makeText(this,"Proxy guardado como desactivado",Toast.LENGTH_SHORT).show();return;}try{String[] p=value.split(":",2);int port=Integer.parseInt(p[1]);if(p[0].trim().isEmpty()||port<1||port>65535)throw new Exception();ProxyConfig c=new ProxyConfig.Builder().addProxyRule(p[0].trim()+":"+port).build();ProxyController.getInstance().setProxyOverride(c,Runnable::run,()->runOnUiThread(()->Toast.makeText(this,"Proxy configurado",Toast.LENGTH_SHORT).show()));}catch(Exception e){Toast.makeText(this,"Formato inválido. Usa host:puerto",Toast.LENGTH_LONG).show();}}
+    private boolean validProxyAddress(String value){
+        try{String[] p=value.trim().split(":",2);if(p.length!=2||p[0].trim().isEmpty())return false;int port=Integer.parseInt(p[1].trim());return port>=1&&port<=65535&&!p[0].contains(" ");}
+        catch(Exception e){return false;}
+    }
+    private void refreshProxyProfiles(Spinner spinner){
+        java.util.ArrayList<String> names=new java.util.ArrayList<>();
+        try{JSONArray a=new JSONArray(prefs.getString("proxy_profiles","[]"));for(int i=0;i<a.length();i++)names.add(a.getJSONObject(i).optString("name","Perfil "+(i+1)));}
+        catch(Exception ignored){}
+        if(names.isEmpty())names.add("Sin perfiles guardados");
+        ArrayAdapter<String> adapter=new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item,names);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+    }
+    private void saveProxy(String value,boolean enabled){prefs.edit().putString("proxy",value).putBoolean("proxy_enabled",enabled).apply();if(!enabled){Toast.makeText(this,"Proxy guardado como desactivado",Toast.LENGTH_SHORT).show();return;}try{if(!validProxyAddress(value))throw new Exception();String[] p=value.split(":",2);int port=Integer.parseInt(p[1].trim());ProxyConfig c=new ProxyConfig.Builder().addProxyRule(p[0].trim()+":"+port).build();ProxyController.getInstance().setProxyOverride(c,Runnable::run,()->runOnUiThread(()->Toast.makeText(this,"Proxy configurado",Toast.LENGTH_SHORT).show()));}catch(Exception e){Toast.makeText(this,"Formato inválido. Usa host:puerto",Toast.LENGTH_LONG).show();}}
 }

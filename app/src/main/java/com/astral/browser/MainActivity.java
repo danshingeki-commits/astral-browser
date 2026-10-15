@@ -312,6 +312,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout browserActions = new LinearLayout(this);
         browserActions.setOrientation(LinearLayout.VERTICAL);
         browserActions.setPadding(0, dp(5), 0, dp(5));
+        addMenuAction(browserActions, "✦   Astral Assistant", "Chatea, usa voz y busca en Internet", () -> { dialog.dismiss(); Intent assistant = new Intent(this, AssistantActivity.class); String url = current().getUrl(); assistant.putExtra("page_url", isHome(current()) || url == null ? "Página de inicio" : url); startActivity(assistant); });
         addMenuAction(browserActions, "◷   Historial", "Páginas visitadas en esta pestaña", () -> { dialog.dismiss(); showHistory(); });
         addMenuAction(browserActions, "↓   Descargas", "Archivos descargados", () -> { dialog.dismiss(); showDownloads(); });
         addMenuAction(browserActions, "☆   Favoritos", "Tus páginas guardadas", () -> { dialog.dismiss(); showFavorites(); });

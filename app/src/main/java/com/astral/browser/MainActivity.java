@@ -62,9 +62,9 @@ public class MainActivity extends AppCompatActivity {
         tabsBar = findViewById(R.id.tabsBar);
         Button back = findViewById(R.id.btnBack), forward = findViewById(R.id.btnForward);
         Button refresh = findViewById(R.id.btnRefresh), go = findViewById(R.id.btnSearch);
-        Button burn = findViewById(R.id.btnBurn), addTab = findViewById(R.id.btnAddTab);
+        Button burn = findViewById(R.id.btnBurn), addTab = findViewById(R.id.btnAddTab), menu = findViewById(R.id.btnMenu);
         Button home = findViewById(R.id.btnHome), tabsButton = findViewById(R.id.btnTabs);
-        applyBrowserTheme(back,forward,refresh,go,burn,addTab,home,tabsButton);
+        applyBrowserTheme(back,forward,refresh,go,burn,addTab,home,tabsButton,menu);
 
         back.setOnClickListener(v -> { WebView w=current(); if(w.canGoBack()) w.goBack(); else showHome(w); });
         forward.setOnClickListener(v -> { if(current().canGoForward()) current().goForward(); });
@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         addTab.setOnClickListener(v -> newTab(true));
         home.setOnClickListener(v -> showHome(current()));
         tabsButton.setOnClickListener(v -> showTabsMenu());
+        menu.setOnClickListener(v -> showTabsMenu());
         etUrl.setOnEditorActionListener((TextView v, int actionId, KeyEvent event) -> {
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_SEARCH ||
                 (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
@@ -231,14 +232,19 @@ public class MainActivity extends AppCompatActivity {
     }
     private void applyDesktopMode(WebView webView) {
         boolean desktop = getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("desktop_mode", false);
-        String userAgent = WebSettings.getDefaultUserAgent(this);
+        String userAgent;
         if (desktop) {
-            userAgent = userAgent.replace("Mobile", "").replace("Android", "X11; Linux x86_64");
-            if (!userAgent.contains("X11; Linux x86_64")) userAgent += " X11; Linux x86_64";
+            // Use a genuine desktop-style UA. Merely removing the word "Mobile"
+            // leaves Android in the UA and many sites still serve their mobile layout.
+            userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+        } else {
+            userAgent = WebSettings.getDefaultUserAgent(this);
         }
-        webView.getSettings().setUserAgentString(userAgent);
-        webView.getSettings().setLoadWithOverviewMode(desktop);
-        webView.getSettings().setUseWideViewPort(desktop);
+        WebSettings settings = webView.getSettings();
+        settings.setUserAgentString(userAgent);
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(desktop);
+        settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NORMAL);
     }
 
     private void showSettings() {

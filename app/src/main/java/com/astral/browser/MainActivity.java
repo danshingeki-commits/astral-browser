@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("SetJavaScriptEnabled")
     private void newTab(boolean show) {
         WebView w = new WebView(this);
-        w.setBackgroundColor(Color.rgb(11,8,19));
+        w.setBackgroundColor(Color.rgb(3,7,11));
         WebSettings s=w.getSettings();
         s.setJavaScriptEnabled(getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("javascript_enabled", true)); s.setDomStorageEnabled(true); s.setTextZoom(getSharedPreferences("astral_settings", MODE_PRIVATE).getInt("text_zoom", 100)); s.setJavaScriptCanOpenWindowsAutomatically(!getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("block_popups", true)); s.setMediaPlaybackRequiresUserGesture(!getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("autoplay_media", false));
         s.setSupportZoom(true); s.setBuiltInZoomControls(true); s.setDisplayZoomControls(false);
@@ -147,10 +147,10 @@ public class MainActivity extends AppCompatActivity {
             final int index=i;
             LinearLayout chip=new LinearLayout(this); chip.setGravity( android.view.Gravity.CENTER_VERTICAL);
             chip.setPadding(dp(10),0,dp(4),0);
-            GradientDrawable bg=new GradientDrawable(); bg.setColor(i==activeTab?Color.rgb(48,31,72):Color.rgb(24,18,37)); bg.setCornerRadius(dp(14)); chip.setBackground(bg);
+            GradientDrawable bg=new GradientDrawable(); bg.setColor(i==activeTab?Color.rgb(5,54,66):Color.rgb(7,21,27)); bg.setCornerRadius(dp(14)); chip.setBackground(bg);
             TextView title=new TextView(this); title.setText((tabTitles.get(i).length()>13?tabTitles.get(i).substring(0,12)+"…":tabTitles.get(i))); title.setTextColor(i==activeTab?Color.WHITE:Color.rgb(184,165,208)); title.setTextSize(12); title.setMaxWidth(dp(105)); title.setSingleLine(true);
             chip.addView(title,new LinearLayout.LayoutParams(-2,dp(38)));
-            TextView close=new TextView(this); close.setText(" × "); close.setTextColor(Color.rgb(192,132,252)); close.setTextSize(17);
+            TextView close=new TextView(this); close.setText(" × "); close.setTextColor(Color.rgb(75,234,255)); close.setTextSize(17);
             close.setOnClickListener(v -> closeTab(index)); chip.addView(close);
             chip.setOnClickListener(v -> switchTab(index));
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-2,dp(38)); lp.setMargins(dp(4),dp(4),dp(3),dp(4)); tabsBar.addView(chip,lp);
@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showHome(WebView w){
         w.setTag("home");
-        String html = "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1'><meta name='theme-color' content='#0b0b10'><style>\n*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Roboto,Arial,sans-serif;background:#0b0b10;color:#f4f1fa}body{min-height:100vh}.wrap{max-width:620px;margin:auto;padding:26px 17px 32px}.top{display:flex;align-items:center;gap:11px;margin-bottom:34px}.mark{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#171323;border:1px solid #47315f;color:#c4a0ff;font-size:24px}.brand{font-size:21px;font-weight:650;letter-spacing:.3px}.brand span{color:#a78bfa}.subtitle{font-size:11px;color:#9c95aa;margin-top:3px;letter-spacing:.6px}.status{margin-left:auto;color:#a78bfa;font-size:12px;border:1px solid #352743;border-radius:20px;padding:8px 11px}.dots{font-size:22px;width:38px;height:38px;padding:0;flex-shrink:0}.welcome{text-align:center;margin:28px 0 27px}.wordmark{font-size:34px;font-weight:750;letter-spacing:1px}.wordmark span{color:#a78bfa}.welcome p{margin:8px 0 0;color:#a7a0b5;font-size:13px}.search{display:flex;align-items:center;gap:11px;padding:6px 8px 6px 15px;border:1px solid #393044;border-radius:28px;background:#19171f;box-shadow:0 2px 10px #0003}.search:focus-within{border-color:#8b5cf6;box-shadow:0 0 0 1px #8b5cf633}.glass{font-size:22px;color:#b8a2e8}.search input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#fff;font-size:14px;padding:12px 0}.search input::placeholder{color:#a19aaa}.search button{border:0;border-radius:50%;width:39px;height:39px;background:#34224a;color:#e6d7ff;font-size:19px}.section{margin-top:30px}.heading{display:flex;align-items:center;justify-content:space-between;margin:0 2px 13px}.heading h2{margin:0;font-size:15px;font-weight:600}.edit{border:0;background:transparent;color:#bda3ee;font-size:12px;padding:6px}.links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.link{min-width:0;text-decoration:none;color:#eee9f7;text-align:center;border:1px solid #292431;background:#15131a;border-radius:15px;padding:14px 3px 12px}.link:active{background:#211a2b;border-color:#6f4c91}.ico{width:39px;height:39px;margin:0 auto 9px;border-radius:50%;display:grid;place-items:center;background:#24202c;color:#c9b3f4;font-size:20px;font-weight:600}.yt{color:#ff6868}.wiki{font-family:Georgia,serif;font-size:26px}.google{font-weight:800;color:#c3a5ff}.git{font-size:22px}.link strong{display:block;font-size:11px;font-weight:500;white-space:nowrap}.link small{display:block;margin-top:5px;font-size:9px;color:#a49bad;white-space:nowrap}.suggestions{border:1px solid #292431;background:#15131a;border-radius:16px;padding:0 13px}.suggest{display:flex;align-items:center;gap:12px;padding:13px 1px;text-decoration:none;color:#f0ebf7;border-bottom:1px solid #2a2531}.suggest:last-child{border-bottom:0}.sico{width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;border-radius:50%;background:#24202c;color:#bda3ee;font-size:17px}.slabel{flex:1;font-size:13px}.slabel small{display:block;margin-top:4px;font-size:10px;color:#a49bad}.arrow{font-size:18px;color:#bda3ee}.foot{margin-top:28px;padding-top:15px;border-top:1px solid #24202b;text-align:center;color:#797284;font-size:10px;letter-spacing:.8px}@media(min-width:500px){.wrap{padding-top:35px}.welcome{margin-top:42px}.link{padding:17px 4px 15px}}\n</style></head><body><main class='wrap'><header class='top'><div class='mark'>✦</div><div><div class='brand'>Astral<span>.</span></div><div class='subtitle'>Navegador web</div></div><div class='status'>● Privado y rápido</div><button class='mini dots' onclick='if(window.AstralNative){AstralNative.openMenu()}' aria-label='Menú del navegador'>⋮</button></header><section class='welcome'><div class='wordmark'>Astral<span> ✦</span></div><p>¿Qué quieres explorar hoy?</p></section><form class='search' action='https://duckduckgo.com/'><span class='glass'>⌕</span><input id='query' name='q' placeholder='Buscar o escribir una dirección' autocomplete='off' autocapitalize='off'><button type='submit' aria-label='Buscar'>↗</button></form><section class='section'><div class='heading'><h2>Accesos rápidos</h2><button class='edit' onclick='editLinks()'>Editar</button></div><div class='links' id='links'><a class='link' href='https://www.youtube.com'><span class='ico yt'>▶</span><strong>YouTube</strong><small>Vídeos</small></a><a class='link' href='https://www.wikipedia.org'><span class='ico wiki'>W</span><strong>Wikipedia</strong><small>Enciclopedia</small></a><a class='link' href='https://www.google.com'><span class='ico google'>G</span><strong>Google</strong><small>Buscador</small></a><a class='link' href='https://github.com'><span class='ico git'>◈</span><strong>GitHub</strong><small>Proyectos</small></a></div></section><section class='section'><div class='heading'><h2>Para descubrir</h2></div><div class='suggestions'><a class='suggest' href='https://open.spotify.com'><span class='sico'>♫</span><span class='slabel'>Spotify<small>open.spotify.com</small></span><span class='arrow'>↗</span></a><a class='suggest' href='https://chatgpt.com'><span class='sico'>✧</span><span class='slabel'>ChatGPT<small>chatgpt.com</small></span><span class='arrow'>↗</span></a><a class='suggest' href='https://www.netflix.com'><span class='sico'>N</span><span class='slabel'>Netflix<small>netflix.com</small></span><span class='arrow'>↗</span></a><a class='suggest' href='https://discord.com'><span class='sico'>◉</span><span class='slabel'>Discord<small>discord.com</small></span><span class='arrow'>↗</span></a></div></section><footer class='foot'>ASTRAL BROWSER · TU NAVEGADOR, A TU MANERA</footer></main><script>function editLinks(){var n=prompt('¿Qué acceso quieres editar? Escribe 1 YouTube, 2 Wikipedia, 3 Google o 4 GitHub.');var i=parseInt(n,10)-1;var a=document.querySelectorAll('#links a');if(!Number.isInteger(i)||i<0||i>=a.length)return;var name=prompt('Nombre:',a[i].querySelector('strong').textContent);if(!name)return;var url=prompt('Dirección web:',a[i].href);if(!url)return;if(!/^https?:\\/\\//i.test(url))url='https://'+url;a[i].href=url;a[i].querySelector('strong').textContent=name;a[i].querySelector('small').textContent=new URL(url).hostname;}</script></body></html>";
+        String html = "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1'><meta name='theme-color' content='#03070b'><style>\n*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Roboto,Arial,sans-serif;background:#03070b;color:#e6fbff}body{min-height:100vh;background-image:radial-gradient(ellipse at 15% 35%,rgba(0,210,240,.09),transparent 38%),radial-gradient(ellipse at 90% 78%,rgba(0,125,180,.10),transparent 35%);background-attachment:fixed}.wrap{max-width:620px;margin:auto;padding:26px 17px 32px;position:relative}.top{display:flex;align-items:center;gap:11px;margin-bottom:34px}.mark{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#07151b;border:1px solid #146477;color:#4beaff;font-size:24px}.brand{font-size:21px;font-weight:650;letter-spacing:.3px}.brand span{color:#27dff5}.subtitle{font-size:11px;color:#7a9da8;margin-top:3px;letter-spacing:.6px}.status{margin-left:auto;color:#27dff5;font-size:12px;border:1px solid #123c48;border-radius:20px;padding:8px 11px}.dots{font-size:22px;width:38px;height:38px;padding:0;flex-shrink:0}.welcome{text-align:center;margin:28px 0 27px}.wordmark{font-size:34px;font-weight:750;letter-spacing:1px}.wordmark span{color:#27dff5}.welcome p{margin:8px 0 0;color:#8bb3bd;font-size:13px}.search{display:flex;align-items:center;gap:11px;padding:6px 8px 6px 15px;border:1px solid #176a7a;border-radius:28px;background:#07151b;box-shadow:0 2px 10px #0003}.search:focus-within{border-color:#8b5cf6;box-shadow:0 0 0 1px #8b5cf633}.glass{font-size:22px;color:#4beaff}.search input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#fff;font-size:14px;padding:12px 0}.search input::placeholder{color:#72939d}.search button{border:0;border-radius:50%;width:39px;height:39px;background:#063c4a;color:#d9fbff;font-size:19px}.section{margin-top:30px}.heading{display:flex;align-items:center;justify-content:space-between;margin:0 2px 13px}.heading h2{margin:0;font-size:15px;font-weight:600}.edit{border:0;background:transparent;color:#4beaff;font-size:12px;padding:6px}.links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.link{min-width:0;text-decoration:none;color:#e6fbff;text-align:center;border:1px solid #10252c;background:#061117;border-radius:10px;padding:14px 3px 12px;box-shadow:inset 0 0 0 1px rgba(39,223,245,.025)}.link:active{background:#0a2630;border-color:#21dff5}.ico{width:39px;height:39px;margin:0 auto 9px;border-radius:50%;display:grid;place-items:center;background:#0d2027;color:#5cecff;font-size:20px;font-weight:600}.yt{color:#ff5478}.wiki{font-family:Georgia,serif;font-size:26px}.google{font-weight:800;color:#4beaff}.git{font-size:22px}.link strong{display:block;font-size:11px;font-weight:500;white-space:nowrap}.link small{display:block;margin-top:5px;font-size:9px;color:#7a9da8;white-space:nowrap}.suggestions{border:1px solid #10252c;background:#061117;border-radius:10px;padding:0 13px;box-shadow:0 0 18px rgba(0,210,240,.025)}.suggest{display:flex;align-items:center;gap:12px;padding:13px 1px;text-decoration:none;color:#f0ebf7;border-bottom:1px solid #112a31}.suggest:last-child{border-bottom:0}.sico{width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;border-radius:50%;background:#0d2027;color:#4beaff;font-size:17px}.slabel{flex:1;font-size:13px}.slabel small{display:block;margin-top:4px;font-size:10px;color:#7a9da8}.arrow{font-size:18px;color:#4beaff}.foot{margin-top:28px;padding-top:15px;border-top:1px solid #24202b;text-align:center;color:#547781;font-size:10px;letter-spacing:1.2px}@media(min-width:500px){.wrap{padding-top:35px}.welcome{margin-top:42px}.link{padding:17px 4px 15px}}\n</style></head><body><main class='wrap'><header class='top'><div class='mark'>✦</div><div><div class='brand'>Astral<span>.</span></div><div class='subtitle'>Navegador web</div></div><div class='status'>● Privado y rápido</div><button class='mini dots' onclick='if(window.AstralNative){AstralNative.openMenu()}' aria-label='Menú del navegador'>⋮</button></header><section class='welcome'><div class='wordmark'>Astral<span> ✦</span></div><p>¿Qué quieres explorar hoy?</p></section><form class='search' action='https://duckduckgo.com/'><span class='glass'>⌕</span><input id='query' name='q' placeholder='Buscar o escribir una dirección' autocomplete='off' autocapitalize='off'><button type='submit' aria-label='Buscar'>↗</button></form><section class='section'><div class='heading'><h2>Accesos rápidos</h2><button class='edit' onclick='editLinks()'>Editar</button></div><div class='links' id='links'><a class='link' href='https://www.youtube.com'><span class='ico yt'>▶</span><strong>YouTube</strong><small>Vídeos</small></a><a class='link' href='https://www.wikipedia.org'><span class='ico wiki'>W</span><strong>Wikipedia</strong><small>Enciclopedia</small></a><a class='link' href='https://www.google.com'><span class='ico google'>G</span><strong>Google</strong><small>Buscador</small></a><a class='link' href='https://github.com'><span class='ico git'>◈</span><strong>GitHub</strong><small>Proyectos</small></a></div></section><section class='section'><div class='heading'><h2>Para descubrir</h2></div><div class='suggestions'><a class='suggest' href='https://open.spotify.com'><span class='sico'>♫</span><span class='slabel'>Spotify<small>open.spotify.com</small></span><span class='arrow'>↗</span></a><a class='suggest' href='https://chatgpt.com'><span class='sico'>✧</span><span class='slabel'>ChatGPT<small>chatgpt.com</small></span><span class='arrow'>↗</span></a><a class='suggest' href='https://www.netflix.com'><span class='sico'>N</span><span class='slabel'>Netflix<small>netflix.com</small></span><span class='arrow'>↗</span></a><a class='suggest' href='https://discord.com'><span class='sico'>◉</span><span class='slabel'>Discord<small>discord.com</small></span><span class='arrow'>↗</span></a></div></section><footer class='foot'>ASTRAL BROWSER · TU NAVEGADOR, A TU MANERA</footer></main><script>function editLinks(){var n=prompt('¿Qué acceso quieres editar? Escribe 1 YouTube, 2 Wikipedia, 3 Google o 4 GitHub.');var i=parseInt(n,10)-1;var a=document.querySelectorAll('#links a');if(!Number.isInteger(i)||i<0||i>=a.length)return;var name=prompt('Nombre:',a[i].querySelector('strong').textContent);if(!name)return;var url=prompt('Dirección web:',a[i].href);if(!url)return;if(!/^https?:\\/\\//i.test(url))url='https://'+url;a[i].href=url;a[i].querySelector('strong').textContent=name;a[i].querySelector('small').textContent=new URL(url).hostname;}</script></body></html>";
         w.loadDataWithBaseURL("https://astral.local/",html,"text/html","UTF-8",null);
         etUrl.setText("");
     }
@@ -208,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
         TextView title = settingsText("Pestañas abiertas · " + tabs.size(), 20, Color.WHITE);
         title.setTypeface(null, Typeface.BOLD);
         panel.addView(title);
-        TextView subtitle = settingsText("Toca una tarjeta para cambiar de pestaña", 12, Color.rgb(169,154,190));
+        TextView subtitle = settingsText("Toca una tarjeta para cambiar de pestaña", 12, Color.rgb(122,157,168));
         panel.addView(subtitle);
         LinearLayout quickActions = new LinearLayout(this);
         quickActions.setOrientation(LinearLayout.HORIZONTAL);
@@ -217,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
         privateMode.setTextSize(12);
         privateMode.setAllCaps(false);
         privateMode.setTextColor(Color.WHITE);
-        privateMode.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(91,45,130)));
+        privateMode.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(5,110,132)));
         privateMode.setOnClickListener(v -> { dialog.dismiss(); startActivity(new Intent(this, IncognitoActivity.class)); });
         Button saveFavorite = new Button(this);
         saveFavorite.setText("☆ Guardar");
@@ -272,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
             row.setGravity(android.view.Gravity.CENTER_VERTICAL);
             row.setPadding(dp(12), dp(8), dp(8), dp(8));
             GradientDrawable rowBg = new GradientDrawable();
-            rowBg.setColor(i == activeTab ? Color.rgb(48,31,72) : Color.rgb(24,18,37));
+            rowBg.setColor(i == activeTab ? Color.rgb(5,54,66) : Color.rgb(7,21,27));
             rowBg.setCornerRadius(dp(13));
             row.setBackground(rowBg);
             LinearLayout labels = new LinearLayout(this);
@@ -281,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
             tabName.setMaxLines(1);
             tabName.setEllipsize(android.text.TextUtils.TruncateAt.END);
             labels.addView(tabName);
-            TextView tabUrl = settingsText(isHome(tabs.get(i)) ? "Página de inicio" : (tabs.get(i).getUrl() == null ? "Cargando…" : tabs.get(i).getUrl()), 10, Color.rgb(169,154,190));
+            TextView tabUrl = settingsText(isHome(tabs.get(i)) ? "Página de inicio" : (tabs.get(i).getUrl() == null ? "Cargando…" : tabs.get(i).getUrl()), 10, Color.rgb(122,157,168));
             tabUrl.setMaxLines(1);
             tabUrl.setEllipsize(android.text.TextUtils.TruncateAt.END);
             labels.addView(tabUrl);
@@ -289,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
             Button close = new Button(this);
             close.setText("×");
             close.setTextSize(18);
-            close.setTextColor(Color.rgb(192,132,252));
+            close.setTextColor(Color.rgb(75,234,255));
             close.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(35,24,49)));
             close.setMinWidth(dp(42));
             close.setOnClickListener(v -> { dialog.dismiss(); closeTab(index); showTabsMenu(); });
@@ -304,13 +304,13 @@ public class MainActivity extends AppCompatActivity {
         Button add = new Button(this);
         add.setText("+  Nueva pestaña");
         add.setTextColor(Color.WHITE);
-        add.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(91,45,130)));
+        add.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(5,110,132)));
         add.setOnClickListener(v -> { dialog.dismiss(); newTab(true); });
         panel.addView(add, new LinearLayout.LayoutParams(-1, -2));
         dialog.setView(panel);
         dialog.show();
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.rgb(11,8,19)));
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.rgb(3,7,11)));
             dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels * 0.92f), (int)(getResources().getDisplayMetrics().heightPixels * 0.78f));
         }
     }
@@ -321,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
         row.setPadding(dp(12), dp(8), dp(8), dp(8));
         TextView primary = settingsText(title, 14, Color.WHITE);
         row.addView(primary);
-        TextView secondary = settingsText(subtitle, 11, Color.rgb(169,154,190));
+        TextView secondary = settingsText(subtitle, 11, Color.rgb(122,157,168));
         row.addView(secondary);
         row.setBackgroundResource(android.R.drawable.list_selector_background);
         row.setOnClickListener(v -> action.run());
@@ -459,7 +459,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addSettingsHeading(LinearLayout panel, String heading) {
-        TextView title = settingsText(heading, 13, Color.rgb(192,132,252));
+        TextView title = settingsText(heading, 13, Color.rgb(75,234,255));
         title.setTypeface(null, Typeface.BOLD);
         title.setPadding(0, dp(18), 0, dp(7));
         panel.addView(title);

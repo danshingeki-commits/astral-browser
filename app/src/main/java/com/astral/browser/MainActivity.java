@@ -367,7 +367,11 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.rgb(3,7,11)));
-            dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels * 0.92f), (int)(getResources().getDisplayMetrics().heightPixels * 0.78f));
+            dialog.getWindow().setGravity(android.view.Gravity.TOP | android.view.Gravity.END);
+            dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels * 0.90f), (int)(getResources().getDisplayMetrics().heightPixels * 0.62f));
+            android.view.WindowManager.LayoutParams menuParams = dialog.getWindow().getAttributes();
+            menuParams.y = dp(56);
+            dialog.getWindow().setAttributes(menuParams);
         }
     }
 

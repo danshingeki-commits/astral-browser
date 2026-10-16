@@ -260,6 +260,7 @@ public class MainActivity extends AppCompatActivity {
         panel.setPadding(dp(18), dp(16), dp(18), dp(12));
         panel.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
             new int[]{Color.rgb(19,25,43),Color.rgb(8,11,20)}));
+        panel.setClipToOutline(true);
         TextView title = settingsText("Menú de Astral", 20, Color.WHITE);
         title.setTypeface(null, Typeface.BOLD);
         panel.addView(title);
@@ -368,7 +369,7 @@ public class MainActivity extends AppCompatActivity {
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.rgb(3,7,11)));
             dialog.getWindow().setGravity(android.view.Gravity.TOP | android.view.Gravity.END);
-            dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels * 0.90f), (int)(getResources().getDisplayMetrics().heightPixels * 0.62f));
+            dialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels * 0.78f), android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
             android.view.WindowManager.LayoutParams menuParams = dialog.getWindow().getAttributes();
             menuParams.y = dp(56);
             dialog.getWindow().setAttributes(menuParams);

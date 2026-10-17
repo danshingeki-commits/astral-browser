@@ -292,6 +292,15 @@ public class SettingsActivity extends Activity {
             CheckBox popups=new CheckBox(this);popups.setText("Bloquear ventanas emergentes automáticas");popups.setTextColor(Color.WHITE);popups.setButtonTintList(android.content.res.ColorStateList.valueOf(cyan));popups.setChecked(prefs.getBoolean("block_popups",true));
             card("Ventanas emergentes","Reduce las ventanas abiertas automáticamente por páginas web.",popups);
             card("Guardar seguridad web","Guarda JavaScript y el bloqueo de ventanas emergentes para pestañas nuevas.",button("Guardar preferencias",()->{prefs.edit().putBoolean("javascript_enabled",javascript.isChecked()).putBoolean("block_popups",popups.isChecked()).apply();Toast.makeText(this,"Preferencias web guardadas",Toast.LENGTH_SHORT).show();}));
+            Spinner identity=new Spinner(this);
+            String[] identityModes={"Predeterminado (recomendado)","Android móvil","Escritorio"};
+            identity.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,identityModes));
+            identity.setSelection(Math.max(0,Math.min(2,prefs.getInt("identity_mode",0))));
+            card("IDENTIDAD DEL NAVEGADOR","Cambia el User-Agent de las pestañas nuevas. No cambia el dispositivo real ni oculta por completo la huella digital.",identity);
+            card("Guardar identidad","Se aplicará a las pestañas que abras después de guardar.",button("Guardar modo",()->{
+                prefs.edit().putInt("identity_mode",identity.getSelectedItemPosition()).apply();
+                Toast.makeText(this,"Modo guardado para nuevas pestañas",Toast.LENGTH_SHORT).show();
+            }));
             Spinner profiles=new Spinner(this);
             refreshProxyProfiles(profiles);
             card("Perfiles guardados","Selecciona un perfil para cargar su servidor.",profiles);

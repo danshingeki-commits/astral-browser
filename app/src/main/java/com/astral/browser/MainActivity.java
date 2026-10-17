@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
             @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 if (getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("ad_block_enabled", true)) {
                     String host = request.getUrl().getHost();
-                    if (host != null && isAdHost(host.toLowerCase(java.util.Locale.ROOT))) return new android.webkit.WebResourceResponse("text/plain","utf-8",new java.io.ByteArrayInputStream(new byte[0]));
+                    if (host != null && !isMediaRequest(request.getUrl()) && isAdHost(host.toLowerCase(java.util.Locale.ROOT))) return new android.webkit.WebResourceResponse("text/plain","utf-8",new java.io.ByteArrayInputStream(new byte[0]));
                 }
                 return super.shouldInterceptRequest(view, request);
             }
@@ -556,7 +556,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private boolean isAdHost(String host) {
+    // Evita bloquear archivos de audio/vídeo y segmentos de streaming: bloquearlos puede dejar el reproductor en negro.\n    private boolean isMediaRequest(Uri uri) {\n        String path = uri == null ? "" : uri.getPath();\n        if (path == null) return false;\n        path = path.toLowerCase(java.util.Locale.ROOT);\n        return path.matches(".*\\\\.(mp4|m4v|webm|m3u8|mpd|ts|m4s|aac|mp3|ogg|opus|wav|vtt|m4a)(?:$|/).*");\n    }\n\n    private boolean isAdHost(String host) {
         String[] blocked={"doubleclick.net","googlesyndication.com","googleadservices.com","adservice.google.com","adnxs.com","adsrvr.org","adform.net","taboola.com","outbrain.com","popads.net","popcash.net","propellerads.com","exoclick.com","adsterra.com","trafficjunky.net","criteo.com"};
         for(String domain:blocked)if(host.equals(domain)||host.endsWith("."+domain))return true;
         return false;

@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
         CookieManager.getInstance().setAcceptCookie(true);
-        newTab(true);
+        restoreTabs();
     }
 
     private void applyBrowserTheme(Button... controls) {
@@ -140,6 +140,13 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onReceivedTitle(WebView view,String title){ int i=tabs.indexOf(view); if(i>=0){tabTitles.set(i, title==null||title.isEmpty()?"Nueva pestaña":title); renderTabs();} }
         });
         w.setWebViewClient(new WebViewClient(){
+            @Override public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                if (getSharedPreferences("astral_settings", MODE_PRIVATE).getBoolean("ad_block_enabled", true)) {
+                    String host = request.getUrl().getHost();
+                    if (host != null && isAdHost(host.toLowerCase(java.util.Locale.ROOT))) return new android.webkit.WebResourceResponse("text/plain","utf-8",new java.io.ByteArrayInputStream(new byte[0]));
+                }
+                return super.shouldInterceptRequest(view, request);
+            }
             @Override public void onPageStarted(WebView view,String url,Bitmap icon){ if(!url.startsWith("https://astral.local/")) view.setTag("web"); if(view==current() && !url.startsWith("file:")) etUrl.setText(url.equals("about:blank")||url.startsWith("https://astral.local/")?"":url); }
             @Override public void onPageFinished(WebView view,String url){ if(view==current() && !isHome(view)) etUrl.setText(url); }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req){
@@ -548,8 +555,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    private boolean isAdHost(String host) {
+        String[] blocked={"doubleclick.net","googlesyndication.com","googleadservices.com","adservice.google.com","adnxs.com","adsrvr.org","adform.net","taboola.com","outbrain.com","popads.net","popcash.net","propellerads.com","exoclick.com","adsterra.com","trafficjunky.net","criteo.com"};
+        for(String domain:blocked)if(host.equals(domain)||host.endsWith("."+domain))return true;
+        return false;
+    }
+    private void restoreTabs(){
+        SharedPreferences prefs=getSharedPreferences("astral_settings",MODE_PRIVATE);String saved=prefs.getString("saved_tabs","");
+        if(saved.isEmpty()){newTab(true);return;}
+        try{JSONArray items=new JSONArray(saved);if(items.length()==0){newTab(true);return;}int selected=Math.max(0,Math.min(items.length()-1,prefs.getInt("saved_active_tab",0)));
+            for(int i=0;i<items.length();i++){String url=items.optString(i,"");newTab(i==selected);WebView w=tabs.get(tabs.size()-1);if(url.startsWith("https://")||url.startsWith("http://")){w.setTag("web");w.loadUrl(url);}}
+        }catch(Exception ignored){newTab(true);}
+    }
+    private void saveTabs(){
+        if(tabs.isEmpty())return;try{JSONArray items=new JSONArray();for(WebView w:tabs){String url=w.getUrl();if(url==null||url.startsWith("https://astral.local/")||url.equals("about:blank"))url="";items.put(url==null?"":url);}getSharedPreferences("astral_settings",MODE_PRIVATE).edit().putString("saved_tabs",items.toString()).putInt("saved_active_tab",activeTab).apply();}catch(Exception ignored){}
+    }
+    @Override protected void onStop(){saveTabs();super.onStop();}
     private void destroySession(){
         for(WebView w:tabs){w.clearCache(true);w.clearHistory();}
+        getSharedPreferences("astral_settings", MODE_PRIVATE).edit().remove("saved_tabs").remove("saved_active_tab").apply();
         CookieManager.getInstance().removeAllCookies(null); CookieManager.getInstance().flush();
         showHome(current()); Toast.makeText(this,"Rastro borrado: cookies y caché eliminadas",Toast.LENGTH_SHORT).show();
     }
